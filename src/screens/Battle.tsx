@@ -26,6 +26,18 @@ const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n
 const randInt = (lo: number, hi: number) => lo + Math.floor(Math.random() * (hi - lo + 1))
 
 function makeWild(playerLevel: number, config: Extract<BattleConfig, { kind: 'wild' }>): Combatant {
+  // DEVデモ用: localStorage.demo_enemy が指定されていればその種を出す(本番では無効)
+  if (import.meta.env.DEV) {
+    const forced = localStorage.getItem('demo_enemy')
+    if (forced) {
+      const lvl = Number(localStorage.getItem('demo_enemy_level')) || playerLevel
+      try {
+        return makeCombatant(species(forced), lvl)
+      } catch {
+        /* 不明idなら通常処理 */
+      }
+    }
+  }
   const pool = config.pool?.length
     ? config.pool
     : DEX.filter((d) => d.role !== 'legendary' && d.stage <= 2).map((d) => d.id)
