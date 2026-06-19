@@ -1,0 +1,150 @@
+{
+  "meta": {
+    "title": "錬金幻獣録 アルケミスト・オーダー — 幻獣図鑑",
+    "version": "1.0",
+    "count": 100,
+    "fields": "dex=全国図鑑番号, type/type2=属性, stage=進化段階, from/to=進化系統(id), at=進化Lv(進化条件), stats=[HP,ATK,DEF,SPD,MAG]種族値, role=normal/legendary, sig=固有技, dex_text=図鑑解説",
+    "starters": ["ignif", "aquab", "cogrif"],
+    "canon_note": "提示画像由来の26体を確定種として収録(canon:true)。相性倍率は data/typechart.json を単一の真実の源として参照。",
+    "statCurve": "stage1≈300 / stage2≈420 / stage3≈540 / legendary≈580-600"
+  },
+  "dex": [
+    { "dex": 1, "id": "ignif", "name": "イグニフ", "type": "火", "stage": 1, "from": null, "to": "flamand", "at": 16, "canon": true, "stats": [50, 62, 50, 65, 48], "sig": "ひのこ", "dex_text": "尾の火種で道を照らす火トカゲ。御三家・火。" },
+    { "dex": 2, "id": "flamand", "name": "フレアマンド", "type": "火", "stage": 2, "from": "ignif", "to": "volcadon", "at": 34, "canon": true, "stats": [70, 88, 70, 90, 72], "sig": "かえんほう", "dex_text": "火炎をまとうサラマンダー。怒ると全身が燃え立つ。" },
+    { "dex": 3, "id": "volcadon", "name": "ヴォルカドン", "type": "火", "stage": 3, "from": "flamand", "to": null, "at": null, "canon": true, "stats": [95, 118, 92, 100, 95], "sig": "ヴォルカニックレイ", "dex_text": "背に火山を背負う炎竜。噴火は山一つを焼く。御三家最終形。" },
+
+    { "dex": 4, "id": "emberio", "name": "エンバーリオ", "type": "火", "stage": 1, "from": null, "to": "blazeroar", "at": 18, "stats": [55, 64, 48, 60, 45], "sig": "ひっかく", "dex_text": "燃える鬣を持つ仔獅子。甘えん坊だが火の粉を散らす。" },
+    { "dex": 5, "id": "blazeroar", "name": "ブレイズロア", "type": "火", "stage": 2, "from": "emberio", "to": "ignisleo", "at": 36, "stats": [75, 92, 66, 82, 60], "sig": "ほのおのキバ", "dex_text": "咆哮で炎を巻き起こす火獅子。" },
+    { "dex": 6, "id": "ignisleo", "name": "イグニス・レオ", "type": "火", "stage": 3, "from": "blazeroar", "to": null, "at": null, "stats": [95, 122, 84, 102, 78], "sig": "獅子炎舞", "dex_text": "炎の鬣を持つ獣の王。その威に弱き幻獣は平伏する。" },
+
+    { "dex": 7, "id": "candle", "name": "キャンドル", "type": "火", "type2": "冥", "stage": 1, "from": null, "to": "lanternwisp", "at": 20, "stats": [45, 45, 45, 50, 70], "sig": "おにび", "dex_text": "蝋燭の炎に魂が宿った幻獣。火が消えると消滅する。" },
+    { "dex": 8, "id": "lanternwisp", "name": "ランタン・ウィスプ", "type": "火", "type2": "冥", "stage": 2, "from": "candle", "to": "hellflare", "at": 38, "stats": [60, 60, 60, 70, 100], "sig": "たましいの炎", "dex_text": "迷い人を導く——あるいは惑わすランタンの霊。" },
+    { "dex": 9, "id": "hellflare", "name": "ヘルフレア", "type": "火", "type2": "冥", "stage": 3, "from": "lanternwisp", "to": null, "at": null, "stats": [75, 80, 72, 88, 125], "sig": "煉獄火", "dex_text": "冥府の業火を操る鬼火の主。" },
+
+    { "dex": 10, "id": "aquab", "name": "アクアブ", "type": "水", "stage": 1, "from": null, "to": "marinel", "at": 16, "canon": true, "stats": [55, 50, 58, 52, 60], "sig": "みずでっぽう", "dex_text": "水球状の身体を持つスライム魚。御三家・水。" },
+    { "dex": 11, "id": "marinel", "name": "マリネル", "type": "水", "stage": 2, "from": "aquab", "to": "leviaran", "at": 34, "canon": true, "stats": [75, 70, 78, 72, 88], "sig": "うずしお", "dex_text": "歌で波を操る人魚の幻獣。" },
+    { "dex": 12, "id": "leviaran", "name": "レヴィアラン", "type": "水", "stage": 3, "from": "marinel", "to": null, "at": null, "canon": true, "stats": [100, 92, 98, 90, 110], "sig": "大海嘯", "dex_text": "深海に眠る海蛇の王。怒れば沿岸を呑む。御三家最終形。" },
+
+    { "dex": 13, "id": "teary", "name": "ティアリィ", "type": "水", "type2": "聖", "stage": 1, "from": null, "to": "naiad", "at": 18, "stats": [50, 42, 48, 58, 62], "sig": "しずくだま", "dex_text": "泉の一滴から生まれた水妖精。" },
+    { "dex": 14, "id": "naiad", "name": "ナイアード", "type": "水", "type2": "聖", "stage": 2, "from": "teary", "to": "undine", "at": 36, "stats": [68, 58, 64, 76, 90], "sig": "いやしの泉", "dex_text": "泉を守る乙女の精。澄んだ水を清める。" },
+    { "dex": 15, "id": "undine", "name": "ウンディーネ", "type": "水", "type2": "聖", "stage": 3, "from": "naiad", "to": null, "at": null, "stats": [85, 72, 80, 92, 118], "sig": "聖水の渦", "dex_text": "水の四大精霊の一柱。穢れを洗い流す。" },
+
+    { "dex": 16, "id": "shelk", "name": "シェルク", "type": "水", "stage": 1, "from": null, "to": "coralga", "at": 20, "stats": [55, 52, 70, 38, 50], "sig": "からにこもる", "dex_text": "硬い貝殻に身を守る幻獣。" },
+    { "dex": 17, "id": "coralga", "name": "コーラルガ", "type": "水", "stage": 2, "from": "shelk", "to": "krakent", "at": 40, "stats": [78, 72, 95, 52, 72], "sig": "あわのよろい", "dex_text": "珊瑚の鎧を纏う甲殻獣。" },
+    { "dex": 18, "id": "krakent", "name": "クラーケント", "type": "水", "stage": 3, "from": "coralga", "to": null, "at": null, "stats": [100, 100, 112, 60, 95], "sig": "深淵の触手", "dex_text": "船を沈める伝承の大海獣。" },
+
+    { "dex": 19, "id": "frost", "name": "フロスト", "type": "水", "stage": 1, "from": null, "to": "glacia", "at": 18, "stats": [52, 50, 55, 55, 58], "sig": "こなゆき", "dex_text": "万年雪から生まれた氷の小獣。" },
+    { "dex": 20, "id": "glacia", "name": "グレイシア", "type": "水", "stage": 2, "from": "frost", "to": "iceberg", "at": 38, "stats": [72, 70, 78, 70, 80], "sig": "つららおとし", "dex_text": "氷塊を操る雪獣。吐く息で湖を凍らせる。" },
+    { "dex": 21, "id": "iceberg", "name": "アイスバーグ", "type": "水", "stage": 3, "from": "glacia", "to": null, "at": null, "stats": [98, 92, 105, 70, 95], "sig": "絶対零度氷塊", "dex_text": "氷山そのものが動く巨獣。" },
+
+    { "dex": 22, "id": "cogrif", "name": "コグリフ", "type": "風", "stage": 1, "from": null, "to": "sylfeed", "at": 16, "canon": true, "stats": [50, 58, 50, 70, 50], "sig": "かぜおこし", "dex_text": "鷲と獅子の子・仔グリフォン。御三家・風。" },
+    { "dex": 23, "id": "sylfeed", "name": "シルフィード", "type": "風", "stage": 2, "from": "cogrif", "to": "grandroc", "at": 34, "canon": true, "stats": [70, 80, 66, 98, 72], "sig": "エアスラッシュ", "dex_text": "風をまとい音もなく飛ぶ翼獣。" },
+    { "dex": 24, "id": "grandroc", "name": "グランドロク", "type": "風", "stage": 3, "from": "sylfeed", "to": null, "at": null, "canon": true, "stats": [92, 108, 84, 118, 88], "sig": "天空裂風", "dex_text": "翼を広げれば空を覆う大ロック鳥。御三家最終形。" },
+
+    { "dex": 25, "id": "pibit", "name": "ピビット", "type": "風", "stage": 1, "from": null, "to": "skylark", "at": 17, "canon": true, "stats": [45, 50, 42, 72, 48], "sig": "ついばむ", "dex_text": "群れで暮らす青い小鳥。序盤の定番。" },
+    { "dex": 26, "id": "skylark", "name": "スカイラーク", "type": "風", "stage": 2, "from": "pibit", "to": "tempesta", "at": 35, "stats": [62, 70, 56, 95, 62], "sig": "つばめがえし", "dex_text": "天高く舞う旅鳥。渡りの先導役。" },
+    { "dex": 27, "id": "tempesta", "name": "テンペスタ", "type": "風", "stage": 3, "from": "skylark", "to": null, "at": null, "stats": [82, 95, 74, 120, 80], "sig": "嵐翼", "dex_text": "嵐を呼ぶ猛禽。雷雲を引き連れ飛ぶ。" },
+
+    { "dex": 28, "id": "briezel", "name": "ブリーゼル", "type": "風", "stage": 1, "from": null, "to": "gailfox", "at": 19, "stats": [48, 55, 45, 68, 50], "sig": "かまいたち", "dex_text": "風を切って走る疾風の仔狐。" },
+    { "dex": 29, "id": "gailfox", "name": "ゲイルフォックス", "type": "風", "stage": 2, "from": "briezel", "to": "zampu", "at": 37, "stats": [66, 76, 60, 92, 68], "sig": "しっぷうじん", "dex_text": "九つの尾で旋風を起こす妖狐。" },
+    { "dex": 30, "id": "zampu", "name": "ザンプウ", "type": "風", "stage": 3, "from": "gailfox", "to": null, "at": null, "stats": [80, 96, 74, 116, 84], "sig": "颶風斬", "dex_text": "風神の使いとされる尾長狐。" },
+
+    { "dex": 31, "id": "wingly", "name": "ウィングリ", "type": "風", "stage": 1, "from": null, "to": "skydrake", "at": 20, "stats": [55, 60, 52, 58, 50], "sig": "つつく", "dex_text": "羽化したての飛竜の幼体。" },
+    { "dex": 32, "id": "skydrake", "name": "スカイドレイク", "type": "風", "stage": 2, "from": "wingly", "to": "stormwyvern", "at": 40, "stats": [76, 88, 70, 82, 70], "sig": "りゅうのいぶき", "dex_text": "空の覇者を目指す若き飛竜。" },
+    { "dex": 33, "id": "stormwyvern", "name": "ストームワイバーン", "type": "風", "stage": 3, "from": "skydrake", "to": null, "at": null, "stats": [95, 114, 88, 100, 90], "sig": "暴風竜爪", "dex_text": "雷雲を切り裂く飛竜の王。" },
+
+    { "dex": 34, "id": "falcone", "name": "ファルコーネ", "type": "地", "stage": 1, "from": null, "to": "mandrago", "at": 16, "canon": true, "stats": [55, 50, 55, 45, 60], "sig": "つるのムチ", "dex_text": "芽生えたばかりの魔草。土の養分で育つ。" },
+    { "dex": 35, "id": "mandrago", "name": "マンドラゴ", "type": "地", "stage": 2, "from": "falcone", "to": "alraune", "at": 32, "canon": true, "stats": [72, 72, 72, 58, 88], "sig": "ぜっきょう", "dex_text": "引き抜くと叫び声を上げるマンドラゴラ。" },
+    { "dex": 36, "id": "alraune", "name": "アルラウネ", "type": "地", "stage": 3, "from": "mandrago", "to": null, "at": null, "canon": true, "stats": [90, 92, 88, 70, 110], "sig": "魅惑の花粉", "dex_text": "花の女体を持つ植物獣。香りで獲物を眠らせる。" },
+
+    { "dex": 37, "id": "pebblin", "name": "ペブリン", "type": "地", "stage": 1, "from": null, "to": "rockgolem", "at": 18, "stats": [60, 58, 72, 35, 40], "sig": "いわおとし", "dex_text": "小石が寄り集まった土塊の幻獣。" },
+    { "dex": 38, "id": "rockgolem", "name": "ロックゴーレム", "type": "地", "stage": 2, "from": "pebblin", "to": "titanrock", "at": 36, "stats": [85, 85, 100, 42, 52], "sig": "ストーンエッジ", "dex_text": "岩を鎧う土の番人。" },
+    { "dex": 39, "id": "titanrock", "name": "タイタンロック", "type": "地", "stage": 3, "from": "rockgolem", "to": null, "at": null, "stats": [115, 110, 130, 45, 60], "sig": "大地崩し", "dex_text": "山の如き巨岩の番人。防御は全幻獣随一。" },
+
+    { "dex": 40, "id": "gnomy", "name": "グノーミィ", "type": "地", "stage": 1, "from": null, "to": "earthgnome", "at": 18, "canon": true, "stats": [55, 55, 58, 50, 55], "sig": "すなかけ", "dex_text": "赤帽をかぶった土の精。鉱脈を見つける名人。" },
+    { "dex": 41, "id": "earthgnome", "name": "アース・グノーム", "type": "地", "stage": 2, "from": "gnomy", "to": "gaialord", "at": 38, "canon": true, "stats": [78, 76, 82, 64, 80], "sig": "じしん", "dex_text": "大地を操る土の賢者。" },
+    { "dex": 42, "id": "gaialord", "name": "ガイア・ロード", "type": "地", "stage": 3, "from": "earthgnome", "to": null, "at": null, "stats": [100, 100, 106, 70, 98], "sig": "地脈震動", "dex_text": "大地の力を統べる土精の長。" },
+
+    { "dex": 43, "id": "hobgobalt", "name": "ホブゴバルト", "type": "地", "type2": "毒", "stage": 1, "from": null, "to": "ogrebalt", "at": 24, "canon": true, "stats": [58, 68, 52, 55, 40], "sig": "どくづき", "dex_text": "緑肌の小鬼。群れで悪戯を働く。" },
+    { "dex": 44, "id": "ogrebalt", "name": "オーガバルト", "type": "地", "type2": "毒", "stage": 2, "from": "hobgobalt", "to": null, "at": null, "stats": [95, 118, 80, 70, 55], "sig": "鬼棍乱打", "dex_text": "巨棍を振るう鬼。怪力で岩を砕く。" },
+
+    { "dex": 45, "id": "tsunousa", "name": "ツノウサ", "type": "地", "stage": 1, "from": null, "to": "hornrabi", "at": 17, "stats": [50, 48, 50, 65, 48], "sig": "とっしん", "dex_text": "額に小さな水晶角を持つ野兎。" },
+    { "dex": 46, "id": "hornrabi", "name": "ホーンラビ", "type": "地", "stage": 2, "from": "tsunousa", "to": "crystag", "at": 35, "stats": [68, 66, 64, 88, 64], "sig": "クリスタルホーン", "dex_text": "角の水晶で光を集める跳ね兎。" },
+    { "dex": 47, "id": "crystag", "name": "クリスタッグ", "type": "地", "stage": 3, "from": "hornrabi", "to": null, "at": null, "stats": [85, 86, 82, 104, 88], "sig": "聖晶角", "dex_text": "水晶の枝角を戴く神鹿。森の守り手。" },
+
+    { "dex": 48, "id": "ammo", "name": "アンモ", "type": "地", "type2": "錬成", "stage": 1, "from": null, "to": "ankylos", "at": 30, "stats": [60, 55, 80, 30, 50], "sig": "からをとじる", "dex_text": "古代の地層から錬成で蘇った化石幻獣。" },
+    { "dex": 49, "id": "ankylos", "name": "アンキロス", "type": "地", "type2": "錬成", "stage": 2, "from": "ammo", "to": null, "at": null, "stats": [90, 100, 118, 42, 55], "sig": "鉄槌の尾", "dex_text": "鉄甲と尾槌を備えた太古の重装獣。" },
+
+    { "dex": 50, "id": "sparki", "name": "スパーキ", "type": "雷", "stage": 1, "from": null, "to": "boltmouse", "at": 18, "stats": [45, 52, 42, 70, 58], "sig": "でんげき", "dex_text": "静電気をまとう小獣。触れるとしびれる。" },
+    { "dex": 51, "id": "boltmouse", "name": "ボルトムース", "type": "雷", "stage": 2, "from": "sparki", "to": "zircondor", "at": 36, "stats": [62, 70, 56, 95, 78], "sig": "スパークボルト", "dex_text": "頬に電気を溜める雷鼠。" },
+    { "dex": 52, "id": "zircondor", "name": "ジルコンドル", "type": "雷", "stage": 3, "from": "boltmouse", "to": null, "at": null, "stats": [80, 90, 72, 120, 100], "sig": "雷霆一閃", "dex_text": "雷雲から舞い降りる電鳥。羽から稲妻を放つ。" },
+
+    { "dex": 53, "id": "latterune", "name": "ラッテ・ルーン", "type": "雷", "stage": 1, "from": null, "to": "coinlatte", "at": 20, "canon": true, "stats": [42, 48, 45, 65, 50], "sig": "たいあたり", "dex_text": "体にルーン文字が浮かぶ小鼠。" },
+    { "dex": 54, "id": "coinlatte", "name": "コイン・ラッテ", "type": "雷", "stage": 2, "from": "latterune", "to": "mithrilrat", "at": 38, "canon": true, "stats": [58, 64, 60, 82, 66], "sig": "コインショット", "dex_text": "金貨を集める習性を持つ鼠。光物に目がない。" },
+    { "dex": 55, "id": "mithrilrat", "name": "ミスリル・ラット", "type": "雷", "stage": 3, "from": "coinlatte", "to": null, "at": null, "stats": [72, 80, 78, 108, 82], "sig": "ミスリルレイル", "dex_text": "ミスリルを帯電させ放つ希少な鼠。" },
+
+    { "dex": 56, "id": "jolty", "name": "ジョルティ", "type": "雷", "stage": 1, "from": null, "to": "elecat", "at": 18, "stats": [48, 55, 44, 66, 55], "sig": "でんきショック", "dex_text": "毛を逆立てて放電する仔猫の幻獣。" },
+    { "dex": 57, "id": "elecat", "name": "エレキャット", "type": "雷", "stage": 2, "from": "jolty", "to": "ligarv", "at": 36, "stats": [66, 75, 58, 90, 72], "sig": "らいげきづめ", "dex_text": "雷をまとう爪で襲う電気猫。" },
+    { "dex": 58, "id": "ligarv", "name": "ライガルヴ", "type": "雷", "stage": 3, "from": "elecat", "to": null, "at": null, "stats": [88, 104, 78, 110, 90], "sig": "雷牙裂爪", "dex_text": "雷を宿す牙を持つ猛獣。咆哮で空を裂く。" },
+
+    { "dex": 59, "id": "portabupa", "name": "ポルタ・ブーパ", "type": "毒", "type2": "風", "stage": 1, "from": null, "to": "morpholucis", "at": 12, "canon": true, "stats": [45, 40, 50, 45, 35], "sig": "いとをはく", "dex_text": "葉を食べて育つ幼虫の幻獣。早く進化する。" },
+    { "dex": 60, "id": "morpholucis", "name": "モルフォ・ルシス", "type": "毒", "type2": "風", "stage": 2, "from": "portabupa", "to": "prismapapillon", "at": 30, "canon": true, "stats": [60, 55, 58, 80, 75], "sig": "りんぷん", "dex_text": "青く輝く翅を持つ蝶。鱗粉で相手を惑わす。" },
+    { "dex": 61, "id": "prismapapillon", "name": "プリズマ・パピヨン", "type": "毒", "type2": "風", "stage": 3, "from": "morpholucis", "to": null, "at": null, "stats": [78, 72, 70, 104, 108], "sig": "虹翅乱舞", "dex_text": "七色に輝く大蝶。鱗粉は猛毒にも霊薬にもなる。" },
+
+    { "dex": 62, "id": "venomite", "name": "ヴェノマイト", "type": "毒", "stage": 1, "from": null, "to": "toxeed", "at": 18, "stats": [50, 55, 48, 55, 45], "sig": "どくばり", "dex_text": "毒針を持つ蟲の幻獣。" },
+    { "dex": 63, "id": "toxeed", "name": "トキシード", "type": "毒", "stage": 2, "from": "venomite", "to": "pestilence", "at": 36, "stats": [68, 76, 64, 72, 60], "sig": "ヘドロこうげき", "dex_text": "毒液を撒き散らす蟲。近づくと危険。" },
+    { "dex": 64, "id": "pestilence", "name": "ペスティレンス", "type": "毒", "stage": 3, "from": "toxeed", "to": null, "at": null, "stats": [88, 98, 82, 84, 78], "sig": "疫病の霧", "dex_text": "疫病を運ぶとされる毒蟲の王。" },
+
+    { "dex": 65, "id": "sporin", "name": "スポアリン", "type": "毒", "type2": "地", "stage": 1, "from": null, "to": "myconid", "at": 20, "stats": [55, 48, 55, 40, 52], "sig": "やどりぎ", "dex_text": "キノコの傘を被った小さな菌類獣。" },
+    { "dex": 66, "id": "myconid", "name": "マイコニド", "type": "毒", "type2": "地", "stage": 2, "from": "sporin", "to": "deathcap", "at": 38, "stats": [74, 66, 74, 52, 80], "sig": "ほうしばくだん", "dex_text": "胞子で意思疎通する菌人。" },
+    { "dex": 67, "id": "deathcap", "name": "デスキャップ", "type": "毒", "type2": "地", "stage": 3, "from": "myconid", "to": null, "at": null, "stats": [92, 84, 90, 58, 106], "sig": "猛毒胞子嵐", "dex_text": "触れれば朽ちる猛毒の菌主。森の奥に潜む。" },
+
+    { "dex": 68, "id": "slimeflask", "name": "スライム・フラスコ", "type": "錬成", "type2": "毒", "stage": 1, "from": null, "to": "amalgamhedoro", "at": 22, "canon": true, "stats": [60, 50, 55, 40, 50], "sig": "とけるしずく", "dex_text": "フラスコから漏れ出た人造の粘体。" },
+    { "dex": 69, "id": "amalgamhedoro", "name": "アマルガム・ヘドロ", "type": "錬成", "type2": "毒", "stage": 2, "from": "slimeflask", "to": "chimeriaooze", "at": 40, "canon": true, "stats": [82, 70, 78, 50, 72], "sig": "ようかいえき", "dex_text": "あらゆる素材を取り込み融合する汚泥。" },
+    { "dex": 70, "id": "chimeriaooze", "name": "キメリア・ウーズ", "type": "錬成", "type2": "毒", "stage": 3, "from": "amalgamhedoro", "to": null, "at": null, "stats": [108, 92, 100, 55, 95], "sig": "全融合崩し", "dex_text": "幾多の幻獣の核を呑み込んだ究極の粘体。" },
+
+    { "dex": 71, "id": "ghostarmor", "name": "ゴースト・アーマー", "type": "錬成", "type2": "冥", "stage": 1, "from": null, "to": "dullahanknight", "at": 24, "canon": true, "stats": [55, 60, 75, 40, 50], "sig": "おどろかす", "dex_text": "中身のない呪われた甲冑。自ら動く。" },
+    { "dex": 72, "id": "dullahanknight", "name": "デュラハン・ナイト", "type": "錬成", "type2": "冥", "stage": 2, "from": "ghostarmor", "to": "blackpaladin", "at": 42, "canon": true, "stats": [80, 92, 102, 58, 68], "sig": "くびなしぎり", "dex_text": "首を抱えた騎士の亡霊。馬上から斬りかかる。" },
+    { "dex": 73, "id": "blackpaladin", "name": "ブラック・パラディン", "type": "錬成", "type2": "冥", "stage": 3, "from": "dullahanknight", "to": null, "at": null, "stats": [100, 116, 120, 64, 80], "sig": "冥黒聖剣", "dex_text": "堕ちた聖騎士の鎧。聖と冥の力を併せ持つ。" },
+
+    { "dex": 74, "id": "coghomuncle", "name": "コグ・ホムンクル", "type": "錬成", "stage": 1, "from": null, "to": "gearknight", "at": 20, "stats": [55, 55, 65, 50, 55], "sig": "はぐるま", "dex_text": "錬金術で造られた小さな人造生命。" },
+    { "dex": 75, "id": "gearknight", "name": "ギア・ナイト", "type": "錬成", "stage": 2, "from": "coghomuncle", "to": "clockworktitan", "at": 40, "stats": [76, 80, 90, 64, 70], "sig": "ギアブレード", "dex_text": "歯車仕掛けで動く自動人形の兵士。" },
+    { "dex": 76, "id": "clockworktitan", "name": "クロックワーク・タイタン", "type": "錬成", "stage": 3, "from": "gearknight", "to": null, "at": null, "stats": [102, 108, 116, 60, 90], "sig": "時計仕掛けの審判", "dex_text": "巨大な歯車機構で動く錬金兵器。" },
+
+    { "dex": 77, "id": "mimicris", "name": "ミミクリス", "type": "錬成", "stage": 1, "from": null, "to": null, "at": null, "stats": [50, 95, 95, 45, 60], "sig": "がぶがぶ", "dex_text": "宝箱に擬態する人造幻獣。捕獲は困難で出現も稀。単独種。" },
+
+    { "dex": 78, "id": "florapixie", "name": "フローラ・ピクシー", "type": "聖", "stage": 1, "from": null, "to": "titania", "at": 22, "canon": true, "stats": [50, 45, 48, 65, 70], "sig": "ようせいのかぜ", "dex_text": "花畑に住む小さな妖精。" },
+    { "dex": 79, "id": "titania", "name": "ティターニア", "type": "聖", "stage": 2, "from": "florapixie", "to": "seraphim", "at": 42, "stats": [70, 60, 66, 88, 100], "sig": "妖精郷の光", "dex_text": "妖精郷を治める女王。" },
+    { "dex": 80, "id": "seraphim", "name": "セラフィム", "type": "聖", "stage": 3, "from": "titania", "to": null, "at": null, "stats": [88, 76, 84, 100, 128], "sig": "六翼の聖光", "dex_text": "六枚の翼を持つ熾天使。最上位の聖なる幻獣。" },
+
+    { "dex": 81, "id": "lumiel", "name": "ルミエル", "type": "聖", "stage": 1, "from": null, "to": "archange", "at": 30, "stats": [60, 58, 60, 62, 75], "sig": "ひかりのや", "dex_text": "光をまとう翼を持つ幼い天使。" },
+    { "dex": 82, "id": "archange", "name": "アークエンジェ", "type": "聖", "stage": 2, "from": "lumiel", "to": null, "at": null, "stats": [92, 88, 90, 84, 116], "sig": "裁きの光輪", "dex_text": "聖剣と光輪を携える大天使。" },
+
+    { "dex": 83, "id": "chimeracub", "name": "キメラ・カブ", "type": "聖", "stage": 1, "from": null, "to": "mysticchimera", "at": 30, "canon": true, "stats": [65, 60, 60, 60, 65], "sig": "みつのキバ", "dex_text": "獅子・山羊・蛇の特徴を持つ幼いキメラ。準伝説。" },
+    { "dex": 84, "id": "mysticchimera", "name": "ミスティック・キメラ", "type": "聖", "stage": 2, "from": "chimeracub", "to": "celestialchimera", "at": 50, "stats": [90, 90, 88, 84, 98], "sig": "三獣咆哮", "dex_text": "三つの頭が異なる力を操る神秘の幻獣。" },
+    { "dex": 85, "id": "celestialchimera", "name": "セレスティアル・キメラ", "type": "聖", "role": "legendary", "stage": 3, "from": "mysticchimera", "to": null, "at": null, "canon": true, "stats": [120, 120, 110, 110, 140], "sig": "天翔ける黄金光", "dex_text": "黄金の翼で天を翔ける伝説の幻獣。賢者の石の守護者とされる。" },
+
+    { "dex": 86, "id": "nosferabat", "name": "ノスフェラバット", "type": "冥", "stage": 1, "from": null, "to": "vamplord", "at": 28, "canon": true, "stats": [55, 60, 48, 75, 58], "sig": "きゅうけつ", "dex_text": "夜空を舞い生き血を吸う吸血コウモリ。" },
+    { "dex": 87, "id": "vamplord", "name": "ヴァンプ・ロード", "type": "冥", "stage": 2, "from": "nosferabat", "to": "noxdracul", "at": 46, "canon": true, "stats": [80, 92, 70, 96, 88], "sig": "ブラッドドレイン", "dex_text": "夜を統べる吸血鬼の貴族。" },
+    { "dex": 88, "id": "noxdracul", "name": "ノクス・ドラクル", "type": "冥", "stage": 3, "from": "vamplord", "to": null, "at": null, "canon": false, "stats": [98, 112, 86, 112, 102], "sig": "真祖の牙", "dex_text": "吸血鬼の始祖。コウモリの群れに姿を変える。" },
+
+    { "dex": 89, "id": "bonekids", "name": "ボーンキッズ", "type": "冥", "stage": 1, "from": null, "to": "skelknight", "at": 22, "stats": [45, 55, 55, 50, 45], "sig": "ほねこんぼう", "dex_text": "錬成で動き出した小さな骸骨。" },
+    { "dex": 90, "id": "skelknight", "name": "スケルナイト", "type": "冥", "stage": 2, "from": "bonekids", "to": "lich", "at": 42, "stats": [70, 82, 80, 64, 60], "sig": "ボーンソード", "dex_text": "錆びた剣を振るう骸骨の騎士。" },
+    { "dex": 91, "id": "lich", "name": "リッチ", "type": "冥", "stage": 3, "from": "skelknight", "to": null, "at": null, "stats": [88, 78, 88, 74, 122], "sig": "死霊術", "dex_text": "不死を得た魔導師の成れの果て。死霊を操る。" },
+
+    { "dex": 92, "id": "shadowl", "name": "シャドウル", "type": "冥", "stage": 1, "from": null, "to": "wraith", "at": 20, "stats": [48, 50, 42, 68, 60], "sig": "かげぬい", "dex_text": "影に潜む幽鬼。実体を持たない。" },
+    { "dex": 93, "id": "wraith", "name": "レイス", "type": "冥", "stage": 2, "from": "shadowl", "to": "nightmare", "at": 40, "stats": [64, 66, 56, 88, 86], "sig": "うらみ", "dex_text": "怨念が凝った亡霊。冷気を帯びる。" },
+    { "dex": 94, "id": "nightmare", "name": "ナイトメア", "type": "冥", "stage": 3, "from": "wraith", "to": null, "at": null, "stats": [82, 84, 72, 108, 110], "sig": "悪夢侵食", "dex_text": "眠る者の夢を喰らう闇馬の幻獣。" },
+
+    { "dex": 95, "id": "ignaros", "name": "イグナロス", "type": "火", "role": "legendary", "stage": 1, "from": null, "to": null, "at": null, "stats": [100, 130, 95, 105, 120], "sig": "原初の業火", "dex_text": "世界に最初の火を灯した原初の幻獣。四大伝説の一柱。" },
+    { "dex": 96, "id": "abystia", "name": "アビスティア", "type": "水", "role": "legendary", "stage": 1, "from": null, "to": null, "at": null, "stats": [120, 100, 110, 90, 130], "sig": "原初の大海", "dex_text": "すべての水の源たる深海の原初獣。四大伝説の一柱。" },
+    { "dex": 97, "id": "tempestroc", "name": "テンペスト・ロック", "type": "風", "role": "legendary", "stage": 1, "from": null, "to": null, "at": null, "stats": [105, 115, 90, 135, 105], "sig": "原初の嵐", "dex_text": "天地を分けた最初の嵐を司る原初獣。四大伝説の一柱。" },
+    { "dex": 98, "id": "terrabehemoth", "name": "テラ・ベヒモス", "type": "地", "role": "legendary", "stage": 1, "from": null, "to": null, "at": null, "stats": [140, 120, 130, 60, 90], "sig": "原初の大地", "dex_text": "大陸そのものを形作った原初の巨獣。四大伝説の一柱。" },
+    { "dex": 99, "id": "sol", "name": "ソル", "type": "聖", "role": "legendary", "stage": 1, "from": null, "to": null, "at": null, "stats": [110, 110, 105, 115, 140], "sig": "太陽神光", "dex_text": "昼を司る太陽の幻獣。ルナと対をなす。" },
+    { "dex": 100, "id": "luna", "name": "ルナ", "type": "冥", "role": "legendary", "stage": 1, "from": null, "to": null, "at": null, "stats": [110, 105, 110, 115, 140], "sig": "月幻の蝕", "dex_text": "夜を司る月の幻獣。ソルと対をなす。" }
+  ],
+  "bosses": [
+    { "id": "magnus", "name": "灰王 マグヌス", "type": "錬成", "role": "boss", "stats": [130, 110, 110, 85, 125], "sig": "灰化の理", "dex_text": "ラスボス第1形態。オーダーを追放された天才錬獣師。賢者の石を不完全に再現し世界を灰化させる。図鑑番号なし。" },
+    { "id": "abysschimera", "name": "アビス・キメラ", "type": "冥", "type2": "聖", "role": "final_boss", "stats": [180, 140, 130, 100, 150], "sig": "深淵融合", "dex_text": "セレスティアル・キメラを核に暴走した賢者の石が生んだ禁忌の幻獣。最終形態。図鑑番号なし。" }
+  ]
+}
