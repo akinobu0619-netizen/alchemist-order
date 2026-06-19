@@ -248,6 +248,12 @@ button:disabled {
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
   border: 2px solid #ffffff33;
   flex-shrink: 0;
+  overflow: hidden;
+}
+.sprite-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 /* ── ホーム ── */

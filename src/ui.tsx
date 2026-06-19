@@ -1,5 +1,9 @@
+import { useState } from 'react'
 import type { Combatant, StatusKind } from './types'
 import { spriteOf } from './game/sprites'
+
+// 画像が無いidを記録し、再リクエストを避ける(セッション内)
+const missingSprites = new Set<string>()
 
 export const TYPE_COLORS: Record<string, string> = {
   火: '#e2563b', 水: '#3b82e2', 風: '#4cae8b', 地: '#b08a3e', 雷: '#e2c23b',
@@ -27,8 +31,13 @@ export function StatusBadge({ status }: { status: StatusKind | null }) {
   )
 }
 
-/** 絵文字スプライト。type-color の光輪の上に表示 */
+/**
+ * スプライト。public/sprites/<id>.png があれば画像、無ければ絵文字にフォールバック。
+ * 画像を1体ずつ追加していけるので、生成済みのものから順に反映される。
+ */
 export function Sprite({ id, type, size = 56 }: { id: string; type: string; size?: number }) {
+  const [failed, setFailed] = useState(missingSprites.has(id))
+  const src = `${import.meta.env.BASE_URL}sprites/${id}.png`
   return (
     <div
       className="sprite"
@@ -39,7 +48,20 @@ export function Sprite({ id, type, size = 56 }: { id: string; type: string; size
         fontSize: size * 0.6,
       }}
     >
-      {spriteOf(id, type)}
+      {failed ? (
+        spriteOf(id, type)
+      ) : (
+        <img
+          className="sprite-img"
+          src={src}
+          alt=""
+          loading="lazy"
+          onError={() => {
+            missingSprites.add(id)
+            setFailed(true)
+          }}
+        />
+      )}
     </div>
   )
 }
