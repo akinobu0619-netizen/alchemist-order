@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import type { BattleConfig, GameState } from '../types'
 import { ENCOUNTER_RATE, MAPS, TRAINERS, isWall } from '../game/maps'
 
@@ -8,6 +8,9 @@ interface Props {
   onStartBattle: (config: BattleConfig) => void
   onMenu: () => void
 }
+
+// マップ俯瞰絵が無いものを記録(再リクエスト回避)
+const missingMaps = new Set<string>()
 
 function tileClass(ch: string): string {
   if (ch === '#') return 'wall'
@@ -19,13 +22,30 @@ function tileClass(ch: string): string {
 export default function Field({ state, setState, onStartBattle, onMenu }: Props) {
   const map = MAPS[state.pos.mapId]
   const { x, y } = state.pos
+  const cols = map.grid[0].length
+  const rows = map.grid.length
+  const mapArtUrl = `${import.meta.env.BASE_URL}bg/map/${map.id}.png`
+  const [artOk, setArtOk] = useState(!missingMaps.has(map.id))
+
+  useEffect(() => {
+    if (missingMaps.has(map.id)) {
+      setArtOk(false)
+      return
+    }
+    const img = new Image()
+    img.onload = () => setArtOk(true)
+    img.onerror = () => {
+      missingMaps.add(map.id)
+      setArtOk(false)
+    }
+    img.src = mapArtUrl
+  }, [map.id, mapArtUrl])
 
   function move(dx: number, dy: number) {
     const nx = x + dx
     const ny = y + dy
     if (ny < 0 || ny >= map.grid.length || nx < 0 || nx >= map.grid[0].length) return
 
-    // 支部長に話しかける(隣接マスへ進もうとする)
     if (map.leader && map.leader.x === nx && map.leader.y === ny) {
       const trainer = TRAINERS[map.leader.trainerId]
       if (!state.defeatedTrainers.includes(trainer.id)) {
@@ -37,7 +57,6 @@ export default function Field({ state, setState, onStartBattle, onMenu }: Props)
     const ch = map.grid[ny][nx]
     if (isWall(ch)) return
 
-    // ワープ
     const warp = map.warps.find((w) => w.x === nx && w.y === ny)
     if (warp) {
       setState((s) => ({ ...s, pos: { mapId: warp.to, x: warp.tx, y: warp.ty } }))
@@ -46,7 +65,6 @@ export default function Field({ state, setState, onStartBattle, onMenu }: Props)
 
     setState((s) => ({ ...s, pos: { ...s.pos, x: nx, y: ny } }))
 
-    // 草むらでエンカウント
     if (ch === 'G' && map.encounter && Math.random() < ENCOUNTER_RATE) {
       onStartBattle({
         kind: 'wild',
@@ -58,7 +76,6 @@ export default function Field({ state, setState, onStartBattle, onMenu }: Props)
     }
   }
 
-  // キーボード操作
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const k = e.key
@@ -75,6 +92,10 @@ export default function Field({ state, setState, onStartBattle, onMenu }: Props)
   }, [state])
 
   const leaderDefeated = map.leader ? state.defeatedTrainers.includes(TRAINERS[map.leader.trainerId].id) : false
+  const pct = (tx: number, ty: number) => ({
+    left: `${((tx + 0.5) / cols) * 100}%`,
+    top: `${((ty + 0.5) / rows) * 100}%`,
+  })
 
   return (
     <div className="screen field">
@@ -84,42 +105,54 @@ export default function Field({ state, setState, onStartBattle, onMenu }: Props)
       </div>
       {map.intro && <p className="field-intro">{map.intro}</p>}
 
-      <div
-        className="map-grid"
-        style={{ gridTemplateColumns: `repeat(${map.grid[0].length}, 1fr)` }}
-      >
-        {map.grid.flatMap((row, ry) =>
-          row.split('').map((ch, rx) => {
-            const isPlayer = rx === x && ry === y
-            const isLeader = map.leader && map.leader.x === rx && map.leader.y === ry
-            const isWarp = map.warps.some((w) => w.x === rx && w.y === ry)
-            return (
-              <div key={`${rx}-${ry}`} className={`tile ${tileClass(ch)}`}>
-                {isWarp && !isPlayer && <span className="tile-icon">🚪</span>}
-                {isLeader && !isPlayer && (
-                  <span className="tile-icon">{leaderDefeated ? '🧙' : '🧙‍♀️'}</span>
-                )}
-                {isPlayer && <span className="tile-icon player-mark">🧝</span>}
-              </div>
-            )
-          }),
-        )}
-      </div>
+      {artOk ? (
+        // 俯瞰マップ一枚絵 + コマ
+        <div
+          className="map-art"
+          style={{ backgroundImage: `url(${mapArtUrl})`, aspectRatio: `${cols} / ${rows}` }}
+        >
+          {map.warps.map((w) => (
+            <span key={`w${w.x}-${w.y}`} className="map-token warp-token" style={pct(w.x, w.y)}>
+              🚪
+            </span>
+          ))}
+          {map.leader && (
+            <span className="map-token leader-token" style={pct(map.leader.x, map.leader.y)}>
+              {leaderDefeated ? '🧙' : '🧙‍♀️'}
+            </span>
+          )}
+          <span className="map-token player-token" style={pct(x, y)}>
+            🧝
+          </span>
+        </div>
+      ) : (
+        // フォールバック: タイル表示
+        <div className="map-grid" style={{ gridTemplateColumns: `repeat(${cols}, 1fr)` }}>
+          {map.grid.flatMap((row, ry) =>
+            row.split('').map((ch, rx) => {
+              const isPlayer = rx === x && ry === y
+              const isLeader = map.leader && map.leader.x === rx && map.leader.y === ry
+              const isWarp = map.warps.some((w) => w.x === rx && w.y === ry)
+              return (
+                <div key={`${rx}-${ry}`} className={`tile ${tileClass(ch)}`}>
+                  {isWarp && !isPlayer && <span className="tile-icon">🚪</span>}
+                  {isLeader && !isPlayer && (
+                    <span className="tile-icon">{leaderDefeated ? '🧙' : '🧙‍♀️'}</span>
+                  )}
+                  {isPlayer && <span className="tile-icon player-mark">🧝</span>}
+                </div>
+              )
+            }),
+          )}
+        </div>
+      )}
 
       <div className="field-controls">
         <div className="dpad">
-          <button className="dpad-btn up" onClick={() => move(0, -1)}>
-            ↑
-          </button>
-          <button className="dpad-btn left" onClick={() => move(-1, 0)}>
-            ←
-          </button>
-          <button className="dpad-btn right" onClick={() => move(1, 0)}>
-            →
-          </button>
-          <button className="dpad-btn down" onClick={() => move(0, 1)}>
-            ↓
-          </button>
+          <button className="dpad-btn up" onClick={() => move(0, -1)}>↑</button>
+          <button className="dpad-btn left" onClick={() => move(-1, 0)}>←</button>
+          <button className="dpad-btn right" onClick={() => move(1, 0)}>→</button>
+          <button className="dpad-btn down" onClick={() => move(0, 1)}>↓</button>
         </div>
         <button className="move-btn menu-btn" onClick={onMenu}>
           <span className="move-name">📋 メニュー</span>

@@ -64,6 +64,16 @@ Render each scene I describe in exactly this style.
 
 ---
 
+## フィールド俯瞰マップ絵（最優先で着手）
+各マップの**俯瞰（真上から見た）一枚絵**。中央が歩けるエリア、周囲が木や壁で囲まれた構図にすると、上に重ねるキャラのコマと噛み合う。文字・キャラ・グリッド線は入れない。`public/bg/map/<mapId>.png` に保存（透過不要）。
+
+> 背景マスター指示を貼った上で、以下を投げる。アスペクトは正方形でOK（はみ出しは自動でカバー表示）。
+
+- `bg/map/forest.png`（緑霧の森） — `Top-down (bird's-eye) view of a misty forest clearing as a game map. A large oval grassy clearing in the CENTER (open and walkable), densely surrounded by big trees along ALL edges. A small open glade at the TOP-CENTER, and a dirt path opening at the BOTTOM-CENTER. Soft fog, dappled light. No characters, no text, no grid.`
+- `bg/map/rapis.png`（始まりの村ラピス） — `Top-down (bird's-eye) view of a small Renaissance alchemist village square as a game map. An open cobblestone-and-grass square in the CENTER (walkable), a few stone houses with chimneys along the TOP edge, low stone walls/fences around the BORDER, and a road opening at the BOTTOM-CENTER. Warm daylight. No characters, no text, no grid.`
+
+→ 保存して教えてくれれば、`<mapId>.png` に整えて配置（PNG変換含む）し、本番反映する。コマ（🧝主人公・🧙‍♀️支部長・🚪出口）は私が絵の上に重ねる位置を調整する。
+
 ## 命名・配置 規約
 - バトル背景: `public/bg/battle/<地形キー>.jpg`（forest/plains/town/cave/sea/peak/graveyard/furnace）
 - マップ絵: `public/bg/map/<mapId>.png`（rapis / forest）
