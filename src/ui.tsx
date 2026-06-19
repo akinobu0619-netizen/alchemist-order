@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { Combatant, StatusKind } from './types'
-import { spriteOf } from './game/sprites'
+import { spriteFileNo, spriteOf } from './game/sprites'
 
 // 画像が無いidを記録し、再リクエストを避ける(セッション内)
 const missingSprites = new Set<string>()
@@ -37,7 +37,7 @@ export function StatusBadge({ status }: { status: StatusKind | null }) {
  */
 export function Sprite({ id, type, size = 56 }: { id: string; type: string; size?: number }) {
   const [failed, setFailed] = useState(missingSprites.has(id))
-  const src = `${import.meta.env.BASE_URL}sprites/${id}.png`
+  const src = `${import.meta.env.BASE_URL}sprites/${spriteFileNo(id)}.png`
   return (
     <div
       className="sprite"

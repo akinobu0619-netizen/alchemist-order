@@ -1,4 +1,19 @@
 // 各幻獣の絵文字スプライト。未定義はタイプ別の既定にフォールバック。
+import monstersJson from '../../data/monsters.json'
+
+// id → 画像ファイル番号(3桁ゼロ詰め)。画像は public/sprites/<番号>.png で配置する。
+const DEX_NO: Record<string, string> = {}
+;(monstersJson.dex as { id: string; dex: number }[]).forEach((d) => {
+  DEX_NO[d.id] = String(d.dex).padStart(3, '0')
+})
+DEX_NO['magnus'] = '101'
+DEX_NO['abysschimera'] = '102'
+
+/** スプライト画像のファイル名(拡張子なし)。例: 'ignif' → '001' */
+export function spriteFileNo(id: string): string {
+  return DEX_NO[id] ?? id
+}
+
 export const SPRITES: Record<string, string> = {
   // 火
   ignif: '🦎', flamand: '🦎', volcadon: '🐉',
