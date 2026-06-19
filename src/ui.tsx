@@ -32,12 +32,45 @@ export function StatusBadge({ status }: { status: StatusKind | null }) {
 }
 
 /**
- * スプライト。public/sprites/<id>.png があれば画像、無ければ絵文字にフォールバック。
- * 画像を1体ずつ追加していけるので、生成済みのものから順に反映される。
+ * スプライト。public/sprites/<番号>.png があれば画像、無ければ絵文字にフォールバック。
+ * bare=true で枠なし(バトルシーン用)、flip=true で左右反転(向かい合わせ用)。
  */
-export function Sprite({ id, type, size = 56 }: { id: string; type: string; size?: number }) {
+export function Sprite({
+  id,
+  type,
+  size = 56,
+  bare = false,
+  flip = false,
+}: {
+  id: string
+  type: string
+  size?: number
+  bare?: boolean
+  flip?: boolean
+}) {
   const [failed, setFailed] = useState(missingSprites.has(id))
   const src = `${import.meta.env.BASE_URL}sprites/${spriteFileNo(id)}.png`
+  const content = failed ? (
+    spriteOf(id, type)
+  ) : (
+    <img
+      className="sprite-img"
+      src={src}
+      alt=""
+      loading="lazy"
+      onError={() => {
+        missingSprites.add(id)
+        setFailed(true)
+      }}
+    />
+  )
+  if (bare) {
+    return (
+      <div className="sprite-bare" style={{ width: size, height: size, fontSize: size * 0.85, transform: flip ? 'scaleX(-1)' : undefined }}>
+        {content}
+      </div>
+    )
+  }
   return (
     <div
       className="sprite"
@@ -48,20 +81,7 @@ export function Sprite({ id, type, size = 56 }: { id: string; type: string; size
         fontSize: size * 0.6,
       }}
     >
-      {failed ? (
-        spriteOf(id, type)
-      ) : (
-        <img
-          className="sprite-img"
-          src={src}
-          alt=""
-          loading="lazy"
-          onError={() => {
-            missingSprites.add(id)
-            setFailed(true)
-          }}
-        />
-      )}
+      {content}
     </div>
   )
 }

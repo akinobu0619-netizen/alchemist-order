@@ -78,6 +78,7 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
   const [enemyIndex, setEnemyIndex] = useState(0)
   const [log, setLog] = useState<string[]>([])
   const [phase, setPhase] = useState<Phase>('fighting')
+  const [menu, setMenu] = useState<'root' | 'fight'>('root')
   const [acting, setActing] = useState(false)
   const [fx, setFx] = useState<Fx>({})
   const [popup, setPopup] = useState<Popup | null>(null)
@@ -302,6 +303,7 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
 
     busy.current = false
     setActing(false)
+    setMenu('root')
   }
 
   async function throwFlask() {
@@ -372,94 +374,99 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
       }
     : undefined
 
-  const card = (c: Combatant, side: Side) => (
+  const plate = (c: Combatant, who: Side) => (
+    <div className={`info-plate ${who === 'e' ? 'enemy-plate' : 'player-plate'}`}>
+      <div className="ip-head">
+        <span className="ip-name">{c.data.name}</span>
+        <span className="ip-lv">Lv.{c.level}</span>
+      </div>
+      <div className="ip-badges">
+        <TypeBadge t={c.data.type} />
+        {c.data.type2 && <TypeBadge t={c.data.type2} />}
+        <StatusBadge status={c.status} />
+      </div>
+      <HpBar c={c} />
+    </div>
+  )
+
+  const combatant = (c: Combatant, who: Side) => (
     <div
-      className={`card ${side === 'e' ? 'enemy' : 'player'} ${fx.hit === side ? 'fx-hit' : ''} ${
-        fx.atk === side ? `fx-atk-${side}` : ''
+      className={`combatant ${who === 'e' ? 'enemy-side' : 'player-side'} ${fx.hit === who ? 'fx-hit' : ''} ${
+        fx.atk === who ? `fx-atk-${who}` : ''
       } ${c.hp <= 0 ? 'fainted' : ''}`}
     >
-      {popup?.side === side && (
+      {popup?.side === who && (
         <span key={popup.key} className={`dmg-popup ${popup.cls}`}>
           {popup.text}
         </span>
       )}
-      <div className="card-head">
-        <span className="mon-name">{c.data.name}</span>
-        <span className="mon-lv">Lv.{c.level}</span>
-      </div>
-      <div className="row">
-        <Sprite id={c.data.id} type={c.data.type} size={64} />
-        <div className="grow">
-          <div className="badges">
-            <TypeBadge t={c.data.type} />
-            {c.data.type2 && <TypeBadge t={c.data.type2} />}
-            <StatusBadge status={c.status} />
-          </div>
-          <HpBar c={c} />
-        </div>
-      </div>
+      <Sprite id={c.data.id} type={c.data.type} size={who === 'e' ? 128 : 148} bare flip={who === 'e'} />
+      <div className="ground-shadow" />
     </div>
   )
 
   return (
-    <div className="screen">
-      {isTrainer && config.kind === 'trainer' && (
-        <div className="trainer-banner">
-          ⚔ {config.trainer.name} — 残り {remaining} 体
+    <div className="screen battle-screen">
+      <div className={`battle-scene ${fx.flash ? 'flash' : ''}`} style={fieldStyle}>
+        <div className="scene-intro" />
+        {isTrainer && config.kind === 'trainer' && (
+          <div className="trainer-tag">⚔ {config.trainer.name}・残り{remaining}体</div>
+        )}
+        {plate(enemy, 'e')}
+        {plate(player, 'p')}
+        {combatant(enemy, 'e')}
+        {combatant(player, 'p')}
+      </div>
+
+      <div className="battle-ui">
+        <div className="msg-box">
+          {log.slice(-3).map((l, i) => (
+            <div key={i} className="log-line">
+              {l}
+            </div>
+          ))}
+          <div ref={logEndRef} />
         </div>
-      )}
-      <div className={`battlefield bg-${player.data.type} ${fx.flash ? 'flash' : ''}`} style={fieldStyle}>
-        {card(enemy, 'e')}
-        <div className="vs">VS</div>
-        {card(player, 'p')}
-      </div>
 
-      <div className="log">
-        {log.map((l, i) => (
-          <div key={i} className="log-line">
-            {l}
-          </div>
-        ))}
-        <div ref={logEndRef} />
-      </div>
-
-      {phase === 'fighting' ? (
-        <>
-          <div className="moves moves-grid">
-            {playerMoves.map((mv) => (
-              <button key={mv.id} className="move-btn" disabled={acting} onClick={() => takeTurn(mv)} title={mv.desc}>
-                <span className="move-name">{mv.name}</span>
-                <span className="move-meta">
-                  <TypeBadge t={mv.type} />
-                  {mv.category === 'status'
-                    ? mv.heal
-                      ? '回復'
-                      : '状態'
-                    : `威力${mv.power}`}
-                  ・命中{Math.round(mv.acc * 100)}
-                </span>
+        <div className="cmd-box">
+          {phase !== 'fighting' ? (
+            <button className="cmd-btn wide" onClick={onExit}>
+              フィールドに もどる
+            </button>
+          ) : menu === 'root' ? (
+            <div className="cmd-grid">
+              <button className="cmd-btn" disabled={acting} onClick={() => setMenu('fight')}>
+                たたかう
               </button>
-            ))}
-          </div>
-          {config.kind === 'wild' && (
-            <div className="moves" style={{ marginTop: 10 }}>
-              <button className="move-btn" disabled={acting || state.flasks <= 0} onClick={throwFlask}>
-                <span className="move-name">封獣フラスコを投げる</span>
-                <span className="move-meta">残り{state.flasks}個・捕獲率およそ{Math.round(catchChance(enemy) * 100)}%</span>
-              </button>
-              <button className="move-btn ghost" disabled={acting} onClick={flee}>
-                にげる
+              {config.kind === 'wild' && (
+                <button className="cmd-btn" disabled={acting || state.flasks <= 0} onClick={throwFlask}>
+                  つかまえる<span className="cmd-sub">フラスコ{state.flasks}</span>
+                </button>
+              )}
+              {config.kind === 'wild' && (
+                <button className="cmd-btn" disabled={acting} onClick={flee}>
+                  にげる
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="cmd-grid moves">
+              {playerMoves.map((mv) => (
+                <button key={mv.id} className="cmd-btn move" disabled={acting} onClick={() => takeTurn(mv)} title={mv.desc}>
+                  <span className="m-name">{mv.name}</span>
+                  <span className="m-meta">
+                    <TypeBadge t={mv.type} />
+                    {mv.category === 'status' ? (mv.heal ? '回復' : '状態') : `威${mv.power}`}・中{Math.round(mv.acc * 100)}
+                  </span>
+                </button>
+              ))}
+              <button className="cmd-btn back" disabled={acting} onClick={() => setMenu('root')}>
+                ← もどる
               </button>
             </div>
           )}
-        </>
-      ) : (
-        <div className="result-actions">
-          <button className="move-btn" onClick={onExit}>
-            フィールドに もどる
-          </button>
         </div>
-      )}
+      </div>
     </div>
   )
 }

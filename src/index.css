@@ -664,3 +664,81 @@ button:disabled {
   color: var(--gold-bright);
   margin-bottom: 12px;
 }
+
+/* ── 新バトル画面 (FF/ポケモン型: 敵=左 / 自分=右) ── */
+.battle-scene {
+  position: relative;
+  height: clamp(260px, 46vw, 360px);
+  border-radius: 14px;
+  overflow: hidden;
+  border: 2px solid var(--border);
+  background: radial-gradient(120% 90% at 50% 0%, #2a2419, #15120d);
+  animation: sceneZoom 0.4s ease;
+}
+@keyframes sceneZoom { from { transform: scale(1.05); filter: brightness(1.6); } to { transform: none; filter: none; } }
+.scene-intro {
+  position: absolute; inset: 0; background: #fff; pointer-events: none; z-index: 7;
+  animation: sceneIntro 0.55s ease forwards;
+}
+@keyframes sceneIntro { 0% { opacity: 0.85; } 100% { opacity: 0; } }
+.battle-scene.flash::after {
+  content: ''; position: absolute; inset: 0; background: #fff; opacity: 0;
+  animation: flash 0.4s ease; pointer-events: none; z-index: 6;
+}
+.trainer-tag {
+  position: absolute; top: 8px; left: 50%; transform: translateX(-50%);
+  background: rgba(90,44,44,0.92); border: 1px solid #8a4a4a; border-radius: 999px;
+  padding: 3px 14px; font-size: 12px; font-weight: 700; color: var(--gold-bright); z-index: 5; white-space: nowrap;
+}
+
+.combatant { position: absolute; display: flex; flex-direction: column; align-items: center; z-index: 3; }
+.enemy-side { left: 5%; top: 24%; }
+.player-side { right: 5%; bottom: 14%; }
+.sprite-bare { display: flex; align-items: center; justify-content: center; line-height: 1; }
+.sprite-bare .sprite-img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 7px 6px rgba(0,0,0,0.55)); }
+.ground-shadow {
+  width: 64%; height: 14px; margin-top: -6px; border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(0,0,0,0.55), transparent 70%);
+}
+.combatant.fainted { opacity: 0.2; filter: grayscale(0.9); transform: translateY(12px); }
+.combatant.fx-hit { animation: shake 0.3s ease; }
+.combatant.fx-hit .sprite-bare { animation: hitflash 0.3s ease; }
+.combatant.fx-atk-e { animation: lunge-right 0.3s ease; }
+.combatant.fx-atk-p { animation: lunge-left 0.3s ease; }
+@keyframes lunge-right { 50% { transform: translateX(18px); } }
+@keyframes lunge-left { 50% { transform: translateX(-18px); } }
+
+.info-plate {
+  position: absolute; z-index: 4; width: 46%;
+  background: rgba(20,17,12,0.82); border: 1px solid var(--border);
+  border-radius: 10px; padding: 7px 10px; backdrop-filter: blur(2px);
+}
+.enemy-plate { top: 10px; left: 10px; }
+.player-plate { bottom: 10px; right: 10px; }
+.ip-head { display: flex; justify-content: space-between; align-items: baseline; }
+.ip-name { font-size: 14px; font-weight: 700; color: var(--gold-bright); }
+.ip-lv { font-size: 11px; color: var(--ink-dim); }
+.ip-badges { display: flex; gap: 4px; margin: 4px 0; }
+
+/* ── 下部 メッセージ＆コマンド ── */
+.battle-ui { margin-top: 10px; }
+.msg-box {
+  background: var(--panel-2); border: 2px solid var(--border); border-radius: 12px;
+  padding: 10px 14px; min-height: 70px; font-size: 14px; line-height: 1.6;
+}
+.cmd-box { margin-top: 10px; }
+.cmd-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.cmd-btn {
+  background: linear-gradient(180deg, var(--panel-2), var(--panel));
+  border: 2px solid var(--border); border-radius: 12px; padding: 13px;
+  color: var(--gold-bright); font-size: 16px; font-weight: 700; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  transition: border-color 0.12s, transform 0.1s;
+}
+.cmd-btn:hover:not(:disabled) { border-color: var(--gold); transform: translateY(-2px); }
+.cmd-btn.wide { grid-column: 1 / -1; }
+.cmd-btn.back { grid-column: 1 / -1; color: var(--ink-dim); font-size: 14px; }
+.cmd-sub { font-size: 11px; color: var(--ink-dim); font-weight: 400; }
+.cmd-btn.move { align-items: flex-start; gap: 5px; }
+.m-name { font-size: 15px; color: var(--gold-bright); }
+.m-meta { font-size: 11px; color: var(--ink-dim); font-weight: 400; display: flex; align-items: center; gap: 5px; }
