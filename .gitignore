@@ -3,3 +3,4 @@ dist
 dev.log
 *.local
 .DS_Store
+art_src/
