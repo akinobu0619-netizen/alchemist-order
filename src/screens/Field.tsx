@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { BattleConfig, GameState } from '../types'
 import { ENCOUNTER_RATE, MAPS, TRAINERS, isWall } from '../game/maps'
-import { PlayerToken } from '../ui'
+import { LeaderToken, PlayerToken } from '../ui'
 
 interface Props {
   state: GameState
@@ -122,7 +122,7 @@ export default function Field({ state, setState, onStartBattle, onMenu }: Props)
           ))}
           {map.leader && (
             <span className="map-token leader-token" style={pct(map.leader.x, map.leader.y)}>
-              {leaderDefeated ? '🧙' : '🧙‍♀️'}
+              <LeaderToken trainerId={map.leader.trainerId} defeated={leaderDefeated} size={50} />
             </span>
           )}
           <span className="map-token player-token" style={pct(x, y)}>
@@ -141,7 +141,9 @@ export default function Field({ state, setState, onStartBattle, onMenu }: Props)
                 <div key={`${rx}-${ry}`} className={`tile ${tileClass(ch)}`}>
                   {isWarp && !isPlayer && <span className="tile-icon">🚪</span>}
                   {isLeader && !isPlayer && (
-                    <span className="tile-icon">{leaderDefeated ? '🧙' : '🧙‍♀️'}</span>
+                    <span className="tile-icon">
+                      <LeaderToken trainerId={map.leader!.trainerId} defeated={leaderDefeated} size={32} />
+                    </span>
                   )}
                   {isPlayer && (
                     <span className="tile-icon player-mark">

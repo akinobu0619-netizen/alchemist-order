@@ -108,6 +108,27 @@ export function PlayerToken({ flip = false, size = 34 }: { flip?: boolean; size?
   )
 }
 
+// 支部長など敵トレーナーの歩きキャラ。public/ui/<trainerId>.png があれば画像、無ければ🧙‍♀️。
+const leaderImgState: Record<string, boolean> = {}
+export function LeaderToken({ trainerId, defeated, size = 46 }: { trainerId: string; defeated?: boolean; size?: number }) {
+  const [failed, setFailed] = useState(!!leaderImgState[trainerId])
+  if (failed) {
+    return <span>{defeated ? '🧙' : '🧙‍♀️'}</span>
+  }
+  return (
+    <img
+      className="leader-sprite"
+      src={`${import.meta.env.BASE_URL}ui/${trainerId}.png`}
+      alt=""
+      style={{ height: size, width: 'auto', opacity: defeated ? 0.5 : 1 }}
+      onError={() => {
+        leaderImgState[trainerId] = true
+        setFailed(true)
+      }}
+    />
+  )
+}
+
 export function HpBar({ c }: { c: Combatant }) {
   const ratio = c.hp / c.maxHp
   const hpColor = ratio > 0.5 ? '#43c463' : ratio > 0.2 ? '#e2c23b' : '#e2563b'
