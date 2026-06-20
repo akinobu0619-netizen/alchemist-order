@@ -44,7 +44,7 @@ Render each creature I describe in exactly this style.
 - `011.png` — **マリネル**（水・進化2）: a juvenile sea-serpent water beast — NOT humanoid, no human body, no person; a sleek eel-like aquatic dragon-fish with a small horned head, large flowing translucent fins, blue-green scales and a long finned tail, water splashing around. The mid-stage between a small water blob and a great sea-serpent dragon.
 - `012.png` — **レヴィアラン**（水・進化3）: a colossal sea-serpent dragon, sleek blue scales, oceanic fins, regal and ancient.
 - `013.png` — **ティアリィ**（水/聖・進化1）: a tiny water sprite, a single living dewdrop with delicate translucent wings.
-- `014.png` — **ナイアード**（水/聖・進化2）: a serene water maiden spirit, hair and gown of flowing water.
+- `014.png` — **ナイアード**（水/聖・進化2）: an ethereal water elemental spirit — its body formed entirely of living, flowing translucent water, only a faint suggested face, small and otherworldly, drifting with droplets and ripples. More elemental water-creature than a person; NOT a realistic human woman, no detailed human skin or face.
 - `015.png` — **ウンディーネ**（水/聖・進化3）: an elegant water elemental nymph, robes of cascading water, gently radiant.
 - `016.png` — **シェルク**（水・進化1）: a small timid creature peeking out from a sturdy spiral shell.
 - `017.png` — **コーラルガ**（水・進化2）: an armored crab-like creature plated with living coral.
