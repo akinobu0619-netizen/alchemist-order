@@ -74,6 +74,27 @@ Render each scene I describe in exactly this style.
 
 → 保存して教えてくれれば、`<mapId>.png` に整えて配置（PNG変換含む）し、本番反映する。コマ（🧝主人公・🧙‍♀️支部長・🚪出口）は私が絵の上に重ねる位置を調整する。
 
+## プレイヤーキャラ（2種・テイストを使い分け）
+主人公は「錬金術師の見習い」。用途で画風を分ける。
+
+### ① マップ移動用＝ドット絵 → `public/ui/player.png`
+背景は水彩、キャラはドット絵の **HD-2D**（Octopath Traveler）風の組み合わせ。透過PNG・正方形。
+```
+Top-down RPG character sprite, 16-bit SNES JRPG pixel art, a young alchemist apprentice
+with a satchel and a small glowing potion flask, facing the viewer (front/down view),
+full body, clean readable silhouette, limited retro palette, crisp pixels,
+transparent background, no text.
+```
+> 入れると🧝絵文字を置き換え、移動の向きで左右反転する（実装済み）。性別・髪色など見た目は自由に指定してOK。
+
+### ② ストーリー/会話用＝水彩 → `public/portraits/player.png`
+モンスターと同じ手描きインク＆水彩。会話・イベント用の立ち絵（実装は会話システム導入時）。
+```
+A young alchemist apprentice adventurer, waist-up portrait, hand-painted ink-and-watercolor
+style matching a fantasy bestiary, warm and characterful expression,
+transparent background, no text.
+```
+
 ## 命名・配置 規約
 - バトル背景: `public/bg/battle/<地形キー>.jpg`（forest/plains/town/cave/sea/peak/graveyard/furnace）
 - マップ絵: `public/bg/map/<mapId>.png`（rapis / forest）

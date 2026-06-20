@@ -86,6 +86,28 @@ export function Sprite({
   )
 }
 
+// プレイヤーの歩きキャラ(ドット絵)。public/ui/player.png があれば画像、無ければ🧝。
+const playerImgState = { missing: false }
+export function PlayerToken({ flip = false, size = 34 }: { flip?: boolean; size?: number }) {
+  const [failed, setFailed] = useState(playerImgState.missing)
+  const transform = flip ? 'scaleX(-1)' : undefined
+  if (failed) {
+    return <span style={{ transform, display: 'inline-block' }}>🧝</span>
+  }
+  return (
+    <img
+      className="player-sprite"
+      src={`${import.meta.env.BASE_URL}ui/player.png`}
+      alt=""
+      style={{ width: size, height: size, transform }}
+      onError={() => {
+        playerImgState.missing = true
+        setFailed(true)
+      }}
+    />
+  )
+}
+
 export function HpBar({ c }: { c: Combatant }) {
   const ratio = c.hp / c.maxHp
   const hpColor = ratio > 0.5 ? '#43c463' : ratio > 0.2 ? '#e2c23b' : '#e2563b'

@@ -772,3 +772,11 @@ button:disabled {
 }
 .map-token.leader-token { z-index: 3; }
 .map-token.warp-token { opacity: 0.9; }
+
+/* ── プレイヤーの歩きキャラ(ドット絵) ── */
+.player-sprite {
+  image-rendering: pixelated;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 2px rgba(0,0,0,0.6));
+  display: block;
+}

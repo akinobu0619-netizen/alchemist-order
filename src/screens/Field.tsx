@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { BattleConfig, GameState } from '../types'
 import { ENCOUNTER_RATE, MAPS, TRAINERS, isWall } from '../game/maps'
+import { PlayerToken } from '../ui'
 
 interface Props {
   state: GameState
@@ -26,6 +27,7 @@ export default function Field({ state, setState, onStartBattle, onMenu }: Props)
   const rows = map.grid.length
   const mapArtUrl = `${import.meta.env.BASE_URL}bg/map/${map.id}.png`
   const [artOk, setArtOk] = useState(!missingMaps.has(map.id))
+  const [flip, setFlip] = useState(false)
 
   useEffect(() => {
     if (missingMaps.has(map.id)) {
@@ -42,6 +44,8 @@ export default function Field({ state, setState, onStartBattle, onMenu }: Props)
   }, [map.id, mapArtUrl])
 
   function move(dx: number, dy: number) {
+    if (dx < 0) setFlip(true)
+    else if (dx > 0) setFlip(false)
     const nx = x + dx
     const ny = y + dy
     if (ny < 0 || ny >= map.grid.length || nx < 0 || nx >= map.grid[0].length) return
@@ -122,7 +126,7 @@ export default function Field({ state, setState, onStartBattle, onMenu }: Props)
             </span>
           )}
           <span className="map-token player-token" style={pct(x, y)}>
-            🧝
+            <PlayerToken flip={flip} size={38} />
           </span>
         </div>
       ) : (
@@ -139,7 +143,11 @@ export default function Field({ state, setState, onStartBattle, onMenu }: Props)
                   {isLeader && !isPlayer && (
                     <span className="tile-icon">{leaderDefeated ? '🧙' : '🧙‍♀️'}</span>
                   )}
-                  {isPlayer && <span className="tile-icon player-mark">🧝</span>}
+                  {isPlayer && (
+                    <span className="tile-icon player-mark">
+                      <PlayerToken flip={flip} size={28} />
+                    </span>
+                  )}
                 </div>
               )
             }),
