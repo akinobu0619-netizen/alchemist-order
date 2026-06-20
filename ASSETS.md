@@ -95,6 +95,43 @@ style matching a fantasy bestiary, warm and characterful expression,
 transparent background, no text.
 ```
 
+## 敵トレーナー（支部長・宿敵・ボス）
+プレイヤー同様、**フィールド用＝ドット絵／会話・バトル用＝水彩立ち絵**の2種。水彩立ち絵は前述の【キャラ用マスター指示】を貼ってから生成する。
+
+### 森の支部長 シルヴァ（gym_forest）
+設定：緑霧の森を統べる植物使いの錬獣師。地/毒系（スポアリン/マンドラゴ/アルラウネ）を操る。落ち着いた女性。
+- ドット絵（🧙‍♀️置き換え）→ `public/ui/gym_forest.png`
+  ```
+  Top-down RPG character sprite, 16-bit SNES JRPG pixel art, a calm forest alchemist-botanist
+  woman in moss-green hooded robes adorned with leaves, holding a small wooden staff,
+  facing the viewer (front/down view), full body, clean readable silhouette,
+  limited retro palette, crisp pixels, transparent background, no text.
+  ```
+- 水彩立ち絵（会話・バトル）→ `public/portraits/gym_forest.png`（※キャラ用マスターを先に貼る）
+  ```
+  Silva, the forest gym leader — a calm woman alchemist-botanist in her late 20s,
+  flowing moss-green and earth-toned robes adorned with leaves and vines,
+  holding a wooden staff topped with a budding flower, gentle confident expression,
+  waist-up portrait, transparent background, no text.
+  ```
+
+### ラスボス 灰王マグヌス（人型・magnus）
+※幻獣図鑑の `101` はバトル時の姿。会話用に人型の立ち絵を別途用意する場合：
+- 水彩立ち絵 → `public/portraits/magnus.png`（※キャラ用マスターを先に貼る）
+  ```
+  Magnus, the Ashen King — a gaunt fallen genius alchemist, tattered grey-and-black robes
+  wreathed in faint drifting ash and glowing corrupted alchemical sigils, intense haunted eyes,
+  imposing and tragic, waist-up portrait, transparent background, no text.
+  ```
+
+### 敵トレーナー汎用テンプレート（水彩立ち絵）
+`{ }` を差し替えて量産。先頭にキャラ用マスターを貼る。
+```
+{年代/性別} alchemist (錬獣師) themed around {属性/モチーフ},
+wearing {服装}, holding {持ち物}, {表情/雰囲気},
+waist-up portrait, transparent background, no text.
+```
+
 ## 命名・配置 規約
 - バトル背景: `public/bg/battle/<地形キー>.jpg`（forest/plains/town/cave/sea/peak/graveyard/furnace）
 - マップ絵: `public/bg/map/<mapId>.png`（rapis / forest）
