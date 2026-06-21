@@ -71,15 +71,36 @@ export function signatureMove(sp: MonsterData): Move {
   }
 }
 
-/** レベルに応じた技セット(最大4)。低Lvは2技、育つと状態異常・別タイプ技を覚える。 */
-export function getMoveset(sp: MonsterData, level: number): Move[] {
+/** タイプ固有の「たいあたり」級の初期技 */
+function starterTackle(type: string): Move {
+  return { id: `tk_${type}`, name: 'たいあたり', type, category: 'phys', power: 40, acc: 1, desc: '全身でぶつかる基本技。' }
+}
+
+interface LearnEntry {
+  lvl: number
+  move: Move
+}
+
+/** 種ごとの習得表(学習レベル順)。最大4枠で、覚えると古い技と入れ替わる。 */
+export function learnset(sp: MonsterData): LearnEntry[] {
   const t1 = sp.type
   const kit1 = TYPE_KIT[t1]
-  const moves: Move[] = [signatureMove(sp), kit1.basic]
-  if (level >= 8) moves.push(kit1.tech)
-  if (level >= 12) {
-    const t2 = sp.type2
-    moves.push(t2 && TYPE_KIT[t2] ? TYPE_KIT[t2].blast : kit1.blast)
-  }
-  return moves
+  const list: LearnEntry[] = [
+    { lvl: 1, move: starterTackle(t1) },
+    { lvl: 1, move: kit1.basic },
+    { lvl: 7, move: kit1.tech },
+    { lvl: 13, move: kit1.blast },
+    { lvl: 19, move: signatureMove(sp) },
+  ]
+  // 複合タイプは副属性のコワザを中盤で習得
+  if (sp.type2 && TYPE_KIT[sp.type2]) list.push({ lvl: 16, move: TYPE_KIT[sp.type2].blast })
+  return list.sort((a, b) => a.lvl - b.lvl)
+}
+
+/** 現在レベルで使える技(最大4・新しく覚えた順に4つ) */
+export function getMoveset(sp: MonsterData, level: number): Move[] {
+  const learned = learnset(sp)
+    .filter((e) => level >= e.lvl)
+    .map((e) => e.move)
+  return learned.slice(-4)
 }

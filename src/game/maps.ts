@@ -2,12 +2,14 @@
 // グリッド文字: '#'=壁/木, 'H'=建物, '.'=地面, 'G'=草むら(エンカウント)
 import type { TrainerData } from '../types'
 
-export type NpcKind = 'mentor' | 'mom' | 'inn' | 'sign'
+export type NpcKind = 'mentor' | 'mom' | 'inn' | 'sign' | 'villager'
 export interface Npc {
   x: number
   y: number
   kind: NpcKind
   name: string
+  emoji?: string // 画像が無い場合の表示(種別既定を上書き)
+  lines?: string[] // villager/sign 用の台詞
 }
 
 export interface GameMap {
@@ -45,6 +47,27 @@ export const MAPS: Record<string, GameMap> = {
       { x: 4, y: 2, to: 'mentor_house', tx: 3, ty: 3 },
       { x: 2, y: 2, to: 'home', tx: 3, ty: 3 },
       { x: 6, y: 2, to: 'inn', tx: 3, ty: 3 },
+    ],
+    npcs: [
+      {
+        x: 6,
+        y: 4,
+        kind: 'villager',
+        name: '老人モーリス',
+        emoji: '👴',
+        lines: [
+          'わしも昔は錬獣師でな……。だが近頃の"灰化"は、わしらの知る災いとは違う。',
+          '色を失い、心まで失って暴れ出す。あれは……誰かが、作り出しているものだ。',
+        ],
+      },
+      {
+        x: 2,
+        y: 5,
+        kind: 'villager',
+        name: '子供ティナ',
+        emoji: '🧒',
+        lines: ['ねえねえ、幻獣つれてるの！？ いいなあ！ あたしも錬獣師になるんだ！', '強くなったら、また見せてね。約束だよ！'],
+      },
     ],
     intro: '錬金工房が並ぶ静かな村。家の扉から中へ。村の出口の先に緑霧の森が広がる。',
   },

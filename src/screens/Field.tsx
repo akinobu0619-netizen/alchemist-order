@@ -163,7 +163,7 @@ export default function Field({ state, setState, onStartBattle, onMenu, onTalk, 
           ))}
           {map.npcs?.map((n) => (
             <span key={`n${n.x}-${n.y}`} className="map-token npc-token" style={pct(n.x, n.y)}>
-              <NpcToken kind={n.kind} size={46} />
+              <NpcToken kind={n.kind} emoji={n.emoji} size={46} />
             </span>
           ))}
           {map.leader && (
@@ -188,7 +188,7 @@ export default function Field({ state, setState, onStartBattle, onMenu, onTalk, 
                   {isWarp && !isPlayer && <span className="tile-warp" aria-hidden />}
                   {npc && !isPlayer && (
                     <span className="tile-icon">
-                      <NpcToken kind={npc.kind} size={28} />
+                      <NpcToken kind={npc.kind} emoji={npc.emoji} size={28} />
                     </span>
                   )}
                   {isLeader && !isPlayer && (

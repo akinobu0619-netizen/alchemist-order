@@ -90,8 +90,8 @@ export default function App() {
           speaker: '師ガレン',
           portrait: 'mentor',
           lines: [
-            'よく来たな。今日からおまえも 錬獣師としての一歩を踏み出すのだ。',
-            'この三つの核から、共に往く幻獣を ひとつ選びなさい。',
+            'よく来た。今日からおまえも、錬獣師としての一歩を踏み出すのだ。',
+            'この三つの核には、それぞれ異なる命が眠っている。――心で選びなさい。',
           ],
           after: () => setStarterOpen(true),
         })
@@ -99,7 +99,7 @@ export default function App() {
         setDialogue({
           speaker: '師ガレン',
           portrait: 'mentor',
-          lines: ['いい相棒を選んだな。', '各地のオーダー支部で 8つの記章を集めるのだ。北の森が最初の試練だぞ。'],
+          lines: ['各地のオーダー支部で、八つの記章を集めよ。それが一人前の証だ。', '……灰化が広がっている。急くな。だが、目を逸らすな。'],
         })
       }
     } else if (npc.kind === 'mom') {
@@ -107,21 +107,29 @@ export default function App() {
         setDialogue({
           speaker: 'おかあさん',
           portrait: 'mom',
-          lines: ['あら、いよいよ旅立ちね。', 'これを持っていきなさい。傷薬を3つ。無理だけはしないでね。'],
+          lines: [
+            'あら、起きたのね。……ふふ、いい顔。もう"その日"だって、わかってるみたい。',
+            'これを持っていって。傷薬を三つ。あなたの幻獣が傷ついたら、使ってあげるのよ。',
+            '無理だけはしないで。……強くなって帰ってきてくれれば、それでいいの。',
+          ],
           after: () => setGame((s) => withFlag({ ...s, items: { ...s.items, heal: s.items.heal + 3 } }, 'mom_gift')),
         })
       } else {
-        setDialogue({ speaker: 'おかあさん', portrait: 'mom', lines: ['体に気をつけてね。いつでも帰っておいで。'] })
+        setDialogue({ speaker: 'おかあさん', portrait: 'mom', lines: ['おかえり。少し背が伸びた……気がするわ。気のせいかしら。ふふ。'] })
       }
     } else if (npc.kind === 'inn') {
       setDialogue({
         speaker: '宿屋の主人',
         portrait: 'inn',
-        lines: ['ようこそ宿屋へ。ゆっくり休んでいきな。', '……すぅ……zzz……', '幻獣たちは すっかり元気になった！'],
+        lines: [
+          'よう、見ない顔だ……って、リーゼんとこの子か！ 旅立ちかい。',
+          'うちで休んでいきな。幻獣ってのは、人と同じだ。眠れば、ちゃんと元気になる。',
+          '……ほら、すっかり顔色が戻った。気をつけて行きな！',
+        ],
         after: () => setGame((s) => healParty(s)),
       })
     } else {
-      setDialogue({ speaker: npc.name, lines: ['……'] })
+      setDialogue({ speaker: npc.name, lines: npc.lines ?? ['……'] })
     }
   }
 
@@ -140,7 +148,11 @@ export default function App() {
     setDialogue({
       speaker: '師ガレン',
       portrait: 'mentor',
-      lines: ['その子が おまえの最初の相棒だ。大切に育てなさい。', '村の出口の先、緑霧の森へ。気をつけて行くのだぞ。'],
+      lines: [
+        '……いい目だ。その子が、おまえの最初の相棒。大切に育てなさい。',
+        '強さとは、勝つ数ではない。共に時を重ねた証だ。',
+        'さあ、行きなさい。村の出口の先、緑霧の森へ。',
+      ],
     })
   }
 
