@@ -33,15 +33,16 @@ JRPG title screen, around 70 BPM, instrumental
 
 **Title 例**: `Ashen King`
 
-**Style（貼る／勇壮な行進曲調・「決戦」系）**:
+**Style（貼る／頭に“決め”のある勇壮な行進曲・「決戦」系）**:
 ```
-Heroic militaristic orchestral boss-battle march, urgent and desperate yet triumphant,
-a bold brass main melody over a relentless galloping snare-and-timpani march rhythm,
-driving minor-key string ostinato, soaring French horns and trumpets, dramatic and grand,
-propulsive forward momentum, rising tension into a triumphant climax,
+Heroic militaristic orchestral boss-battle march. Opens with a sudden powerful orchestral
+hit — a dramatic brass-and-timpani stab with a cymbal crash — then drops hard into a
+relentless galloping snare-and-timpani march. Bold brass main melody, driving minor-key
+string ostinato, soaring French horns and trumpets, urgent and desperate yet triumphant,
+grand and propulsive, rising into a triumphant climax,
 classic 16-bit JRPG boss energy reimagined for full orchestra, around 150 BPM, instrumental
 ```
-**構成タグ（任意）**: `[March intro] [Brass main theme] [String ostinato build] [Triumphant climax] [Loop]`
+**構成タグ（任意）**: `[Dramatic opening hit] [Drop into march] [Brass main theme] [Build] [Triumphant climax] [Loop]`
 
 **ロック寄りにしたい場合は末尾に追記**: `, with distorted electric guitar doubling the brass melody and a driving rock drum kit`
 
@@ -64,12 +65,13 @@ JRPG hometown, around 90 BPM, instrumental
 
 **Title 例**: `Misty Verdant Wood` → `forest.mp3`
 ```
-Mysterious enchanted forest theme, misty and ethereal with a touch of melancholy,
-airy flute and oboe, harp glissandos, soft sustained strings and wordless choir pads,
-delicate bell and celesta accents, gentle ambient woodland atmosphere, subtle light percussion,
-exploratory and magical, slow and loopable, JRPG forest dungeon, around 80 BPM, instrumental
+Mysterious tense forest-dungeon theme, eerie and suspenseful with lurking danger,
+hushed airy flute and oboe over a low pulsing string drone and uneasy harp,
+wordless choir pads, occasional sharp pizzicato accents and distant low percussion,
+a creeping feeling that monsters could appear at any moment, exploratory but on edge,
+dark-fantasy woodland, loopable, around 95 BPM, instrumental
 ```
-構成（任意）: `[Ambient intro] [Flute theme] [Choir pad swell] [Quiet loop]`
+構成（任意）: `[Uneasy intro] [Flute theme over drone] [Tension swell] [Loop]`
 
 ## ⑤ 通常戦闘（爽快・ボスより軽い）
 
