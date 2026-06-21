@@ -10,6 +10,7 @@ import {
   withCaught,
   withSeen,
 } from './game/state'
+import * as audio from './game/audio'
 import { Sprite, TypeBadge } from './ui'
 import Home from './screens/Home'
 import Battle from './screens/Battle'
@@ -23,7 +24,6 @@ type Screen = 'field' | 'home' | 'battle' | 'dex'
 const STARTER_LEVEL = 8
 const STARTER_FLASKS = 8
 
-// タイトル背景(あれば bg/title.jpg、無ければテーマ色)
 const titleBg = {
   backgroundColor: '#15120d',
   backgroundImage: `linear-gradient(rgba(18,15,10,0.55), rgba(18,15,10,0.82)), url(${import.meta.env.BASE_URL}bg/title.jpg)`,
@@ -36,55 +36,71 @@ export default function App() {
   const [phase, setPhase] = useState<Phase>('title')
   const [screen, setScreen] = useState<Screen>('field')
   const [battleConfig, setBattleConfig] = useState<BattleConfig | null>(null)
+  const [muted, setMuted] = useState(audio.isMuted())
 
   useEffect(() => {
     saveGame(game)
   }, [game])
 
+  // 最初のユーザー操作でBGM再生を解禁
+  useEffect(() => {
+    const h = () => audio.unlock()
+    window.addEventListener('pointerdown', h, { once: true })
+    window.addEventListener('keydown', h, { once: true })
+    return () => {
+      window.removeEventListener('pointerdown', h)
+      window.removeEventListener('keydown', h)
+    }
+  }, [])
+
+  // 画面に応じてBGMを自動切替
+  useEffect(() => {
+    let key = 'title'
+    if (phase === 'game') {
+      if (screen === 'battle') key = battleConfig?.kind === 'trainer' ? 'boss' : 'battle'
+      else key = game.pos.mapId === 'rapis' ? 'town' : game.pos.mapId === 'forest' ? 'forest' : 'field'
+    }
+    audio.playBgm(key)
+  }, [phase, screen, battleConfig, game.pos.mapId])
+
   const hasSave = game.collection.length > 0
+  const active = game.collection.find((o) => o.uid === game.activeUid) ?? game.collection[0]
+  const startBattle = (config: BattleConfig) => {
+    setBattleConfig(config)
+    setScreen('battle')
+  }
 
-  // ── タイトル画面 ──
+  let content: JSX.Element
+
   if (phase === 'title') {
-    return (
-      <div className="app">
-        <div className="title-screen" style={titleBg}>
-          <div className="title-logo">
-            <h1>錬金幻獣録</h1>
-            <h2>アルケミスト・オーダー</h2>
-          </div>
-          <div className="title-buttons">
-            {hasSave && (
-              <button
-                className="title-btn primary"
-                onClick={() => {
-                  setScreen('field')
-                  setPhase('game')
-                }}
-              >
-                つづきから
-              </button>
-            )}
-            <button className={`title-btn ${hasSave ? '' : 'primary'}`} onClick={() => setPhase('opening')}>
-              {hasSave ? 'さいしょから' : 'はじめる'}
-            </button>
-          </div>
-          <p className="title-foot">全100体・9属性 / 育成RPG</p>
+    content = (
+      <div className="title-screen" style={titleBg}>
+        <div className="title-logo">
+          <h1>錬金幻獣録</h1>
+          <h2>アルケミスト・オーダー</h2>
         </div>
+        <div className="title-buttons">
+          {hasSave && (
+            <button
+              className="title-btn primary"
+              onClick={() => {
+                setScreen('field')
+                setPhase('game')
+              }}
+            >
+              つづきから
+            </button>
+          )}
+          <button className={`title-btn ${hasSave ? '' : 'primary'}`} onClick={() => setPhase('opening')}>
+            {hasSave ? 'さいしょから' : 'はじめる'}
+          </button>
+        </div>
+        <p className="title-foot">全100体・9属性 / 育成RPG</p>
       </div>
     )
-  }
-
-  // ── オープニング ──
-  if (phase === 'opening') {
-    return (
-      <div className="app">
-        <Opening onDone={() => setPhase('starter')} />
-      </div>
-    )
-  }
-
-  // ── 御三家選択 ──
-  if (phase === 'starter') {
+  } else if (phase === 'opening') {
+    content = <Opening onDone={() => setPhase('starter')} />
+  } else if (phase === 'starter') {
     const pick = (id: string) => {
       const owned = makeOwned(id, STARTER_LEVEL)
       setGame(() => {
@@ -100,8 +116,8 @@ export default function App() {
       setScreen('field')
       setPhase('game')
     }
-    return (
-      <div className="app">
+    content = (
+      <>
         <header>
           <h1>錬金幻獣録</h1>
           <h2>アルケミスト・オーダー</h2>
@@ -125,40 +141,46 @@ export default function App() {
             ← タイトルへ
           </button>
         </footer>
-      </div>
+      </>
     )
-  }
-
-  // ── ゲーム本編 ──
-  const active = game.collection.find((o) => o.uid === game.activeUid) ?? game.collection[0]
-  const startBattle = (config: BattleConfig) => {
-    setBattleConfig(config)
-    setScreen('battle')
+  } else if (screen === 'home') {
+    content = (
+      <Home
+        state={game}
+        setActive={(uid) => setGame((s) => ({ ...s, activeUid: uid }))}
+        onField={() => setScreen('field')}
+        onDex={() => setScreen('dex')}
+      />
+    )
+  } else if (screen === 'battle' && battleConfig) {
+    content = (
+      <Battle
+        active={active}
+        config={battleConfig}
+        state={game}
+        setState={setGame}
+        onExit={() => setScreen('field')}
+      />
+    )
+  } else if (screen === 'dex') {
+    content = <Dex state={game} onBack={() => setScreen('home')} />
+  } else {
+    content = (
+      <Field state={game} setState={setGame} onStartBattle={startBattle} onMenu={() => setScreen('home')} />
+    )
   }
 
   return (
     <div className="app">
-      {screen === 'field' && (
-        <Field state={game} setState={setGame} onStartBattle={startBattle} onMenu={() => setScreen('home')} />
-      )}
-      {screen === 'home' && (
-        <Home
-          state={game}
-          setActive={(uid) => setGame((s) => ({ ...s, activeUid: uid }))}
-          onField={() => setScreen('field')}
-          onDex={() => setScreen('dex')}
-        />
-      )}
-      {screen === 'battle' && battleConfig && (
-        <Battle
-          active={active}
-          config={battleConfig}
-          state={game}
-          setState={setGame}
-          onExit={() => setScreen('field')}
-        />
-      )}
-      {screen === 'dex' && <Dex state={game} onBack={() => setScreen('home')} />}
+      <button
+        className="mute-btn"
+        onClick={() => setMuted(audio.toggleMute())}
+        aria-label="BGMオン/オフ"
+        title="BGMオン/オフ"
+      >
+        {muted ? '🔇' : '🔊'}
+      </button>
+      {content}
     </div>
   )
 }

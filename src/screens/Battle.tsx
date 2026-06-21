@@ -19,6 +19,7 @@ import {
   withSeen,
 } from '../game/state'
 import { getMoveset } from '../game/moves'
+import * as audio from '../game/audio'
 import { HpBar, LeaderToken, Sprite, StatusBadge, TypeBadge } from '../ui'
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
@@ -148,11 +149,13 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
           : [...s.defeatedTrainers, config.trainer.id],
       }))
       pushLog(`${enemy.data.name}を たおした！`, ...expMsgs, `${config.trainer.name}に かった！`, `🎖 ${config.trainer.badge}を 手に入れた！`)
+      audio.playVictory()
       setPhase('won')
       return
     }
     setState((s) => ({ ...s, wins: s.wins + 1, flasks: s.flasks + 1 }))
     pushLog(`野生の ${enemy.data.name} を たおした！`, ...expMsgs, '🔮 封獣フラスコを 1個 拾った！')
+    audio.playVictory()
     setPhase('won')
   }
 
