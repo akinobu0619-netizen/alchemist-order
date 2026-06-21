@@ -83,8 +83,18 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
   const [enemyIndex, setEnemyIndex] = useState(0)
   const [log, setLog] = useState<string[]>([])
   const [phase, setPhase] = useState<Phase>('fighting')
-  const [menu, setMenu] = useState<'root' | 'fight'>('root')
+  const [menu, setMenu] = useState<'root' | 'fight' | 'switch'>('root')
+  const [curUid, setCurUid] = useState(active.uid)
+  const [mustSwitch, setMustSwitch] = useState(false)
   const [acting, setActing] = useState(false)
+
+  // 手持ちの生存メンバー(現在出ている個体を除く)
+  const mk = (o: OwnedMonster): Combatant => {
+    const c = makeCombatant(species(o.speciesId), o.level)
+    if (typeof o.hp === 'number' && o.hp > 0) c.hp = Math.min(c.maxHp, o.hp)
+    return c
+  }
+  const switchTargets = state.collection.filter((o) => o.uid !== curUid && (o.hp == null || o.hp > 0))
   const [fx, setFx] = useState<Fx>({})
   const [popup, setPopup] = useState<Popup | null>(null)
   const busy = useRef(false)
@@ -184,10 +194,94 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
     return best ?? ms[0]
   }
 
+  // プレイヤーの個体が倒れた時: 生存仲間がいれば交代を促し、いなければ敗北
+  function handlePlayerDown(msg: string) {
+    pushLog(msg)
+    if (switchTargets.length > 0) {
+      pushLog('次の幻獣を 選ぼう！')
+      setMustSwitch(true)
+      setMenu('switch')
+    } else {
+      pushLog('💀 手持ちが 全滅した……アジトに もどされた。')
+      setPhase('lost')
+    }
+  }
+
+  // 敵の1ターン(交代/どうぐ/捕獲失敗後に共通使用)。倒れたら handlePlayerDown
+  async function enemyTurn(p: Combatant) {
+    const e = { ...enemy }
+    const pre = preMoveCheck(e)
+    if (pre.status !== e.status || pre.statusTurns !== e.statusTurns) {
+      setEnemy((prev) => ({ ...prev, status: pre.status, statusTurns: pre.statusTurns }))
+    }
+    if (pre.msg) pushLog(pre.msg)
+    if (!pre.act) return
+    const eMove = chooseEnemyMove(p, e)
+    setFx({ atk: 'e' })
+    await sleep(160)
+    pushLog(`${isTrainer ? '' : '野生の '}${e.data.name}の ${eMove.name}！`)
+    if (Math.random() > eMove.acc) {
+      pushLog('しかし 当たらなかった！')
+      setFx({})
+      await sleep(250)
+      return
+    }
+    if (eMove.category === 'status') {
+      if (eMove.heal) {
+        setEnemy((prev) => ({ ...prev, hp: Math.min(prev.maxHp, prev.hp + Math.floor(prev.maxHp * (eMove.heal ?? 0))) }))
+        pushLog(`${e.data.name}は HPを 回復した！`)
+      } else if (eMove.inflict && !p.status) {
+        const st = eMove.inflict.status
+        setPlayer((prev) => ({ ...prev, status: st, statusTurns: st === 'ねむり' ? randInt(2, 3) : 0 }))
+        pushLog(st === '灰化' ? `${p.data.name}は 灰化しはじめた……` : `${p.data.name}は ${st}状態になった！`)
+      }
+      setFx({})
+      await sleep(300)
+      return
+    }
+    const r = calcDamage(e, p, eMove)
+    const pHp = Math.max(0, p.hp - r.damage)
+    setPlayer((prev) => ({ ...prev, hp: pHp }))
+    setFx({ hit: 'p', flash: r.eff >= 2 })
+    showPopup('p', `-${r.damage}`, r.eff >= 2 ? 'crit' : 'dmg')
+    const msg = effMessage(r.eff)
+    if (msg) pushLog(msg)
+    await sleep(440)
+    setFx({})
+    if (pHp <= 0) handlePlayerDown(`${p.data.name}は たおれてしまった……`)
+  }
+
+  // 手持ちを交代。forced(気絶後)は敵ターンなし、任意交代は敵が1手行動
+  async function doSwitch(uid: string) {
+    if (busy.current) return
+    const target = state.collection.find((o) => o.uid === uid)
+    if (!target) return
+    const forced = mustSwitch
+    busy.current = true
+    setActing(true)
+    const outUid = curUid
+    const outHp = player.hp
+    setState((s) => ({ ...s, collection: s.collection.map((o) => (o.uid === outUid ? { ...o, hp: outHp } : o)) }))
+    ownedRef.current = { ...target }
+    setCurUid(uid)
+    const newC = mk(target)
+    setPlayer(newC)
+    pushLog(`ゆけ、${newC.data.name}！`)
+    setMustSwitch(false)
+    setMenu('root')
+    if (!forced) {
+      await sleep(300)
+      await enemyTurn(newC)
+    }
+    busy.current = false
+    setActing(false)
+  }
+
   async function takeTurn(pMove: Move) {
     if (busy.current || phase !== 'fighting') return
     busy.current = true
     setActing(true)
+    setMenu('root')
 
     const p: Combatant = { ...player }
     const e: Combatant = { ...enemy }
@@ -304,13 +398,11 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
       onEnemyDown()
     } else if (outcome === 'playerDown') {
       await sleep(350)
-      pushLog(`${player.data.name}は たおれてしまった……`, '💀 アジトに もどされた。')
-      setPhase('lost')
+      handlePlayerDown(`${p.data.name}は たおれてしまった……`)
     }
 
     busy.current = false
     setActing(false)
-    setMenu('root')
   }
 
   async function throwFlask() {
@@ -338,27 +430,7 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
     } else {
       pushLog('ああっ！ 幻獣が フラスコから 出てしまった！')
       await sleep(400)
-      const e = { ...enemy }
-      const p = { ...player }
-      const eMove = chooseEnemyMove(p, e)
-      setFx({ atk: 'e' })
-      await sleep(160)
-      pushLog(`野生の ${e.data.name}の ${eMove.name}！`)
-      if (eMove.category !== 'status' && Math.random() <= eMove.acc) {
-        const r = calcDamage(e, p, eMove)
-        const pHp = Math.max(0, p.hp - r.damage)
-        setPlayer((prev) => ({ ...prev, hp: pHp }))
-        setFx({ hit: 'p', flash: r.eff >= 2 })
-        showPopup('p', `-${r.damage}`, r.eff >= 2 ? 'crit' : 'dmg')
-        const msg = effMessage(r.eff)
-        if (msg) pushLog(msg)
-        await sleep(440)
-        if (pHp <= 0) {
-          pushLog(`${player.data.name}は たおれてしまった……`)
-          setPhase('lost')
-        }
-      }
-      setFx({})
+      await enemyTurn({ ...player })
     }
     busy.current = false
     setActing(false)
@@ -386,39 +458,20 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
     showPopup('p', `+${nh - before}`, 'heal')
     pushLog(`傷薬を つかった！ ${player.data.name}の HPが 回復した。`)
     await sleep(700)
-    const e = { ...enemy }
-    const p2 = { ...player, hp: nh }
-    const eMove = chooseEnemyMove(p2, e)
-    setFx({ atk: 'e' })
-    await sleep(160)
-    pushLog(`${isTrainer ? '' : '野生の '}${e.data.name}の ${eMove.name}！`)
-    if (eMove.category !== 'status' && Math.random() <= eMove.acc) {
-      const r = calcDamage(e, p2, eMove)
-      const pHp = Math.max(0, nh - r.damage)
-      setPlayer((p) => ({ ...p, hp: pHp }))
-      setFx({ hit: 'p', flash: r.eff >= 2 })
-      showPopup('p', `-${r.damage}`, r.eff >= 2 ? 'crit' : 'dmg')
-      const msg = effMessage(r.eff)
-      if (msg) pushLog(msg)
-      await sleep(440)
-      if (pHp <= 0) {
-        pushLog(`${player.data.name}は たおれてしまった……`)
-        setPhase('lost')
-      }
-    }
-    setFx({})
+    await enemyTurn({ ...player, hp: nh })
     busy.current = false
     setActing(false)
-    setMenu('root')
   }
 
   // バトル終了時に現在HPを手持ちへ保存(敗北は満タンに回復して戻す)
   function exitBattle() {
     setState((s) => ({
       ...s,
-      collection: s.collection.map((o) =>
-        o.uid === active.uid ? { ...o, hp: phase === 'lost' ? undefined : player.hp } : o,
-      ),
+      collection: s.collection.map((o) => {
+        if (phase === 'lost') return { ...o, hp: undefined } // 全滅→全回復して村へ
+        if (o.uid === curUid) return { ...o, hp: player.hp }
+        return o
+      }),
     }))
     onExit()
   }
@@ -502,6 +555,29 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
             <button className="cmd-btn wide" onClick={exitBattle}>
               フィールドに もどる
             </button>
+          ) : menu === 'switch' ? (
+            <div className="cmd-grid">
+              {mustSwitch && <div className="cmd-sub" style={{ gridColumn: '1 / -1' }}>つぎに たたかう幻獣を 選んで！</div>}
+              {switchTargets.map((o) => {
+                const sp = species(o.speciesId)
+                const maxhp = makeCombatant(sp, o.level).maxHp
+                const hp = o.hp == null ? maxhp : o.hp
+                return (
+                  <button key={o.uid} className="cmd-btn move" disabled={acting} onClick={() => doSwitch(o.uid)}>
+                    <span className="m-name">{sp.name}</span>
+                    <span className="m-meta">
+                      <TypeBadge t={sp.type} />Lv.{o.level}・HP {hp}/{maxhp}
+                    </span>
+                  </button>
+                )
+              })}
+              {switchTargets.length === 0 && <div className="cmd-sub" style={{ gridColumn: '1 / -1' }}>交代できる仲間がいない</div>}
+              {!mustSwitch && (
+                <button className="cmd-btn back" disabled={acting} onClick={() => setMenu('root')}>
+                  ← もどる
+                </button>
+              )}
+            </div>
           ) : menu === 'root' ? (
             <div className="cmd-grid">
               <button className="cmd-btn" disabled={acting} onClick={() => setMenu('fight')}>
@@ -509,6 +585,9 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
               </button>
               <button className="cmd-btn" disabled={acting || state.items.heal <= 0} onClick={useItem}>
                 どうぐ<span className="cmd-sub">傷薬{state.items.heal}</span>
+              </button>
+              <button className="cmd-btn" disabled={acting || switchTargets.length === 0} onClick={() => setMenu('switch')}>
+                いれかえ<span className="cmd-sub">仲間{switchTargets.length}</span>
               </button>
               {config.kind === 'wild' && (
                 <button className="cmd-btn" disabled={acting || state.flasks <= 0} onClick={throwFlask}>
