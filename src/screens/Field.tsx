@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { BattleConfig, GameState } from '../types'
 import { ENCOUNTER_RATE, MAPS, TRAINERS, isWall } from '../game/maps'
 import type { Npc } from '../game/maps'
@@ -31,6 +31,12 @@ export default function Field({ state, setState, onStartBattle, onMenu, onTalk, 
   const [artOk, setArtOk] = useState(!missingMaps.has(map.id))
   const [flip, setFlip] = useState(false)
   const hasStarter = state.collection.length > 0
+  const posRef = useRef(state.pos)
+  const holdRef = useRef<number | undefined>(undefined)
+
+  useEffect(() => {
+    posRef.current = state.pos
+  }, [state.pos])
 
   useEffect(() => {
     if (missingMaps.has(map.id)) {
@@ -46,55 +52,80 @@ export default function Field({ state, setState, onStartBattle, onMenu, onTalk, 
     img.src = mapArtUrl
   }, [map.id, mapArtUrl])
 
+  function stopHold() {
+    if (holdRef.current !== undefined) {
+      window.clearInterval(holdRef.current)
+      holdRef.current = undefined
+    }
+  }
+
   function move(dx: number, dy: number) {
     if (dx < 0) setFlip(true)
     else if (dx > 0) setFlip(false)
-    const nx = x + dx
-    const ny = y + dy
-    if (ny < 0 || ny >= rows || nx < 0 || nx >= cols) return
+    const cur = posRef.current
+    const m = MAPS[cur.mapId]
+    const nx = cur.x + dx
+    const ny = cur.y + dy
+    if (ny < 0 || ny >= m.grid.length || nx < 0 || nx >= m.grid[0].length) return
 
-    // 支部長に話しかける
-    if (map.leader && map.leader.x === nx && map.leader.y === ny) {
-      const trainer = TRAINERS[map.leader.trainerId]
+    if (m.leader && m.leader.x === nx && m.leader.y === ny) {
+      stopHold()
+      const trainer = TRAINERS[m.leader.trainerId]
       if (!state.defeatedTrainers.includes(trainer.id)) {
-        onStartBattle({ kind: 'trainer', trainer, biome: map.biome })
+        onStartBattle({ kind: 'trainer', trainer, biome: m.biome })
       }
       return
     }
 
-    // NPCに話しかける(進入不可)
-    const npc = map.npcs?.find((n) => n.x === nx && n.y === ny)
+    const npc = m.npcs?.find((n) => n.x === nx && n.y === ny)
     if (npc) {
+      stopHold()
       onTalk(npc)
       return
     }
 
-    const ch = map.grid[ny][nx]
+    const ch = m.grid[ny][nx]
     if (isWall(ch)) return
 
-    // ワープ(幻獣未所持なら村から出られない)
-    const warp = map.warps.find((w) => w.x === nx && w.y === ny)
+    const warp = m.warps.find((w) => w.x === nx && w.y === ny)
     if (warp) {
+      stopHold()
       if (warp.gate === 'starter' && !hasStarter) {
         onBlockedExit()
         return
       }
-      setState((s) => ({ ...s, pos: { mapId: warp.to, x: warp.tx, y: warp.ty } }))
+      const np = { mapId: warp.to, x: warp.tx, y: warp.ty }
+      posRef.current = np
+      setState((s) => ({ ...s, pos: np }))
       return
     }
 
-    setState((s) => ({ ...s, pos: { ...s.pos, x: nx, y: ny } }))
+    const np = { ...cur, x: nx, y: ny }
+    posRef.current = np
+    setState((s) => ({ ...s, pos: np }))
 
-    if (ch === 'G' && map.encounter && Math.random() < ENCOUNTER_RATE) {
-      onStartBattle({
-        kind: 'wild',
-        pool: map.encounter.pool,
-        min: map.encounter.min,
-        max: map.encounter.max,
-        biome: map.biome,
-      })
+    if (ch === 'G' && m.encounter && Math.random() < ENCOUNTER_RATE) {
+      stopHold()
+      onStartBattle({ kind: 'wild', pool: m.encounter.pool, min: m.encounter.min, max: m.encounter.max, biome: m.biome })
     }
   }
+
+  function startHold(dx: number, dy: number) {
+    stopHold()
+    move(dx, dy)
+    holdRef.current = window.setInterval(() => move(dx, dy), 150)
+  }
+
+  useEffect(() => {
+    const up = () => stopHold()
+    window.addEventListener('pointerup', up)
+    window.addEventListener('pointercancel', up)
+    return () => {
+      stopHold()
+      window.removeEventListener('pointerup', up)
+      window.removeEventListener('pointercancel', up)
+    }
+  }, [])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -179,10 +210,10 @@ export default function Field({ state, setState, onStartBattle, onMenu, onTalk, 
 
       <div className="field-controls">
         <div className="dpad">
-          <button className="dpad-btn up" onClick={() => move(0, -1)}>↑</button>
-          <button className="dpad-btn left" onClick={() => move(-1, 0)}>←</button>
-          <button className="dpad-btn right" onClick={() => move(1, 0)}>→</button>
-          <button className="dpad-btn down" onClick={() => move(0, 1)}>↓</button>
+          <button className="dpad-btn up" onPointerDown={(e) => { e.preventDefault(); startHold(0, -1) }} onPointerUp={stopHold} onPointerLeave={stopHold}>↑</button>
+          <button className="dpad-btn left" onPointerDown={(e) => { e.preventDefault(); startHold(-1, 0) }} onPointerUp={stopHold} onPointerLeave={stopHold}>←</button>
+          <button className="dpad-btn right" onPointerDown={(e) => { e.preventDefault(); startHold(1, 0) }} onPointerUp={stopHold} onPointerLeave={stopHold}>→</button>
+          <button className="dpad-btn down" onPointerDown={(e) => { e.preventDefault(); startHold(0, 1) }} onPointerUp={stopHold} onPointerLeave={stopHold}>↓</button>
         </div>
         <button className="move-btn menu-btn" onClick={onMenu}>
           <span className="move-name">📋 メニュー</span>

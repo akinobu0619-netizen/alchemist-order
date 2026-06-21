@@ -896,3 +896,6 @@ button:disabled {
   border-radius: 50%;
   background: radial-gradient(circle, rgba(240,217,154,0.7), rgba(240,217,154,0) 70%);
 }
+
+/* ── 移動を滑らかに(マス間を補間) ── */
+.map-token.player-token { transition: left 0.14s linear, top 0.14s linear; }

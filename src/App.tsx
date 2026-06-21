@@ -67,7 +67,7 @@ export default function App() {
   useEffect(() => {
     let key = 'title'
     if (phase === 'game') {
-      const townMaps = ['rapis', 'mentor_house', 'home', 'inn']
+      const townMaps = ['rapis', 'mentor_house', 'home', 'home2f', 'inn']
       if (screen === 'battle') key = battleConfig?.kind === 'trainer' ? 'boss' : 'battle'
       else key = townMaps.includes(game.pos.mapId) ? 'town' : game.pos.mapId === 'forest' ? 'forest' : 'field'
     }

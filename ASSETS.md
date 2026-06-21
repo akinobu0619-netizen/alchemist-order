@@ -78,6 +78,7 @@ Render each scene I describe in exactly this style.
 `public/bg/map/<id>.png` に置くと床タイル表示から一枚絵に差替わる。背景マスター指示を先に貼る。中央=歩ける床／上=NPC位置／下中央=出入口。正方形でOK。
 - `bg/map/mentor_house.png`（師ガレンの家）— `Top-down view of a cozy alchemist's study interior, open wooden floor center, shelves of bubbling flasks/books/alembics along walls, a small cauldron, a desk near the top, a doorway with a rug at bottom-center, warm candlelight, watercolor, no characters/text/grid.`
 - `bg/map/home.png`（わが家）— `Top-down view of a warm humble cottage home interior, open wooden floor center, stone fireplace with a cooking pot, dining table and chairs, a small bed in a corner, cupboards along walls, doormat at bottom-center, cozy daylight, watercolor, no characters/text/grid.`
+- `bg/map/home2f.png`（わが家・2階＝主人公の自室）— `Top-down view of a cozy small bedroom (a young adventurer's attic room) interior, open wooden floor center, a bed with a quilt in a corner (top-left), a small desk and chair, a window with morning light, a rug, a staircase opening at the right side, watercolor, no characters/text/grid.`
 - `bg/map/inn.png`（ラピスの宿屋）— `Top-down view of a snug medieval inn interior, open wooden floor center, several quilted beds along the sides, a warm fireplace, a reception counter near the top, barrels and a rug, doorway at bottom-center, inviting warm light, watercolor, no characters/text/grid.`
 
 ## プレイヤーキャラ（2種・テイストを使い分け）

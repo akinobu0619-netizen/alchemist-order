@@ -26,7 +26,7 @@ export function newGame(): GameState {
     activeUid: null,
     flasks: 0,
     wins: 0,
-    pos: { mapId: 'rapis', x: 4, y: 4 },
+    pos: { mapId: 'home2f', x: 2, y: 1 }, // 自室のベッドで目覚める
     badges: [],
     defeatedTrainers: [],
     items: { heal: 0 },

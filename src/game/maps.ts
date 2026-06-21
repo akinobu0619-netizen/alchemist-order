@@ -64,9 +64,23 @@ export const MAPS: Record<string, GameMap> = {
     biome: 'town',
     indoor: true,
     grid: ['#######', '#.....#', '#.....#', '#.....#', '#.....#', '#######'],
-    warps: [{ x: 3, y: 4, to: 'rapis', tx: 2, ty: 3 }],
+    // (3,4)=外への扉、(5,1)=2階への階段
+    warps: [
+      { x: 3, y: 4, to: 'rapis', tx: 2, ty: 3 },
+      { x: 5, y: 1, to: 'home2f', tx: 4, ty: 4 },
+    ],
     npcs: [{ x: 3, y: 1, kind: 'mom', name: 'おかあさん' }],
-    intro: 'あたたかな わが家。',
+    intro: 'あたたかな わが家。階段を上ると自分の部屋がある。',
+  },
+  home2f: {
+    id: 'home2f',
+    name: 'わが家・2階',
+    biome: 'town',
+    indoor: true,
+    grid: ['#######', '#.....#', '#.....#', '#.....#', '#.....#', '#######'],
+    // (4,4)=1階への階段
+    warps: [{ x: 4, y: 4, to: 'home', tx: 5, ty: 2 }],
+    intro: '自分の部屋。窓から朝の光が差し込んでいる。',
   },
   inn: {
     id: 'inn',
