@@ -86,6 +86,19 @@ around 145 BPM, instrumental
 
 > 町・森はマップごとに別BGMを割り当てられるよう実装する（`town.mp3`/`forest.mp3`…）。今後の町・ダンジョンも同じ要領で増設。
 
+## ⑥ 勝利ファンファーレ（短尺・FFの“勝った！”系）
+
+**Title 例**: `Victory!` → `victory.mp3`
+```
+Triumphant orchestral victory fanfare, short and celebratory jingle, bright major key,
+bold brass fanfare with a catchy ascending rhythmic motif, rolling timpani and snare
+flourish, soaring trumpets and horns, jubilant and uplifting, joyous battle-won jingle,
+classic 16-bit JRPG fanfare reimagined for full orchestra, quick and snappy, instrumental
+```
+構成（任意）: `[Fanfare hit] [Rhythmic brass motif] [Triumphant flourish] [End]`
+
+> ⚠️ Sunoは長めに生成するので、**最初の華やかな数秒（〜8〜12秒）だけ切り出して**使うのがコツ（戦闘勝利時に一度だけ鳴らす想定）。`victory.mp3` は短尺・非ループでこちらが再生実装します。
+
 ## 命名・配置（決めておく）
 生成したMP3を `public/audio/<キー>.mp3` に置けば、こちらで画面ごとにループBGM＋ミュート切替を実装します。
 
