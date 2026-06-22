@@ -141,7 +141,7 @@ export default function App() {
     } else if (npc.kind === 'shop') {
       setShopOpen(true)
     } else {
-      setDialogue({ speaker: npc.name, lines: npc.lines ?? ['……'] })
+      setDialogue({ speaker: npc.name, portrait: npc.portrait, lines: npc.lines ?? ['……'] })
     }
   }
 

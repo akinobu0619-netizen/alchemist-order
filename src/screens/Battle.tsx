@@ -20,7 +20,7 @@ import {
 } from '../game/state'
 import { getMoveset } from '../game/moves'
 import * as audio from '../game/audio'
-import { HpBar, LeaderToken, Sprite, StatusBadge, TypeBadge } from '../ui'
+import { BattlePortrait, HpBar, Sprite, StatusBadge, TypeBadge } from '../ui'
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n))
@@ -561,7 +561,7 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
           <>
             <div className="trainer-tag">⚔ {config.trainer.name}・残り{remaining}体</div>
             <div className="trainer-portrait">
-              <LeaderToken trainerId={config.trainer.id} size={96} />
+              <BattlePortrait trainerId={config.trainer.id} size={132} />
             </div>
           </>
         )}

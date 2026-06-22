@@ -254,7 +254,7 @@ export default function Field({ state, setState, onStartBattle, onMenu, onTalk, 
             ))}
             {map.npcs?.map((n) => (
               <span key={`n${n.x}-${n.y}`} className="world-token person-token" style={{ left: n.x * TILE, top: n.y * TILE, width: TILE, height: TILE }}>
-                <NpcToken kind={n.kind} emoji={n.emoji} size={TILE * 1.3} />
+                <NpcToken kind={n.kind} emoji={n.emoji} sprite={n.sprite} size={TILE * 1.3} />
               </span>
             ))}
             {map.leader && (

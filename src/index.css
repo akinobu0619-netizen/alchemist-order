@@ -789,6 +789,7 @@ button:disabled {
 
 .trainer-portrait { position: absolute; top: 6px; right: 8px; z-index: 5; opacity: 0.96; }
 .trainer-portrait .leader-sprite { filter: drop-shadow(0 3px 5px rgba(0,0,0,0.7)); }
+.battle-portrait-img { filter: drop-shadow(0 4px 10px rgba(0,0,0,0.6)); }
 
 /* ── タイトル画面 ── */
 .title-screen {

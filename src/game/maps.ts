@@ -14,6 +14,8 @@ export interface Npc {
   name: string
   emoji?: string // 画像が無い場合の表示(種別既定を上書き)
   lines?: string[] // villager/sign 用の台詞
+  sprite?: string // フィールドの歩きキャラ画像 ui/<sprite>.png (kind既定を上書き)
+  portrait?: string // 会話の立ち絵 portraits/<portrait>.png
 }
 
 // マップ上の小物(家具・装飾)。solid=通行不可、lines=調べると台詞
@@ -164,6 +166,8 @@ export const MAPS: Record<string, GameMap> = {
         kind: 'villager',
         name: '老人モーリス',
         emoji: '👴',
+        sprite: 'npc_morris',
+        portrait: 'morris',
         lines: [
           'わしも昔は錬獣師でな……。だが近頃の"灰化"は、わしらの知る災いとは違う。',
           '色を失い、心まで失って暴れ出す。あれは……誰かが、作り出しているものだ。',
@@ -175,6 +179,8 @@ export const MAPS: Record<string, GameMap> = {
         kind: 'villager',
         name: '子供ティナ',
         emoji: '🧒',
+        sprite: 'npc_tina',
+        portrait: 'tina',
         lines: ['ねえねえ、幻獣つれてるの！？ いいなあ！ あたしも錬獣師になるんだ！', '強くなったら、また見せてね。約束だよ！'],
       },
     ],
@@ -320,6 +326,8 @@ export const MAPS: Record<string, GameMap> = {
         kind: 'villager',
         name: '船乗り',
         emoji: '🧑‍✈️',
+        sprite: 'npc_sailor',
+        portrait: 'sailor',
         lines: ['沖に"灰の渦"が出てな……船もまともに出せやしねえ。', '支部長のマレアの姉さんが、なんとかしようと睨みを利かせてるよ。'],
       },
     ],

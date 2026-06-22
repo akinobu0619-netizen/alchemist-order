@@ -132,17 +132,37 @@ export function LeaderToken({ trainerId, defeated, size = 46 }: { trainerId: str
 // 村のNPC。public/ui/npc_<kind>.png があれば画像、無ければ種別の絵文字。
 const NPC_EMOJI: Record<string, string> = { mentor: '🧙‍♂️', mom: '👩', inn: '🧑‍🍳', sign: '📜', villager: '🧑', shop: '🛒' }
 const npcImgState: Record<string, boolean> = {}
-export function NpcToken({ kind, emoji, size = 46 }: { kind: string; emoji?: string; size?: number }) {
-  const [failed, setFailed] = useState(!!npcImgState[kind])
+export function NpcToken({ kind, emoji, sprite, size = 46 }: { kind: string; emoji?: string; sprite?: string; size?: number }) {
+  const file = sprite ?? `npc_${kind}`
+  const [failed, setFailed] = useState(!!npcImgState[file])
   if (failed) return <span style={{ fontSize: size * 0.92, lineHeight: 1 }}>{emoji ?? NPC_EMOJI[kind] ?? '❔'}</span>
   return (
     <img
       className="leader-sprite"
-      src={`${import.meta.env.BASE_URL}ui/npc_${kind}.png`}
+      src={`${import.meta.env.BASE_URL}ui/${file}.png`}
       alt=""
       style={{ height: size, width: 'auto' }}
       onError={() => {
-        npcImgState[kind] = true
+        npcImgState[file] = true
+        setFailed(true)
+      }}
+    />
+  )
+}
+
+// トレーナー戦のバナー立ち絵。portraits/<trainerId>.png があれば水彩、無ければ歩きキャラに代替。
+const trainerPortraitState: Record<string, boolean> = {}
+export function BattlePortrait({ trainerId, size = 132 }: { trainerId: string; size?: number }) {
+  const [failed, setFailed] = useState(!!trainerPortraitState[trainerId])
+  if (failed) return <LeaderToken trainerId={trainerId} size={size * 0.8} />
+  return (
+    <img
+      className="battle-portrait-img"
+      src={`${import.meta.env.BASE_URL}portraits/${trainerId}.png`}
+      alt=""
+      style={{ height: size, width: 'auto' }}
+      onError={() => {
+        trainerPortraitState[trainerId] = true
         setFailed(true)
       }}
     />
