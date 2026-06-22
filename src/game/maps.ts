@@ -354,6 +354,13 @@ export const TRAINERS: Record<string, TrainerData> = {
       { speciesId: 'alraune', level: 12 },
     ],
     badge: '新緑の記章',
+    portrait: 'gym_forest',
+    preBattle: ['ようこそ、緑霧の森へ。', 'この森も、灰に蝕まれはじめている。……あなたの覚悟、見せて。'],
+    postBattle: [
+      '見事。あなたの幻獣は、よく育てられているわ。……時間をかけて、ね。',
+      '新緑の記章を受け取って。',
+      '灰の源は、北から流れてくる。まずは海へ――港の支部長マレアを訪ねなさい。',
+    ],
   },
   gym_port: {
     id: 'gym_port',
@@ -364,6 +371,13 @@ export const TRAINERS: Record<string, TrainerData> = {
       { speciesId: 'marinel', level: 19 },
     ],
     badge: '蒼潮の記章',
+    portrait: 'gym_port',
+    preBattle: ['あたしの海を濁す、灰の渦……。', 'あんたに、立ち向かう度胸はあるかい？'],
+    postBattle: [
+      'はっ、いい波に乗ってるじゃないか！ 認めるよ。',
+      '蒼潮の記章だ、持っていきな。',
+      'あたしの船で大陸へ送ってやる。灰の使徒の尻尾、掴んでみせな。',
+    ],
   },
 }
 

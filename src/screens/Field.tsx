@@ -8,6 +8,7 @@ interface Props {
   state: GameState
   setState: (updater: (s: GameState) => GameState) => void
   onStartBattle: (config: BattleConfig) => void
+  onTrainer: (trainer: (typeof TRAINERS)[string], biome: string) => void
   onMenu: () => void
   onTalk: (npc: Npc) => void
   onBlockedExit: (msg: string) => void
@@ -43,7 +44,7 @@ const PROP_SCALE: Record<string, number> = {
 
 const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n))
 
-export default function Field({ state, setState, onStartBattle, onMenu, onTalk, onBlockedExit }: Props) {
+export default function Field({ state, setState, onStartBattle, onTrainer, onMenu, onTalk, onBlockedExit }: Props) {
   const map = MAPS[state.pos.mapId]
   const { x, y } = state.pos
   const cols = map.grid[0].length
@@ -120,7 +121,7 @@ export default function Field({ state, setState, onStartBattle, onMenu, onTalk, 
       stopHold()
       const trainer = TRAINERS[m.leader.trainerId]
       if (!state.defeatedTrainers.includes(trainer.id)) {
-        onStartBattle({ kind: 'trainer', trainer, biome: m.biome })
+        onTrainer(trainer, m.biome)
       }
       return
     }

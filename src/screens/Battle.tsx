@@ -628,17 +628,17 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
             </div>
           ) : menu === 'root' ? (
             <div className="cmd-grid">
-              <button className="cmd-btn" disabled={acting} onClick={() => { audio.sfx('select'); setMenu('fight') }}>
+              <button className="cmd-btn" disabled={acting} onClick={() => setMenu('fight')}>
                 たたかう
               </button>
               <button
                 className="cmd-btn"
                 disabled={acting || (state.items.heal <= 0 && state.items.heal2 <= 0)}
-                onClick={() => { audio.sfx('select'); setMenu('item') }}
+                onClick={() => setMenu('item')}
               >
                 どうぐ<span className="cmd-sub">傷薬{state.items.heal}/上{state.items.heal2}</span>
               </button>
-              <button className="cmd-btn" disabled={acting || switchTargets.length === 0} onClick={() => { audio.sfx('select'); setMenu('switch') }}>
+              <button className="cmd-btn" disabled={acting || switchTargets.length === 0} onClick={() => setMenu('switch')}>
                 いれかえ<span className="cmd-sub">仲間{switchTargets.length}</span>
               </button>
               {config.kind === 'wild' && (

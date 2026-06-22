@@ -84,6 +84,9 @@ export interface TrainerData {
   name: string
   team: { speciesId: string; level: number }[]
   badge: string
+  portrait?: string // 立ち絵 portraits/<portrait>.png (戦前/戦後の会話・バナー)
+  preBattle?: string[] // 戦闘前の台詞
+  postBattle?: string[] // 勝利後の台詞(敗北＝相手・記章授与)
 }
 
 // バトル開始設定

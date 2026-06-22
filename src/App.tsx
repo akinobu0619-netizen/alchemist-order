@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import type { BattleConfig, GameState } from './types'
+import type { BattleConfig, GameState, TrainerData } from './types'
 import type { Npc } from './game/maps'
 import {
   STARTER_IDS,
@@ -75,6 +75,16 @@ export default function App() {
     }
   }, [])
 
+  // ボタンを押したら効果音(全ボタン共通)
+  useEffect(() => {
+    const h = (e: MouseEvent) => {
+      const t = e.target as HTMLElement | null
+      if (t?.closest?.('button')) audio.sfx('select')
+    }
+    window.addEventListener('click', h)
+    return () => window.removeEventListener('click', h)
+  }, [])
+
   useEffect(() => {
     let key = 'title'
     if (phase === 'game') {
@@ -88,8 +98,32 @@ export default function App() {
   const hasSave = game.collection.length > 0
   const active = game.collection.find((o) => o.uid === game.activeUid) ?? game.collection[0]
   const startBattle = (config: BattleConfig) => {
+    audio.sfx('encounter')
     setBattleConfig(config)
     setScreen('battle')
+  }
+
+  // 支部長に接触: 戦前の台詞→バトル
+  const onTrainer = (trainer: TrainerData, biome: string) => {
+    if (trainer.preBattle?.length) {
+      setDialogue({
+        speaker: trainer.name,
+        portrait: trainer.portrait,
+        lines: trainer.preBattle,
+        after: () => startBattle({ kind: 'trainer', trainer, biome }),
+      })
+    } else {
+      startBattle({ kind: 'trainer', trainer, biome })
+    }
+  }
+
+  // バトル終了→フィールド。トレーナーに勝っていれば戦後の台詞
+  const handleBattleExit = () => {
+    setScreen('field')
+    const cfg = battleConfig
+    if (cfg?.kind === 'trainer' && cfg.trainer.postBattle?.length && game.defeatedTrainers.includes(cfg.trainer.id)) {
+      setDialogue({ speaker: cfg.trainer.name, portrait: cfg.trainer.portrait, lines: cfg.trainer.postBattle })
+    }
   }
 
   // NPCに話しかけたとき
@@ -220,7 +254,7 @@ export default function App() {
         config={battleConfig}
         state={game}
         setState={setGame}
-        onExit={() => setScreen('field')}
+        onExit={handleBattleExit}
       />
     )
   } else if (screen === 'dex') {
@@ -231,6 +265,7 @@ export default function App() {
         state={game}
         setState={setGame}
         onStartBattle={startBattle}
+        onTrainer={onTrainer}
         onMenu={() => setScreen('home')}
         onTalk={onTalk}
         onBlockedExit={onBlockedExit}
