@@ -70,48 +70,50 @@ function frame(g: string[], ch = '#'): void {
   }
 }
 
-// 始まりの村ラピス(24x18) 芝生に石畳・家3軒・道具屋・南に森への門
+// 始まりの村ラピス(34x26) 広い芝生に石畳の十字路・家3軒・道具屋・南に森への門
 function buildRapis(): string[] {
-  const g = grid(24, 18, ',')
+  const g = grid(34, 26, ',')
   frame(g, '#')
-  fill(g, 2, 8, 21, 8, '.') // 大通り(横)
-  fill(g, 11, 1, 11, 16, '.') // 大通り(縦)
-  // 家(2x3ブロック)＋扉(下に1マスの道)
-  fill(g, 3, 3, 5, 4, 'H')
-  set(g, 4, 5, '.')
-  fill(g, 4, 5, 4, 8, '.') // 扉→大通り
-  fill(g, 10, 2, 12, 3, 'H')
-  set(g, 11, 4, '.')
-  fill(g, 18, 3, 20, 4, 'H')
-  set(g, 19, 5, '.')
-  fill(g, 19, 5, 19, 8, '.')
+  fill(g, 2, 13, 31, 13, '.') // 横の大通り
+  fill(g, 17, 1, 17, 24, '.') // 縦の大通り(南門まで)
+  // 家3軒(ブロック＋扉＋小道)
+  fill(g, 6, 6, 8, 7, 'H')
+  fill(g, 7, 8, 7, 13, '.') // わが家(左)＋扉小道
+  fill(g, 16, 4, 18, 5, 'H')
+  set(g, 17, 6, '.') // 師の家(中央・縦通り上)
+  fill(g, 25, 7, 27, 8, 'H')
+  fill(g, 26, 9, 26, 13, '.') // 宿屋(右)＋扉小道
   // 道具屋の露店
-  fill(g, 13, 10, 15, 11, 'H')
+  fill(g, 20, 15, 22, 16, 'H')
   // 花壇の装飾
-  ;[[6, 11], [7, 6], [16, 12], [20, 10], [3, 14], [8, 13], [17, 6]].forEach(([x, y]) => set(g, x, y, 'F'))
+  ;[[10, 9], [12, 6], [29, 11], [5, 18], [30, 20], [24, 19], [12, 21], [4, 9]].forEach(([x, y]) => set(g, x, y, 'F'))
   // 南の門(森へ)
-  set(g, 11, 16, '.')
+  set(g, 17, 24, '.')
   return g
 }
 
-// 緑霧の森(24x20) 縦の小道を軸に高草の群れと木立。北に支部長、東に海への出口
+// 緑霧の森(34x30) 曲がりくねった小道＋複数の高草地＋木立の迷路。北に支部長、東に海への出口
 function buildForest(): string[] {
-  const g = grid(24, 20, '.')
+  const g = grid(34, 30, '.')
   frame(g, '#')
-  fill(g, 3, 5, 9, 8, 'G')
-  fill(g, 14, 4, 20, 7, 'G')
-  fill(g, 5, 11, 11, 15, 'G')
-  fill(g, 15, 11, 20, 15, 'G')
-  // 木立(障害物)
-  fill(g, 8, 9, 10, 10, '#')
-  fill(g, 14, 9, 16, 10, '#')
-  set(g, 4, 16, '#')
-  set(g, 19, 16, '#')
-  set(g, 6, 3, '#')
-  set(g, 18, 3, '#')
-  // 通路を確保(縦の背骨＋東への枝)
-  fill(g, 12, 2, 12, 18, '.')
-  fill(g, 12, 10, 22, 10, '.')
+  // 高草地(エンカウント)
+  fill(g, 4, 6, 10, 10, 'G')
+  fill(g, 22, 5, 29, 9, 'G')
+  fill(g, 6, 16, 13, 21, 'G')
+  fill(g, 20, 17, 28, 23, 'G')
+  fill(g, 13, 24, 22, 27, 'G')
+  // 木立(障害物・迷路)
+  fill(g, 13, 8, 15, 9, '#')
+  fill(g, 19, 11, 21, 12, '#')
+  fill(g, 9, 13, 10, 14, '#')
+  fill(g, 24, 12, 26, 13, '#')
+  set(g, 16, 20, '#')
+  set(g, 27, 25, '#')
+  set(g, 6, 25, '#')
+  // 通路(必ず歩ける背骨＋東枝＋西枝)
+  fill(g, 17, 3, 17, 28, '.')
+  fill(g, 17, 15, 32, 15, '.')
+  fill(g, 4, 15, 17, 15, '.')
   return g
 }
 
@@ -147,22 +149,22 @@ export const MAPS: Record<string, GameMap> = {
     biome: 'town',
     grid: buildRapis(),
     warps: [
-      { x: 11, y: 16, to: 'forest', tx: 12, ty: 17, gate: 'starter' }, // 南=森へ
-      { x: 11, y: 4, to: 'mentor_house', tx: 3, ty: 3 }, // 中央=師の家
-      { x: 4, y: 5, to: 'home', tx: 3, ty: 3 }, // 左=わが家
-      { x: 19, y: 5, to: 'inn', tx: 3, ty: 3 }, // 右=宿屋
+      { x: 17, y: 24, to: 'forest', tx: 17, ty: 27, gate: 'starter' }, // 南=森へ
+      { x: 17, y: 6, to: 'mentor_house', tx: 3, ty: 3 }, // 中央=師の家
+      { x: 7, y: 8, to: 'home', tx: 3, ty: 3 }, // 左=わが家
+      { x: 26, y: 9, to: 'inn', tx: 3, ty: 3 }, // 右=宿屋
     ],
     npcs: [
       {
-        x: 14,
-        y: 9,
+        x: 21,
+        y: 17,
         kind: 'shop',
         name: '道具屋のラル',
         emoji: '🛒',
       },
       {
-        x: 16,
-        y: 8,
+        x: 24,
+        y: 13,
         kind: 'villager',
         name: '老人モーリス',
         emoji: '👴',
@@ -174,8 +176,8 @@ export const MAPS: Record<string, GameMap> = {
         ],
       },
       {
-        x: 7,
-        y: 9,
+        x: 11,
+        y: 17,
         kind: 'villager',
         name: '子供ティナ',
         emoji: '🧒',
@@ -185,18 +187,15 @@ export const MAPS: Record<string, GameMap> = {
       },
     ],
     props: [
-      { x: 9, y: 10, kind: 'fountain', solid: true, name: '噴水', lines: ['村の古い噴水。水面に錬金術の紋章が彫られている。'] },
-      { x: 16, y: 10, kind: 'barrel', solid: true },
-      { x: 16, y: 11, kind: 'crate', solid: true },
-      { x: 4, y: 12, kind: 'barrel', solid: true },
-      { x: 8, y: 7, kind: 'lamp', solid: true },
-      { x: 17, y: 7, kind: 'lamp', solid: true },
-      { x: 6, y: 7, kind: 'flower' },
-      { x: 18, y: 13, kind: 'flower' },
-      { x: 6, y: 13, kind: 'fence', solid: true },
-      { x: 7, y: 13, kind: 'fence', solid: true },
-      { x: 8, y: 13, kind: 'fence', solid: true },
-      { x: 13, y: 15, kind: 'sign', name: '立て札', lines: ['「↓ 南 — 緑霧の森」'] },
+      { x: 14, y: 15, kind: 'fountain', solid: true, name: '噴水', lines: ['村の古い噴水。水面に錬金術の紋章が彫られている。'] },
+      { x: 22, y: 18, kind: 'barrel', solid: true },
+      { x: 23, y: 18, kind: 'crate', solid: true },
+      { x: 12, y: 11, kind: 'lamp', solid: true },
+      { x: 24, y: 11, kind: 'lamp', solid: true },
+      { x: 9, y: 20, kind: 'fence', solid: true },
+      { x: 10, y: 20, kind: 'fence', solid: true },
+      { x: 11, y: 20, kind: 'fence', solid: true },
+      { x: 19, y: 22, kind: 'sign', name: '立て札', lines: ['「↓ 南 — 緑霧の森」'] },
     ],
     intro: '錬金工房が並ぶ静かな村。家の扉から中へ。南の門の先に緑霧の森が広がる。',
   },
@@ -206,7 +205,7 @@ export const MAPS: Record<string, GameMap> = {
     biome: 'town',
     indoor: true,
     grid: ['#######', '#.....#', '#.....#', '#.....#', '#.....#', '#######'],
-    warps: [{ x: 3, y: 4, to: 'rapis', tx: 11, ty: 5 }],
+    warps: [{ x: 3, y: 4, to: 'rapis', tx: 17, ty: 7 }],
     npcs: [{ x: 3, y: 1, kind: 'mentor', name: '師ガレン' }],
     props: [
       { x: 1, y: 1, kind: 'bookshelf', solid: true, name: '蔵書', lines: ['錬金術の古い写本がぎっしりだ。読めない記号が並んでいる。'] },
@@ -224,7 +223,7 @@ export const MAPS: Record<string, GameMap> = {
     indoor: true,
     grid: ['#######', '#.....#', '#.....#', '#.....#', '#.....#', '#######'],
     warps: [
-      { x: 3, y: 4, to: 'rapis', tx: 4, ty: 6 },
+      { x: 3, y: 4, to: 'rapis', tx: 7, ty: 9 },
       { x: 5, y: 1, to: 'home2f', tx: 4, ty: 4 },
     ],
     npcs: [{ x: 3, y: 1, kind: 'mom', name: 'おかあさん' }],
@@ -258,7 +257,7 @@ export const MAPS: Record<string, GameMap> = {
     biome: 'town',
     indoor: true,
     grid: ['#######', '#.....#', '#.....#', '#.....#', '#.....#', '#######'],
-    warps: [{ x: 3, y: 4, to: 'rapis', tx: 19, ty: 6 }],
+    warps: [{ x: 3, y: 4, to: 'rapis', tx: 26, ty: 10 }],
     npcs: [{ x: 3, y: 1, kind: 'inn', name: '宿屋の主人' }],
     props: [
       { x: 1, y: 1, kind: 'bed', solid: true },
@@ -274,22 +273,22 @@ export const MAPS: Record<string, GameMap> = {
     biome: 'forest',
     grid: buildForest(),
     warps: [
-      { x: 12, y: 18, to: 'rapis', tx: 11, ty: 15 }, // 南=村へ
-      { x: 22, y: 10, to: 'coast_road', tx: 2, ty: 6, gate: '新緑の記章' }, // 東=海へ(要・新緑の記章)
+      { x: 17, y: 28, to: 'rapis', tx: 17, ty: 23 }, // 南=村へ
+      { x: 32, y: 15, to: 'coast_road', tx: 2, ty: 6, gate: '新緑の記章' }, // 東=海へ(要・新緑の記章)
     ],
-    leader: { x: 12, y: 2, trainerId: 'gym_forest' },
+    leader: { x: 17, y: 3, trainerId: 'gym_forest' },
     encounter: {
       pool: ['portabupa', 'venomite', 'sporin', 'hobgobalt', 'tsunousa', 'falcone', 'briezel', 'pibit'],
       min: 4,
       max: 8,
     },
     props: [
-      { x: 3, y: 3, kind: 'rock', solid: true },
-      { x: 20, y: 17, kind: 'rock', solid: true },
-      { x: 6, y: 6, kind: 'mushroom' },
-      { x: 18, y: 6, kind: 'mushroom' },
-      { x: 9, y: 16, kind: 'log', solid: true },
-      { x: 10, y: 17, kind: 'sign', name: '道しるべ', lines: ['「↑ 奥へ — 支部長の気配」', '「→ 東 — 潮騒の道(新緑の記章が必要)」'] },
+      { x: 4, y: 24, kind: 'rock', solid: true },
+      { x: 29, y: 9, kind: 'rock', solid: true },
+      { x: 6, y: 8, kind: 'mushroom' },
+      { x: 25, y: 7, kind: 'mushroom' },
+      { x: 11, y: 19, kind: 'log', solid: true },
+      { x: 19, y: 27, kind: 'sign', name: '道しるべ', lines: ['「↑ 奥へ — 支部長の気配」', '「→ 東 — 潮騒の道(新緑の記章が必要)」'] },
     ],
     intro: '霧が立ちこめる森。高草には野生の幻獣がひそむ。奥に錬獣師の気配……。',
   },
@@ -299,7 +298,7 @@ export const MAPS: Record<string, GameMap> = {
     biome: 'sea',
     grid: buildCoast(),
     warps: [
-      { x: 1, y: 6, to: 'forest', tx: 21, ty: 10 }, // 西=森へ
+      { x: 1, y: 6, to: 'forest', tx: 31, ty: 15 }, // 西=森へ
       { x: 20, y: 6, to: 'port', tx: 2, ty: 8 }, // 東=港町へ
     ],
     encounter: { pool: ['shelk', 'frost', 'aquab', 'teary', 'pibit', 'briezel'], min: 9, max: 13 },
