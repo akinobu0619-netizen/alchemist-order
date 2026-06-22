@@ -46,6 +46,12 @@ const PROP_SCALE: Record<string, number> = {
 
 const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n))
 
+// 反復感を消す: 自然物タイルは座標ハッシュで反転/明るさを微変化、一部に装飾デカール
+const VARY_TYPES = new Set(['grass', 'lawn', 'tree', 'flower', 'sand'])
+const tileHash = (x: number, y: number) => ((x * 73856093) ^ (y * 19349663)) >>> 0
+const decalFor = (type: string, h: number): string | null =>
+  type === 'grass' && h % 5 === 0 ? 'g' : type === 'lawn' && h % 6 === 0 ? 'l' : type === 'path' && h % 9 === 0 ? 'p' : null
+
 export default function Field({ state, setState, onStartBattle, onTrainer, onChest, onMenu, onTalk, onBlockedExit }: Props) {
   const map = MAPS[state.pos.mapId]
   const { x, y } = state.pos
@@ -249,12 +255,29 @@ export default function Field({ state, setState, onStartBattle, onTrainer, onChe
             {map.grid.flatMap((row, ry) =>
               row.split('').map((ch, rx) => {
                 const type = tileType(ch, indoor)
+                const h = tileHash(rx, ry)
+                const vary = VARY_TYPES.has(type)
+                const flip = vary && h & 1 ? 'scaleX(-1) ' : ''
+                const scale = type === 'tree' ? 'scale(1.08)' : ''
+                const transform = flip || scale ? `${flip}${scale}`.trim() : undefined
+                const bright = vary ? 0.95 + ((h >> 1) % 6) * 0.02 : 1
+                const decal = decalFor(type, h)
                 return (
                   <div
                     key={`${rx}-${ry}`}
                     className={`tile2 t-${type}`}
-                    style={{ left: rx * TILE, top: ry * TILE, width: TILE + 1, height: TILE + 1, ...tileStyle(type) }}
-                  />
+                    style={{
+                      left: rx * TILE,
+                      top: ry * TILE,
+                      width: TILE + 1,
+                      height: TILE + 1,
+                      ...tileStyle(type),
+                      transform,
+                      filter: bright !== 1 ? `brightness(${bright.toFixed(2)})` : undefined,
+                    }}
+                  >
+                    {decal && <span className={`decal decal-${decal}`} style={{ top: `${12 + (h % 3) * 26}%`, left: `${12 + ((h >> 3) % 3) * 26}%` }} />}
+                  </div>
                 )
               }),
             )}
