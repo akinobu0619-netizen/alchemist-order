@@ -3,6 +3,7 @@ import type { BattleConfig, GameState } from '../types'
 import { ENCOUNTER_RATE, MAPS, TRAINERS, isWall } from '../game/maps'
 import type { Chest, Npc } from '../game/maps'
 import { hasFlag } from '../game/state'
+import { sfx } from '../game/audio'
 import { Building, ChestToken, LeaderToken, NpcToken, PlayerToken, PropToken, type Dir } from '../ui'
 
 interface Props {
@@ -71,6 +72,8 @@ export default function Field({ state, setState, onStartBattle, onTrainer, onChe
   const holdRef = useRef<number | undefined>(undefined)
   const [dir, setDir] = useState<Dir>('down')
   const [step, setStep] = useState<0 | 1>(0)
+  const [openingDoor, setOpeningDoor] = useState<string | null>(null)
+  const doorTimerRef = useRef<number | undefined>(undefined)
   const vpRef = useRef<HTMLDivElement>(null)
   const [vw, setVw] = useState(0)
   const [, force] = useState(0)
@@ -127,6 +130,7 @@ export default function Field({ state, setState, onStartBattle, onTrainer, onChe
   }
 
   function move(dx: number, dy: number) {
+    if (openingDoor) return
     setDir(dy < 0 ? 'up' : dy > 0 ? 'down' : dx < 0 ? 'left' : 'right')
     const cur = posRef.current
     const m = MAPS[cur.mapId]
@@ -179,6 +183,26 @@ export default function Field({ state, setState, onStartBattle, onTrainer, onChe
         onBlockedExit(`「${warp.gate}」が ないと この先へは 進めないようだ。`)
         return
       }
+      const building = m.buildings?.find((b) => b.x + Math.floor(b.w / 2) === warp.x && b.y + b.h === warp.y)
+      if (building) {
+        const key = `${building.x}-${building.y}`
+        const atDoor = { ...cur, x: warp.x, y: warp.y }
+        posRef.current = atDoor
+        setDir('up')
+        setStep((v) => (v ? 0 : 1))
+        setOpeningDoor(key)
+        sfx('door')
+        setState((s) => ({ ...s, pos: atDoor }))
+        doorTimerRef.current = window.setTimeout(() => {
+          const np = { mapId: warp.to, x: warp.tx, y: warp.ty }
+          posRef.current = np
+          setOpeningDoor(null)
+          setStep(0)
+          setState((s) => ({ ...s, pos: np }))
+          doorTimerRef.current = undefined
+        }, 460)
+        return
+      }
       const np = { mapId: warp.to, x: warp.tx, y: warp.ty }
       posRef.current = np
       setState((s) => ({ ...s, pos: np }))
@@ -208,6 +232,7 @@ export default function Field({ state, setState, onStartBattle, onTrainer, onChe
     window.addEventListener('pointercancel', up)
     return () => {
       stopHold()
+      if (doorTimerRef.current !== undefined) window.clearTimeout(doorTimerRef.current)
       window.removeEventListener('pointerup', up)
       window.removeEventListener('pointercancel', up)
     }
@@ -321,7 +346,7 @@ export default function Field({ state, setState, onStartBattle, onTrainer, onChe
                 className="world-token building-token"
                 style={{ left: b.x * TILE, top: (b.y - 2) * TILE, width: b.w * TILE, height: (b.h + 2) * TILE }}
               >
-                <Building kind={b.kind} w={b.w} tile={TILE} />
+                <Building kind={b.kind} w={b.w} tile={TILE} doorOpen={openingDoor === `${b.x}-${b.y}`} />
               </span>
             ))}
             {map.props?.map((p, i) => (

@@ -220,64 +220,45 @@ export const MAPS: Record<string, GameMap> = {
       { x: 20, y: 15, w: 3, h: 2, kind: 'shop' }, // 道具屋
     ],
     props: [
+      // ── 噴水広場(中央) ──
       { x: 14, y: 15, kind: 'fountain', solid: true, name: '噴水', lines: ['村の古い噴水。水面に錬金術の紋章が彫られている。'] },
-      { x: 22, y: 18, kind: 'barrel', solid: true },
-      { x: 23, y: 18, kind: 'crate', solid: true },
-      { x: 12, y: 11, kind: 'lamp', solid: true },
-      { x: 24, y: 11, kind: 'lamp', solid: true },
-      { x: 9, y: 20, kind: 'fence', solid: true },
-      { x: 10, y: 20, kind: 'fence', solid: true },
-      { x: 11, y: 20, kind: 'fence', solid: true },
-      { x: 19, y: 22, kind: 'sign', name: '立て札', lines: ['「↓ 南 — 緑霧の森」'] },
-      // 街灯
-      { x: 14, y: 8, kind: 'lamp', solid: true },
-      { x: 20, y: 8, kind: 'lamp', solid: true },
-      { x: 14, y: 20, kind: 'lamp', solid: true },
-      { x: 20, y: 20, kind: 'lamp', solid: true },
-      // 花壇
-      { x: 5, y: 5, kind: 'flower' },
-      { x: 9, y: 5, kind: 'flower' },
-      { x: 24, y: 5, kind: 'flower' },
-      { x: 28, y: 5, kind: 'flower' },
-      { x: 12, y: 22, kind: 'flower' },
-      { x: 22, y: 22, kind: 'flower' },
-      // 市場(道具屋まわり)
-      { x: 19, y: 16, kind: 'barrel', solid: true },
-      { x: 24, y: 15, kind: 'barrel', solid: true },
-      { x: 24, y: 16, kind: 'crate', solid: true },
-      // 植木・生垣
-      { x: 3, y: 16, kind: 'plant', solid: true },
-      { x: 31, y: 16, kind: 'plant', solid: true },
-      { x: 3, y: 22, kind: 'plant', solid: true },
-      { x: 30, y: 9, kind: 'plant', solid: true },
-      { x: 4, y: 10, kind: 'fence', solid: true },
-      { x: 5, y: 10, kind: 'fence', solid: true },
-      { x: 28, y: 12, kind: 'fence', solid: true },
-      { x: 29, y: 12, kind: 'fence', solid: true },
-      // 案内板
+      { x: 12, y: 14, kind: 'flower' }, { x: 16, y: 14, kind: 'flower' }, { x: 12, y: 16, kind: 'flower' }, { x: 16, y: 16, kind: 'flower' }, // 噴水を囲む花壇
+      { x: 13, y: 17, kind: 'plant', solid: true }, { x: 15, y: 17, kind: 'plant', solid: true }, // 広場の植え込み
+      { x: 12, y: 17, kind: 'lamp', solid: true }, { x: 16, y: 17, kind: 'lamp', solid: true }, // 広場灯
       { x: 13, y: 12, kind: 'sign', name: '立て札', lines: ['「ようこそ、始まりの村ラピスへ。」'] },
-      // ── 追加の賑わい ──
-      // 花畑(各所)
-      { x: 4, y: 3, kind: 'flower' }, { x: 10, y: 3, kind: 'flower' }, { x: 15, y: 3, kind: 'flower' },
-      { x: 19, y: 3, kind: 'flower' }, { x: 24, y: 3, kind: 'flower' }, { x: 30, y: 3, kind: 'flower' },
-      { x: 2, y: 11, kind: 'flower' }, { x: 32, y: 11, kind: 'flower' }, { x: 8, y: 18, kind: 'flower' },
-      { x: 26, y: 18, kind: 'flower' }, { x: 6, y: 23, kind: 'flower' }, { x: 26, y: 23, kind: 'flower' },
-      { x: 15, y: 21, kind: 'flower' }, { x: 19, y: 21, kind: 'flower' },
-      // 植木・生垣
-      { x: 2, y: 3, kind: 'plant', solid: true }, { x: 31, y: 3, kind: 'plant', solid: true },
-      { x: 2, y: 9, kind: 'plant', solid: true }, { x: 32, y: 9, kind: 'plant', solid: true },
-      { x: 2, y: 18, kind: 'plant', solid: true }, { x: 32, y: 18, kind: 'plant', solid: true },
-      { x: 8, y: 24, kind: 'plant', solid: true }, { x: 28, y: 24, kind: 'plant', solid: true },
-      { x: 13, y: 18, kind: 'plant', solid: true }, { x: 21, y: 18, kind: 'plant', solid: true },
-      { x: 30, y: 17, kind: 'fence', solid: true }, { x: 31, y: 17, kind: 'fence', solid: true },
-      { x: 3, y: 11, kind: 'fence', solid: true }, { x: 3, y: 12, kind: 'fence', solid: true },
-      // 街灯
-      { x: 11, y: 8, kind: 'lamp', solid: true }, { x: 23, y: 8, kind: 'lamp', solid: true },
-      { x: 8, y: 13, kind: 'lamp', solid: true }, { x: 26, y: 13, kind: 'lamp', solid: true },
-      // 市場・倉庫(道具屋/宿屋まわり)
-      { x: 18, y: 16, kind: 'crate', solid: true }, { x: 18, y: 17, kind: 'barrel', solid: true },
-      { x: 28, y: 10, kind: 'barrel', solid: true }, { x: 29, y: 10, kind: 'crate', solid: true },
-      { x: 28, y: 11, kind: 'barrel', solid: true },
+      // ── わが家の前庭(西・扉7,8) ──
+      { x: 5, y: 8, kind: 'flower' }, { x: 6, y: 8, kind: 'flower' }, { x: 8, y: 8, kind: 'flower' }, { x: 9, y: 8, kind: 'flower' }, // 玄関脇の花壇
+      { x: 4, y: 8, kind: 'fence', solid: true }, { x: 4, y: 9, kind: 'fence', solid: true }, { x: 4, y: 10, kind: 'fence', solid: true }, { x: 5, y: 10, kind: 'fence', solid: true }, { x: 6, y: 10, kind: 'fence', solid: true }, // 庭の柵
+      { x: 5, y: 9, kind: 'flower' }, { x: 6, y: 9, kind: 'flower' }, // 庭の中
+      { x: 9, y: 9, kind: 'barrel', solid: true }, { x: 10, y: 8, kind: 'plant', solid: true }, // 雨水樽・生垣
+      // ── 師の家の前(中央北・扉17,6) ──
+      { x: 14, y: 4, kind: 'plant', solid: true }, { x: 20, y: 4, kind: 'plant', solid: true }, // 家を囲む木
+      { x: 15, y: 6, kind: 'lamp', solid: true }, { x: 19, y: 6, kind: 'lamp', solid: true }, // 玄関灯(扉を挟む)
+      { x: 15, y: 5, kind: 'flower' }, { x: 19, y: 5, kind: 'flower' },
+      // ── 宿屋の前(東・扉26,9) ──
+      { x: 24, y: 8, kind: 'sign', name: '看板', lines: ['「ラピスの宿屋 — 一泊で幻獣も元気に」'] },
+      { x: 24, y: 9, kind: 'lamp', solid: true }, { x: 28, y: 9, kind: 'lamp', solid: true }, // 玄関灯
+      { x: 24, y: 10, kind: 'flower' }, { x: 28, y: 10, kind: 'flower' },
+      { x: 29, y: 9, kind: 'barrel', solid: true }, { x: 29, y: 10, kind: 'barrel', solid: true }, { x: 29, y: 11, kind: 'crate', solid: true }, // 酒樽
+      // ── 市場(道具屋20-22,15-16 / ラル21,17) ──
+      { x: 18, y: 16, kind: 'sign', name: '看板', lines: ['「道具屋ラル — 傷薬・封獣フラスコ あります」'] },
+      { x: 19, y: 15, kind: 'crate', solid: true }, { x: 19, y: 16, kind: 'barrel', solid: true }, // 陳列(左)
+      { x: 23, y: 15, kind: 'barrel', solid: true }, { x: 23, y: 16, kind: 'crate', solid: true }, // 陳列(右)
+      { x: 24, y: 16, kind: 'barrel', solid: true }, { x: 19, y: 17, kind: 'crate', solid: true }, // 在庫
+      { x: 22, y: 18, kind: 'barrel', solid: true }, { x: 23, y: 18, kind: 'crate', solid: true },
+      // ── 街路灯(縦の大通りを等間隔で挟む) ──
+      { x: 16, y: 9, kind: 'lamp', solid: true }, { x: 18, y: 9, kind: 'lamp', solid: true },
+      { x: 16, y: 20, kind: 'lamp', solid: true }, { x: 18, y: 20, kind: 'lamp', solid: true },
+      // ── 街路灯(横の大通りを挟む) ──
+      { x: 9, y: 12, kind: 'lamp', solid: true }, { x: 9, y: 14, kind: 'lamp', solid: true }, { x: 29, y: 14, kind: 'lamp', solid: true },
+      // ── 沿道の花(リズム) ──
+      { x: 16, y: 11, kind: 'flower' }, { x: 18, y: 11, kind: 'flower' }, { x: 16, y: 22, kind: 'flower' }, { x: 18, y: 22, kind: 'flower' },
+      // ── 町外周の生垣 ──
+      { x: 2, y: 2, kind: 'plant', solid: true }, { x: 31, y: 2, kind: 'plant', solid: true },
+      { x: 2, y: 12, kind: 'plant', solid: true }, { x: 31, y: 12, kind: 'plant', solid: true },
+      { x: 2, y: 24, kind: 'plant', solid: true }, { x: 8, y: 24, kind: 'plant', solid: true }, { x: 28, y: 24, kind: 'plant', solid: true },
+      // ── 南門の案内板 ──
+      { x: 18, y: 23, kind: 'sign', name: '立て札', lines: ['「↓ 南 — 緑霧の森」'] },
     ],
     chests: [
       { x: 31, y: 22, id: 'rapis_corner', item: 'heal', amount: 2 }, // 村の隅
