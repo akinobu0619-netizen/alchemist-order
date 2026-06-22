@@ -10,7 +10,7 @@ interface Props {
   onStartBattle: (config: BattleConfig) => void
   onMenu: () => void
   onTalk: (npc: Npc) => void
-  onBlockedExit: () => void
+  onBlockedExit: (msg: string) => void
 }
 
 const missingMaps = new Set<string>()
@@ -91,7 +91,11 @@ export default function Field({ state, setState, onStartBattle, onMenu, onTalk, 
     if (warp) {
       stopHold()
       if (warp.gate === 'starter' && !hasStarter) {
-        onBlockedExit()
+        onBlockedExit('まだ相棒がいない。師ガレンに 話しかけて 最初の幻獣を 受け取ろう。')
+        return
+      }
+      if (warp.gate && warp.gate !== 'starter' && !state.badges.includes(warp.gate)) {
+        onBlockedExit(`「${warp.gate}」が ないと この先へは 進めないようだ。`)
         return
       }
       const np = { mapId: warp.to, x: warp.tx, y: warp.ty }

@@ -145,6 +145,12 @@ wearing {服装}, holding {持ち物}, {表情/雰囲気},
 waist-up portrait, transparent background, no text.
 ```
 
+## Phase B（潮鳴りの港町）素材
+- `bg/map/port.png`（俯瞰・港町）— `Top-down view of a Renaissance seaside harbor town, open cobblestone plaza center, fishing boats and docks at the bottom, stone houses and a lighthouse along the top, nets and barrels, watercolor, no characters/text/grid.`
+- `bg/map/coast_road.png`（俯瞰・海沿いの道）— `Top-down view of a coastal path, grassy center walkable, sea and rocks on one side, cliffs on the other, watercolor, no characters/text/grid.`
+- `bg/battle/sea.jpg`（戦闘背景）— `A windswept harbor coastline, waves and old docks, overcast painterly sky, watercolor.`
+- 支部長マレア: ドット `ui/gym_port.png`（`a bold female sea-captain in a tricorn hat and weathered coat, 16-bit pixel art, front view, transparent, no text`）／水彩 `portraits/gym_port.png`（キャラ用マスター先貼り: `Marea, a bold tanned female harbor gym leader, tricorn hat, weathered blue coat, confident grin, waist-up portrait, transparent, no text`）
+
 ## 命名・配置 規約
 - バトル背景: `public/bg/battle/<地形キー>.jpg`（forest/plains/town/cave/sea/peak/graveyard/furnace）
 - マップ絵: `public/bg/map/<mapId>.png`（rapis / forest）

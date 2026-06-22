@@ -131,7 +131,10 @@ export const MAPS: Record<string, GameMap> = {
       '#...W...#',
       '#########',
     ],
-    warps: [{ x: 4, y: 6, to: 'rapis', tx: 4, ty: 5 }],
+    warps: [
+      { x: 4, y: 6, to: 'rapis', tx: 4, ty: 5 },
+      { x: 7, y: 4, to: 'coast_road', tx: 1, ty: 3, gate: '新緑の記章' }, // 東=海へ(要・新緑の記章)
+    ],
     leader: { x: 4, y: 1, trainerId: 'gym_forest' },
     encounter: {
       pool: ['portabupa', 'venomite', 'sporin', 'hobgobalt', 'tsunousa', 'falcone', 'briezel', 'pibit'],
@@ -139,6 +142,46 @@ export const MAPS: Record<string, GameMap> = {
       max: 8,
     },
     intro: '霧が立ちこめる森。草むらには野生の幻獣がひそむ。奥に錬獣師の気配……。',
+  },
+  coast_road: {
+    id: 'coast_road',
+    name: '潮騒の道',
+    biome: 'sea',
+    grid: ['#########', '#.......#', '#.GGGGG.#', '#.GGGGG.#', '#.......#', '#########'],
+    warps: [
+      { x: 1, y: 3, to: 'forest', tx: 7, ty: 4 }, // 西=森へ
+      { x: 7, y: 2, to: 'port', tx: 4, ty: 6 }, // 東=港町へ
+    ],
+    encounter: { pool: ['shelk', 'frost', 'aquab', 'teary', 'pibit', 'briezel'], min: 9, max: 13 },
+    intro: '潮の香りが満ちる海沿いの道。水辺の幻獣が現れる。',
+  },
+  port: {
+    id: 'port',
+    name: '潮鳴りの港町',
+    biome: 'sea',
+    grid: [
+      '#########',
+      '#...L...#',
+      '#.......#',
+      '#.......#',
+      '#.......#',
+      '#.......#',
+      '#.......#',
+      '#########',
+    ],
+    warps: [{ x: 4, y: 6, to: 'coast_road', tx: 7, ty: 2 }],
+    leader: { x: 4, y: 1, trainerId: 'gym_port' },
+    npcs: [
+      {
+        x: 2,
+        y: 4,
+        kind: 'villager',
+        name: '船乗り',
+        emoji: '🧑‍✈️',
+        lines: ['沖に"灰の渦"が出てな……船もまともに出せやしねえ。', '支部長のマレアの姉さんが、なんとかしようと睨みを利かせてるよ。'],
+      },
+    ],
+    intro: '船が行き交う潮鳴りの港町。海風の向こう、支部長マレアが待つ。',
   },
 }
 
@@ -152,6 +195,16 @@ export const TRAINERS: Record<string, TrainerData> = {
       { speciesId: 'alraune', level: 12 },
     ],
     badge: '新緑の記章',
+  },
+  gym_port: {
+    id: 'gym_port',
+    name: '港の支部長 マレア',
+    team: [
+      { speciesId: 'shelk', level: 16 },
+      { speciesId: 'aquab', level: 17 },
+      { speciesId: 'marinel', level: 19 },
+    ],
+    badge: '蒼潮の記章',
   },
 }
 

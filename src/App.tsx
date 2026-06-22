@@ -15,7 +15,7 @@ import {
   withSeen,
 } from './game/state'
 import * as audio from './game/audio'
-import { Sprite, TypeBadge } from './ui'
+import { Sprite, TitleLogo, TypeBadge } from './ui'
 import Home from './screens/Home'
 import Battle from './screens/Battle'
 import Dex from './screens/Dex'
@@ -75,7 +75,7 @@ export default function App() {
   useEffect(() => {
     let key = 'title'
     if (phase === 'game') {
-      const townMaps = ['rapis', 'mentor_house', 'home', 'home2f', 'inn']
+      const townMaps = ['rapis', 'mentor_house', 'home', 'home2f', 'inn', 'port']
       if (screen === 'battle') key = battleConfig?.kind === 'trainer' ? 'boss' : 'battle'
       else key = townMaps.includes(game.pos.mapId) ? 'town' : game.pos.mapId === 'forest' ? 'forest' : 'field'
     }
@@ -142,8 +142,8 @@ export default function App() {
     }
   }
 
-  const onBlockedExit = () => {
-    setDialogue({ lines: ['まだ共に往く幻獣がいない。', '師ガレンに 話しかけて 最初の相棒を 受け取ろう。'] })
+  const onBlockedExit = (msg: string) => {
+    setDialogue({ lines: [msg] })
   }
 
   const pickStarter = (id: string) => {
@@ -170,10 +170,7 @@ export default function App() {
   if (phase === 'title') {
     content = (
       <div className="title-screen" style={titleBg}>
-        <div className="title-logo">
-          <h1>錬金幻獣録</h1>
-          <h2>アルケミスト・オーダー</h2>
-        </div>
+        <TitleLogo />
         <div className="title-buttons">
           {hasSave && (
             <button

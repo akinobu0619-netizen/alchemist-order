@@ -149,6 +149,27 @@ export function NpcToken({ kind, emoji, size = 46 }: { kind: string; emoji?: str
   )
 }
 
+// タイトルロゴ。ui/logo.png があれば画像、無ければ文字。
+export function TitleLogo() {
+  const [failed, setFailed] = useState(false)
+  if (failed) {
+    return (
+      <div className="title-logo">
+        <h1>錬金幻獣録</h1>
+        <h2>アルケミスト・オーダー</h2>
+      </div>
+    )
+  }
+  return (
+    <img
+      className="title-logo-img"
+      src={`${import.meta.env.BASE_URL}ui/logo.png`}
+      alt="錬金幻獣録 アルケミスト・オーダー"
+      onError={() => setFailed(true)}
+    />
+  )
+}
+
 export function HpBar({ c }: { c: Combatant }) {
   const ratio = c.hp / c.maxHp
   const hpColor = ratio > 0.5 ? '#43c463' : ratio > 0.2 ? '#e2c23b' : '#e2563b'
