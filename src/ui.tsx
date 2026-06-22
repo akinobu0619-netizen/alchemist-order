@@ -227,6 +227,35 @@ export function PropToken({ kind, emoji, size = 30 }: { kind: string; emoji?: st
   return <span style={{ fontSize: size * 0.82, lineHeight: 1 }}>{emoji ?? PROP_EMOJI[kind] ?? '◽'}</span>
 }
 
+// 建物(立体イラスト)。public/ui/building_<kind>.png があれば画像、無ければCSSの簡易ハウス(屋根＋壁＋扉)。
+const buildingImgState: Record<string, boolean> = {}
+export function Building({ kind, w, tile }: { kind: string; w: number; tile: number }) {
+  const [failed, setFailed] = useState(!!buildingImgState[kind])
+  const widthPx = w * tile
+  if (!failed) {
+    return (
+      <img
+        className="building-img"
+        src={`${import.meta.env.BASE_URL}ui/building_${kind}.png`}
+        alt=""
+        style={{ width: widthPx, height: 'auto' }}
+        onError={() => {
+          buildingImgState[kind] = true
+          setFailed(true)
+        }}
+      />
+    )
+  }
+  return (
+    <div className="css-house" style={{ width: widthPx, height: tile * 2.7 }}>
+      <div className="ch-roof" />
+      <div className="ch-wall">
+        <div className="ch-door" />
+      </div>
+    </div>
+  )
+}
+
 // タイトルロゴ。ui/logo.png があれば画像、無ければ文字。
 export function TitleLogo() {
   const [failed, setFailed] = useState(false)

@@ -40,6 +40,7 @@ export interface GameMap {
   encounter?: { pool: string[]; min: number; max: number }
   npcs?: Npc[]
   props?: Prop[]
+  buildings?: { x: number; y: number; w: number; h: number; kind: string }[] // 立体の家(footprintは'H'で進入不可)
   indoor?: boolean // 室内(床・壁の見た目)
   intro?: string
 }
@@ -186,6 +187,12 @@ export const MAPS: Record<string, GameMap> = {
         lines: ['ねえねえ、幻獣つれてるの！？ いいなあ！ あたしも錬獣師になるんだ！', '強くなったら、また見せてね。約束だよ！'],
       },
     ],
+    buildings: [
+      { x: 6, y: 6, w: 3, h: 2, kind: 'home' }, // わが家(左)
+      { x: 16, y: 4, w: 3, h: 2, kind: 'mentor' }, // 師の家(中央)
+      { x: 25, y: 7, w: 3, h: 2, kind: 'inn' }, // 宿屋(右)
+      { x: 20, y: 15, w: 3, h: 2, kind: 'shop' }, // 道具屋
+    ],
     props: [
       { x: 14, y: 15, kind: 'fountain', solid: true, name: '噴水', lines: ['村の古い噴水。水面に錬金術の紋章が彫られている。'] },
       { x: 22, y: 18, kind: 'barrel', solid: true },
@@ -329,6 +336,10 @@ export const MAPS: Record<string, GameMap> = {
         portrait: 'sailor',
         lines: ['沖に"灰の渦"が出てな……船もまともに出せやしねえ。', '支部長のマレアの姉さんが、なんとかしようと睨みを利かせてるよ。'],
       },
+    ],
+    buildings: [
+      { x: 5, y: 4, w: 3, h: 2, kind: 'home' },
+      { x: 16, y: 4, w: 3, h: 2, kind: 'inn' },
     ],
     props: [
       { x: 5, y: 9, kind: 'barrel', solid: true },

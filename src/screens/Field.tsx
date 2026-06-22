@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { BattleConfig, GameState } from '../types'
 import { ENCOUNTER_RATE, MAPS, TRAINERS, isWall } from '../game/maps'
 import type { Npc } from '../game/maps'
-import { LeaderToken, NpcToken, PlayerToken, PropToken, type Dir } from '../ui'
+import { Building, LeaderToken, NpcToken, PlayerToken, PropToken, type Dir } from '../ui'
 
 interface Props {
   state: GameState
@@ -21,7 +21,7 @@ const VIEW_ROWS = 9
 // グリッド文字 → タイル種別
 function tileType(ch: string, indoor: boolean): string {
   if (ch === '#') return indoor ? 'wall' : 'tree'
-  if (ch === 'H') return 'house'
+  if (ch === 'H') return 'lawn' // 建物の足元は地面として描画(上に立体の家を重ねる)
   if (ch === 'W') return 'water'
   if (ch === 'G') return 'grass'
   if (ch === ',') return 'lawn'
@@ -256,6 +256,15 @@ export default function Field({ state, setState, onStartBattle, onTrainer, onMen
                 style={{ left: w.x * TILE, top: w.y * TILE, width: TILE, height: TILE }}
                 aria-hidden
               />
+            ))}
+            {map.buildings?.map((b, i) => (
+              <span
+                key={`b${i}`}
+                className="world-token building-token"
+                style={{ left: b.x * TILE, top: (b.y - 2) * TILE, width: b.w * TILE, height: (b.h + 2) * TILE }}
+              >
+                <Building kind={b.kind} w={b.w} tile={TILE} />
+              </span>
             ))}
             {map.props?.map((p, i) => (
               <span key={`p${i}`} className={`world-token prop-token${p.kind === 'rug' ? ' prop-flat' : ''}`} style={{ left: p.x * TILE, top: p.y * TILE, width: TILE, height: TILE }}>
