@@ -92,7 +92,7 @@ export function PlayerToken({ flip = false, size = 34 }: { flip?: boolean; size?
   const [failed, setFailed] = useState(playerImgState.missing)
   const transform = flip ? 'scaleX(-1)' : undefined
   if (failed) {
-    return <span style={{ transform, display: 'inline-block' }}>🧝</span>
+    return <span style={{ transform, display: 'inline-block', fontSize: size * 0.92, lineHeight: 1 }}>🧝</span>
   }
   return (
     <img
@@ -113,7 +113,7 @@ const leaderImgState: Record<string, boolean> = {}
 export function LeaderToken({ trainerId, defeated, size = 46 }: { trainerId: string; defeated?: boolean; size?: number }) {
   const [failed, setFailed] = useState(!!leaderImgState[trainerId])
   if (failed) {
-    return <span>{defeated ? '🧙' : '🧙‍♀️'}</span>
+    return <span style={{ fontSize: size * 0.92, lineHeight: 1 }}>{defeated ? '🧙' : '🧙‍♀️'}</span>
   }
   return (
     <img
@@ -134,7 +134,7 @@ const NPC_EMOJI: Record<string, string> = { mentor: '🧙‍♂️', mom: '👩'
 const npcImgState: Record<string, boolean> = {}
 export function NpcToken({ kind, emoji, size = 46 }: { kind: string; emoji?: string; size?: number }) {
   const [failed, setFailed] = useState(!!npcImgState[kind])
-  if (failed) return <span>{emoji ?? NPC_EMOJI[kind] ?? '❔'}</span>
+  if (failed) return <span style={{ fontSize: size * 0.92, lineHeight: 1 }}>{emoji ?? NPC_EMOJI[kind] ?? '❔'}</span>
   return (
     <img
       className="leader-sprite"
@@ -164,7 +164,7 @@ export function PropToken({ kind, emoji, size = 30 }: { kind: string; emoji?: st
         className="prop-sprite"
         src={`${import.meta.env.BASE_URL}ui/prop_${kind}.png`}
         alt=""
-        style={{ width: size, height: size, objectFit: 'contain' }}
+        style={{ width: size, height: size, objectFit: 'contain', objectPosition: '50% 100%' }}
         onError={() => {
           propImgState[kind] = true
           setFailed(true)

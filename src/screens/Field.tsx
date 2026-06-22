@@ -34,6 +34,13 @@ const TILE_NAMES = ['path', 'floor', 'lawn', 'grass', 'tree', 'wall', 'house', '
 const tileAvail: Record<string, boolean> = {}
 let tileProbed = false
 
+// 小物ごとの大きさ(タイル比)。大きい家具は1超、小物は1未満。
+const PROP_SCALE: Record<string, number> = {
+  bed: 1.25, bookshelf: 1.4, cauldron: 1.1, candle: 0.8, fireplace: 1.25, plant: 1.0,
+  rug: 1.0, window: 1.05, fountain: 1.3, barrel: 1.0, crate: 1.0, lamp: 1.2, flower: 0.75,
+  fence: 1.0, sign: 1.1, rock: 1.05, mushroom: 0.85, log: 1.0, anchor: 1.2, shell: 0.7,
+}
+
 const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n))
 
 export default function Field({ state, setState, onStartBattle, onMenu, onTalk, onBlockedExit }: Props) {
@@ -242,21 +249,21 @@ export default function Field({ state, setState, onStartBattle, onMenu, onTalk, 
             ))}
             {map.props?.map((p, i) => (
               <span key={`p${i}`} className={`world-token prop-token${p.kind === 'rug' ? ' prop-flat' : ''}`} style={{ left: p.x * TILE, top: p.y * TILE, width: TILE, height: TILE }}>
-                <PropToken kind={p.kind} emoji={p.emoji} size={TILE} />
+                <PropToken kind={p.kind} emoji={p.emoji} size={TILE * (PROP_SCALE[p.kind] ?? 1)} />
               </span>
             ))}
             {map.npcs?.map((n) => (
-              <span key={`n${n.x}-${n.y}`} className="world-token" style={{ left: n.x * TILE, top: n.y * TILE, width: TILE, height: TILE }}>
-                <NpcToken kind={n.kind} emoji={n.emoji} size={TILE * 0.9} />
+              <span key={`n${n.x}-${n.y}`} className="world-token person-token" style={{ left: n.x * TILE, top: n.y * TILE, width: TILE, height: TILE }}>
+                <NpcToken kind={n.kind} emoji={n.emoji} size={TILE * 1.3} />
               </span>
             ))}
             {map.leader && (
-              <span className="world-token" style={{ left: map.leader.x * TILE, top: map.leader.y * TILE, width: TILE, height: TILE }}>
-                <LeaderToken trainerId={map.leader.trainerId} defeated={leaderDefeated} size={TILE * 1.05} />
+              <span className="world-token person-token" style={{ left: map.leader.x * TILE, top: map.leader.y * TILE, width: TILE, height: TILE }}>
+                <LeaderToken trainerId={map.leader.trainerId} defeated={leaderDefeated} size={TILE * 1.5} />
               </span>
             )}
-            <span className="world-token player-token" style={{ left: x * TILE, top: y * TILE, width: TILE, height: TILE }}>
-              <PlayerToken flip={flip} size={TILE * 0.82} />
+            <span className="world-token player-token person-token" style={{ left: x * TILE, top: y * TILE, width: TILE, height: TILE }}>
+              <PlayerToken flip={flip} size={TILE * 1.3} />
             </span>
           </div>
         </div>
