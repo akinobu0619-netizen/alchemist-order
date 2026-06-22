@@ -980,6 +980,12 @@ button:disabled {
 .world { position: absolute; left: 0; top: 0; transition: transform 0.13s linear; }
 .tile2 { position: absolute; box-sizing: border-box; background-size: 100% 100%; background-position: center; }
 .t-tree { z-index: 2; } /* 樹冠を隣の地面に少し被せる */
+/* オートタイル: 外側の角に隣接地形を差し込み、内側を丸めてブロブの角を曲線に */
+.tcorner { position: absolute; width: 52%; height: 52%; background-size: 200% 200%; background-position: center; }
+.tc-tl { top: -1px; left: -1px; border-bottom-right-radius: 100%; }
+.tc-tr { top: -1px; right: -1px; border-bottom-left-radius: 100%; }
+.tc-bl { bottom: -1px; left: -1px; border-top-right-radius: 100%; }
+.tc-br { bottom: -1px; right: -1px; border-top-left-radius: 100%; }
 .decal { position: absolute; width: 26%; height: 26%; pointer-events: none; }
 .decal-g { background: radial-gradient(circle at 38% 42%, #eee6bf 0 20%, transparent 22%), radial-gradient(circle at 72% 66%, #e0cf52 0 16%, transparent 18%); }
 .decal-l { width: 22%; height: 22%; background: radial-gradient(circle at 50% 48%, #e879a0 0 30%, #d9b53a 32% 42%, transparent 44%); }

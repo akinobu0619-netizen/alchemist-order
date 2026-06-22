@@ -46,6 +46,14 @@ const PROP_SCALE: Record<string, number> = {
 
 const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n))
 
+// オートタイル対象(縁を丸める自然地形)
+const AUTOTILE = new Set(['grass', 'water'])
+// 角に差し込む隣接地形を選ぶ(地面優先、無ければ非自身、最後はpath)
+const groundPick = (type: string, a: string, b: string): string => {
+  for (const t of [a, b]) if (t !== type && t !== 'edge' && t !== 'tree' && t !== 'wall') return t
+  for (const t of [a, b]) if (t !== type && t !== 'edge') return t
+  return 'path'
+}
 // 反復感を消す: 自然物タイルは座標ハッシュで反転/明るさを微変化、一部に装飾デカール
 const VARY_TYPES = new Set(['grass', 'lawn', 'tree', 'flower', 'sand'])
 const tileHash = (x: number, y: number) => ((x * 73856093) ^ (y * 19349663)) >>> 0
@@ -241,6 +249,10 @@ export default function Field({ state, setState, onStartBattle, onTrainer, onChe
   const tileStyle = (type: string): React.CSSProperties =>
     tileAvail[type] ? { backgroundImage: `url(${BASE}tiles/${type}.png)` } : {}
 
+  // 近傍の地形種別(範囲外は 'edge')
+  const typeAt = (tx: number, ty: number): string =>
+    ty < 0 || ty >= rows || tx < 0 || tx >= cols ? 'edge' : tileType(map.grid[ty][tx], indoor)
+
   return (
     <div className="screen field">
       <div className="field-header">
@@ -256,12 +268,23 @@ export default function Field({ state, setState, onStartBattle, onTrainer, onChe
               row.split('').map((ch, rx) => {
                 const type = tileType(ch, indoor)
                 const h = tileHash(rx, ry)
+                const auto = AUTOTILE.has(type)
                 const vary = VARY_TYPES.has(type)
-                const flip = vary && h & 1 ? 'scaleX(-1) ' : ''
+                const flip = vary && !auto && h & 1 ? 'scaleX(-1) ' : ''
                 const scale = type === 'tree' ? 'scale(1.08)' : ''
                 const transform = flip || scale ? `${flip}${scale}`.trim() : undefined
                 const bright = vary ? 0.95 + ((h >> 1) % 6) * 0.02 : 1
                 const decal = decalFor(type, h)
+                // オートタイル: 外側の角に隣接地形を差し込んで丸める
+                const corners: { p: string; t: string }[] = []
+                if (auto) {
+                  const U = typeAt(rx, ry - 1), D = typeAt(rx, ry + 1), L = typeAt(rx - 1, ry), R = typeAt(rx + 1, ry)
+                  const o = (t: string) => t !== type
+                  if (o(U) && o(L)) corners.push({ p: 'tl', t: groundPick(type, L, U) })
+                  if (o(U) && o(R)) corners.push({ p: 'tr', t: groundPick(type, R, U) })
+                  if (o(D) && o(L)) corners.push({ p: 'bl', t: groundPick(type, L, D) })
+                  if (o(D) && o(R)) corners.push({ p: 'br', t: groundPick(type, R, D) })
+                }
                 return (
                   <div
                     key={`${rx}-${ry}`}
@@ -276,6 +299,9 @@ export default function Field({ state, setState, onStartBattle, onTrainer, onChe
                       filter: bright !== 1 ? `brightness(${bright.toFixed(2)})` : undefined,
                     }}
                   >
+                    {corners.map((c) => (
+                      <span key={c.p} className={`tcorner tc-${c.p} t-${c.t}`} style={tileStyle(c.t)} />
+                    ))}
                     {decal && <span className={`decal decal-${decal}`} style={{ top: `${12 + (h % 3) * 26}%`, left: `${12 + ((h >> 3) % 3) * 26}%` }} />}
                   </div>
                 )
