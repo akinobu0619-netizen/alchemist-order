@@ -907,6 +907,39 @@ button:disabled {
   background: radial-gradient(circle, rgba(240,217,154,0.7), rgba(240,217,154,0) 70%);
 }
 
+/* ── 広大マップ＋カメラ追従(タイル描画) ── */
+.viewport { width: 100%; max-width: 480px; margin: 0 auto 6px; }
+.vp-window {
+  position: relative;
+  overflow: hidden;
+  margin: 0 auto;
+  border-radius: 12px;
+  border: 2px solid var(--border);
+  box-shadow: inset 0 0 24px rgba(0,0,0,0.5), 0 6px 20px rgba(0,0,0,0.4);
+  background: #1a1610;
+}
+.world { position: absolute; left: 0; top: 0; transition: transform 0.13s linear; }
+.tile2 { position: absolute; box-sizing: border-box; background-size: cover; background-position: center; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05); }
+.t-path { background-color: #b9a06d; background-image: linear-gradient(135deg, #c2a875, #ad9460); }
+.t-lawn { background-color: #5d9a45; background-image: radial-gradient(circle at 30% 25%, #6cab50, #538b3d); }
+.t-grass {
+  background-color: #46863a;
+  background-image: repeating-linear-gradient(0deg, #46863a 0, #46863a 5px, #54994a 5px, #54994a 10px);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06), inset 0 0 14px rgba(20,60,20,0.5);
+}
+.t-tree { background-color: #6b8a4a; background-image: radial-gradient(circle at 50% 45%, #2e5e2c 0, #2e5e2c 38%, rgba(46,94,44,0) 44%), radial-gradient(circle at 50% 30%, #3f7536 0, rgba(63,117,54,0) 60%); }
+.t-wall { background-color: #3a2e22; background-image: linear-gradient(#4a3a2a, #34281d); }
+.t-house { background-color: #6e3f30; background-image: repeating-linear-gradient(90deg, #7a4838 0, #7a4838 8px, #6b3e30 8px, #6b3e30 16px), linear-gradient(#854d3b, #5e3628); }
+.t-water { background-color: #2c6aa8; background-image: repeating-linear-gradient(0deg, #2c6aa8 0, #2c6aa8 6px, #3576b6 6px, #3576b6 12px); box-shadow: inset 0 0 14px rgba(0,0,0,0.35); }
+.t-sand { background-color: #d8c693; background-image: linear-gradient(135deg, #ddcb98, #cdba84); }
+.t-flower { background-color: #5d9a45; background-image: radial-gradient(circle at 32% 34%, #e8d24a 0, #e8d24a 16%, transparent 18%), radial-gradient(circle at 68% 62%, #e26a8a 0, #e26a8a 15%, transparent 17%), radial-gradient(circle at 30% 25%, #6cab50, #538b3d); }
+.vp-window.indoor .t-path { background-color: #6b5236; background-image: repeating-linear-gradient(90deg, #6f5639 0, #6f5639 14px, #644d34 14px, #644d34 28px); }
+.vp-window.indoor .t-wall { background-color: #2c2118; background-image: linear-gradient(#352819, #241b12); }
+.world-token { position: absolute; display: flex; align-items: center; justify-content: center; z-index: 5; pointer-events: none; line-height: 1; }
+.world-token.warp-token { background: radial-gradient(circle, rgba(240,217,154,0.8) 0, rgba(240,217,154,0) 42%); box-shadow: none; border-radius: 0; z-index: 4; }
+.world-token .leader-sprite, .world-token .player-sprite { filter: drop-shadow(0 3px 4px rgba(0,0,0,0.5)); }
+.player-token { z-index: 8; transition: left 0.13s linear, top 0.13s linear; }
+
 /* ── 移動を滑らかに(マス間を補間) ── */
 .map-token.player-token { transition: left 0.14s linear, top 0.14s linear; }
 

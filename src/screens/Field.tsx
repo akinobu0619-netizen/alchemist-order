@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { BattleConfig, GameState } from '../types'
 import { ENCOUNTER_RATE, MAPS, TRAINERS, isWall } from '../game/maps'
 import type { Npc } from '../game/maps'
@@ -13,44 +13,85 @@ interface Props {
   onBlockedExit: (msg: string) => void
 }
 
-const missingMaps = new Set<string>()
+const BASE = import.meta.env.BASE_URL
+const VIEW_COLS = 11 // 横に見えるタイル数(これでカメラの寄りが決まる)
+const VIEW_ROWS = 9
 
-function tileClass(ch: string): string {
-  if (ch === '#') return 'wall'
+// グリッド文字 → タイル種別
+function tileType(ch: string, indoor: boolean): string {
+  if (ch === '#') return indoor ? 'wall' : 'tree'
   if (ch === 'H') return 'house'
+  if (ch === 'W') return 'water'
   if (ch === 'G') return 'grass'
-  return 'ground'
+  if (ch === ',') return 'lawn'
+  if (ch === 'F') return 'flower'
+  if (ch === '~') return 'sand'
+  return 'path'
 }
+
+// public/tiles/<type>.png があれば差し替え。1度だけ存在確認(セッション内キャッシュ)
+const TILE_NAMES = ['path', 'lawn', 'grass', 'tree', 'wall', 'house', 'water', 'sand', 'flower']
+const tileAvail: Record<string, boolean> = {}
+let tileProbed = false
+
+const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n))
 
 export default function Field({ state, setState, onStartBattle, onMenu, onTalk, onBlockedExit }: Props) {
   const map = MAPS[state.pos.mapId]
   const { x, y } = state.pos
   const cols = map.grid[0].length
   const rows = map.grid.length
-  const mapArtUrl = `${import.meta.env.BASE_URL}bg/map/${map.id}.png`
-  const [artOk, setArtOk] = useState(!missingMaps.has(map.id))
-  const [flip, setFlip] = useState(false)
+  const indoor = !!map.indoor
   const hasStarter = state.collection.length > 0
   const posRef = useRef(state.pos)
   const holdRef = useRef<number | undefined>(undefined)
+  const [flip, setFlip] = useState(false)
+  const vpRef = useRef<HTMLDivElement>(null)
+  const [vw, setVw] = useState(0)
+  const [, force] = useState(0)
 
   useEffect(() => {
     posRef.current = state.pos
   }, [state.pos])
 
+  // ビューポート幅を測ってタイルサイズを決める(レスポンシブ)
+  useLayoutEffect(() => {
+    const el = vpRef.current
+    if (!el) return
+    const update = () => {
+      const w = el.clientWidth
+      if (w > 0) setVw((prev) => (prev === w ? prev : w))
+    }
+    update()
+    // マウント直後に幅が0のことがあるので数フレーム再測定
+    let tries = 0
+    const tick = () => {
+      update()
+      if (++tries < 10 && el.clientWidth === 0) requestAnimationFrame(tick)
+    }
+    requestAnimationFrame(tick)
+    const ro = new ResizeObserver(update)
+    ro.observe(el)
+    window.addEventListener('resize', update)
+    return () => {
+      ro.disconnect()
+      window.removeEventListener('resize', update)
+    }
+  }, [])
+
+  // タイル画像の存在確認(無ければCSSの見た目を使う)
   useEffect(() => {
-    if (missingMaps.has(map.id)) {
-      setArtOk(false)
-      return
-    }
-    const img = new Image()
-    img.onload = () => setArtOk(true)
-    img.onerror = () => {
-      missingMaps.add(map.id)
-      setArtOk(false)
-    }
-    img.src = mapArtUrl
-  }, [map.id, mapArtUrl])
+    if (tileProbed) return
+    tileProbed = true
+    TILE_NAMES.forEach((name) => {
+      const img = new Image()
+      img.onload = () => {
+        tileAvail[name] = true
+        force((n) => n + 1)
+      }
+      img.src = `${BASE}tiles/${name}.png`
+    })
+  }, [])
 
   function stopHold() {
     if (holdRef.current !== undefined) {
@@ -147,10 +188,18 @@ export default function Field({ state, setState, onStartBattle, onMenu, onTalk, 
   }, [state])
 
   const leaderDefeated = map.leader ? state.defeatedTrainers.includes(TRAINERS[map.leader.trainerId].id) : false
-  const pct = (tx: number, ty: number) => ({
-    left: `${((tx + 0.5) / cols) * 100}%`,
-    top: `${((ty + 0.5) / rows) * 100}%`,
-  })
+
+  // カメラ: プレイヤーを中心に。マップが小さければ中央寄せ
+  const TILE = vw > 0 ? vw / VIEW_COLS : 40
+  const worldW = cols * TILE
+  const worldH = rows * TILE
+  const viewW = Math.min(vw || worldW, worldW)
+  const viewH = Math.min(VIEW_ROWS * TILE, worldH)
+  const camX = worldW <= viewW ? (worldW - viewW) / 2 : clamp(x * TILE + TILE / 2 - viewW / 2, 0, worldW - viewW)
+  const camY = worldH <= viewH ? (worldH - viewH) / 2 : clamp(y * TILE + TILE / 2 - viewH / 2, 0, worldH - viewH)
+
+  const tileStyle = (type: string): React.CSSProperties =>
+    tileAvail[type] ? { backgroundImage: `url(${BASE}tiles/${type}.png)` } : {}
 
   return (
     <div className="screen field">
@@ -160,57 +209,45 @@ export default function Field({ state, setState, onStartBattle, onMenu, onTalk, 
       </div>
       {map.intro && <p className="field-intro">{map.intro}</p>}
 
-      {artOk ? (
-        <div className="map-art" style={{ backgroundImage: `url(${mapArtUrl})`, aspectRatio: `${cols} / ${rows}` }}>
-          {map.warps.map((w) => (
-            <span key={`w${w.x}-${w.y}`} className="map-token warp-token" style={pct(w.x, w.y)} aria-hidden />
-          ))}
-          {map.npcs?.map((n) => (
-            <span key={`n${n.x}-${n.y}`} className="map-token npc-token" style={pct(n.x, n.y)}>
-              <NpcToken kind={n.kind} emoji={n.emoji} size={46} />
+      <div className="viewport" ref={vpRef}>
+        <div className={`vp-window${indoor ? ' indoor' : ''}`} style={{ width: viewW || '100%', height: viewH || 260 }}>
+          <div className="world" style={{ width: worldW, height: worldH, transform: `translate(${-camX}px, ${-camY}px)` }}>
+            {map.grid.flatMap((row, ry) =>
+              row.split('').map((ch, rx) => {
+                const type = tileType(ch, indoor)
+                return (
+                  <div
+                    key={`${rx}-${ry}`}
+                    className={`tile2 t-${type}`}
+                    style={{ left: rx * TILE, top: ry * TILE, width: TILE, height: TILE, ...tileStyle(type) }}
+                  />
+                )
+              }),
+            )}
+            {map.warps.map((w) => (
+              <span
+                key={`w${w.x}-${w.y}`}
+                className="world-token warp-token"
+                style={{ left: w.x * TILE, top: w.y * TILE, width: TILE, height: TILE }}
+                aria-hidden
+              />
+            ))}
+            {map.npcs?.map((n) => (
+              <span key={`n${n.x}-${n.y}`} className="world-token" style={{ left: n.x * TILE, top: n.y * TILE, width: TILE, height: TILE }}>
+                <NpcToken kind={n.kind} emoji={n.emoji} size={TILE * 0.9} />
+              </span>
+            ))}
+            {map.leader && (
+              <span className="world-token" style={{ left: map.leader.x * TILE, top: map.leader.y * TILE, width: TILE, height: TILE }}>
+                <LeaderToken trainerId={map.leader.trainerId} defeated={leaderDefeated} size={TILE * 1.05} />
+              </span>
+            )}
+            <span className="world-token player-token" style={{ left: x * TILE, top: y * TILE, width: TILE, height: TILE }}>
+              <PlayerToken flip={flip} size={TILE * 0.82} />
             </span>
-          ))}
-          {map.leader && (
-            <span className="map-token leader-token" style={pct(map.leader.x, map.leader.y)}>
-              <LeaderToken trainerId={map.leader.trainerId} defeated={leaderDefeated} size={50} />
-            </span>
-          )}
-          <span className="map-token player-token" style={pct(x, y)}>
-            <PlayerToken flip={flip} size={38} />
-          </span>
+          </div>
         </div>
-      ) : (
-        <div className={`map-grid${map.indoor ? ' indoor' : ''}`} style={{ gridTemplateColumns: `repeat(${cols}, 1fr)` }}>
-          {map.grid.flatMap((row, ry) =>
-            row.split('').map((ch, rx) => {
-              const isPlayer = rx === x && ry === y
-              const isLeader = map.leader && map.leader.x === rx && map.leader.y === ry
-              const isWarp = map.warps.some((w) => w.x === rx && w.y === ry)
-              const npc = map.npcs?.find((n) => n.x === rx && n.y === ry)
-              return (
-                <div key={`${rx}-${ry}`} className={`tile ${tileClass(ch)}`}>
-                  {isWarp && !isPlayer && <span className="tile-warp" aria-hidden />}
-                  {npc && !isPlayer && (
-                    <span className="tile-icon">
-                      <NpcToken kind={npc.kind} emoji={npc.emoji} size={28} />
-                    </span>
-                  )}
-                  {isLeader && !isPlayer && (
-                    <span className="tile-icon">
-                      <LeaderToken trainerId={map.leader!.trainerId} defeated={leaderDefeated} size={32} />
-                    </span>
-                  )}
-                  {isPlayer && (
-                    <span className="tile-icon player-mark">
-                      <PlayerToken flip={flip} size={28} />
-                    </span>
-                  )}
-                </div>
-              )
-            }),
-          )}
-        </div>
-      )}
+      </div>
 
       <div className="field-controls">
         <div className="dpad">
@@ -224,7 +261,7 @@ export default function Field({ state, setState, onStartBattle, onMenu, onTalk, 
           <span className="move-meta">手持ち・図鑑・どうぐ</span>
         </button>
       </div>
-      <p className="field-hint">矢印キー / WASD でも移動。人に話しかけ、草むらで幻獣に出会う。</p>
+      <p className="field-hint">矢印キー / WASD でも移動。画面はマップの一部。歩くと景色がスクロールする。</p>
     </div>
   )
 }

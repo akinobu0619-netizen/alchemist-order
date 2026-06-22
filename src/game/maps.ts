@@ -1,5 +1,9 @@
 // フィールドマップとトレーナー定義
-// グリッド文字: '#'=壁/木, 'H'=建物, '.'=地面, 'G'=草むら(エンカウント)
+// グリッド文字:
+//   '#'=木/壁(進入不可)  'H'=建物(進入不可)  'W'=水(進入不可)
+//   '.'=道/床(歩行可)    ','=芝生(歩行可・装飾)  'G'=高草(歩行可・エンカウント)
+//   'F'=花(歩行可・装飾)  '~'=砂浜(歩行可)
+// 広大マップ＋カメラ追従。画面に映るのは一部だけで、移動でスクロールする。
 import type { TrainerData } from '../types'
 
 export type NpcKind = 'mentor' | 'mom' | 'inn' | 'sign' | 'villager' | 'shop'
@@ -22,8 +26,104 @@ export interface GameMap {
   leader?: { x: number; y: number; trainerId: string }
   encounter?: { pool: string[]; min: number; max: number }
   npcs?: Npc[]
-  indoor?: boolean // 室内(壁に木を出さず床表示)
+  indoor?: boolean // 室内(床・壁の見た目)
   intro?: string
+}
+
+// ── マップ生成ヘルパー(座標ズレ防止) ──
+function grid(w: number, h: number, fill = '.'): string[] {
+  return Array.from({ length: h }, () => fill.repeat(w))
+}
+function set(g: string[], x: number, y: number, ch: string): void {
+  if (y < 0 || y >= g.length) return
+  const row = g[y]
+  if (x < 0 || x >= row.length) return
+  g[y] = row.slice(0, x) + ch + row.slice(x + 1)
+}
+function fill(g: string[], x0: number, y0: number, x1: number, y1: number, ch: string): void {
+  for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) set(g, x, y, ch)
+}
+function frame(g: string[], ch = '#'): void {
+  const h = g.length
+  const w = g[0].length
+  for (let x = 0; x < w; x++) {
+    set(g, x, 0, ch)
+    set(g, x, h - 1, ch)
+  }
+  for (let y = 0; y < h; y++) {
+    set(g, 0, y, ch)
+    set(g, w - 1, y, ch)
+  }
+}
+
+// 始まりの村ラピス(24x18) 芝生に石畳・家3軒・道具屋・南に森への門
+function buildRapis(): string[] {
+  const g = grid(24, 18, ',')
+  frame(g, '#')
+  fill(g, 2, 8, 21, 8, '.') // 大通り(横)
+  fill(g, 11, 1, 11, 16, '.') // 大通り(縦)
+  // 家(2x3ブロック)＋扉(下に1マスの道)
+  fill(g, 3, 3, 5, 4, 'H')
+  set(g, 4, 5, '.')
+  fill(g, 4, 5, 4, 8, '.') // 扉→大通り
+  fill(g, 10, 2, 12, 3, 'H')
+  set(g, 11, 4, '.')
+  fill(g, 18, 3, 20, 4, 'H')
+  set(g, 19, 5, '.')
+  fill(g, 19, 5, 19, 8, '.')
+  // 道具屋の露店
+  fill(g, 13, 10, 15, 11, 'H')
+  // 花壇の装飾
+  ;[[6, 11], [7, 6], [16, 12], [20, 10], [3, 14], [8, 13], [17, 6]].forEach(([x, y]) => set(g, x, y, 'F'))
+  // 南の門(森へ)
+  set(g, 11, 16, '.')
+  return g
+}
+
+// 緑霧の森(24x20) 縦の小道を軸に高草の群れと木立。北に支部長、東に海への出口
+function buildForest(): string[] {
+  const g = grid(24, 20, '.')
+  frame(g, '#')
+  fill(g, 3, 5, 9, 8, 'G')
+  fill(g, 14, 4, 20, 7, 'G')
+  fill(g, 5, 11, 11, 15, 'G')
+  fill(g, 15, 11, 20, 15, 'G')
+  // 木立(障害物)
+  fill(g, 8, 9, 10, 10, '#')
+  fill(g, 14, 9, 16, 10, '#')
+  set(g, 4, 16, '#')
+  set(g, 19, 16, '#')
+  set(g, 6, 3, '#')
+  set(g, 18, 3, '#')
+  // 通路を確保(縦の背骨＋東への枝)
+  fill(g, 12, 2, 12, 18, '.')
+  fill(g, 12, 10, 22, 10, '.')
+  return g
+}
+
+// 潮騒の道(22x12) 海沿いの砂浜。葦(高草)で水辺の幻獣が出る
+function buildCoast(): string[] {
+  const g = grid(22, 12, '~')
+  frame(g, '#')
+  fill(g, 1, 1, 20, 2, 'W') // 北は海
+  fill(g, 4, 5, 9, 8, 'G')
+  fill(g, 12, 5, 17, 8, 'G')
+  fill(g, 1, 6, 20, 6, '~') // 砂の小道(横)
+  return g
+}
+
+// 潮鳴りの港町(24x16) 石畳の港町。北に支部長、南東に停泊する船(水)
+function buildPort(): string[] {
+  const g = grid(24, 16, ',')
+  frame(g, '#')
+  fill(g, 1, 8, 22, 8, '.') // 大通り(横)
+  fill(g, 12, 2, 12, 13, '.') // 大通り(縦)
+  fill(g, 15, 12, 22, 14, 'W') // 港の水面
+  fill(g, 5, 4, 7, 5, 'H')
+  fill(g, 16, 4, 18, 5, 'H')
+  ;[[3, 10], [9, 11], [20, 6]].forEach(([x, y]) => set(g, x, y, 'F'))
+  set(g, 1, 8, '.') // 西の出口
+  return g
 }
 
 export const MAPS: Record<string, GameMap> = {
@@ -31,27 +131,24 @@ export const MAPS: Record<string, GameMap> = {
     id: 'rapis',
     name: '始まりの村ラピス',
     biome: 'town',
-    grid: [
-      '#########',
-      '#.......#',
-      '#.......#',
-      '#.......#',
-      '#.......#',
-      '#.......#',
-      '#.......#',
-      '#########',
-    ],
-    // 絵に合わせ: 上段=家3軒(左=わが家/中央=師/右=宿屋)、下中央=森への道
+    grid: buildRapis(),
     warps: [
-      { x: 4, y: 6, to: 'forest', tx: 4, ty: 5, gate: 'starter' },
-      { x: 4, y: 2, to: 'mentor_house', tx: 3, ty: 3 },
-      { x: 2, y: 2, to: 'home', tx: 3, ty: 3 },
-      { x: 6, y: 2, to: 'inn', tx: 3, ty: 3 },
+      { x: 11, y: 16, to: 'forest', tx: 12, ty: 17, gate: 'starter' }, // 南=森へ
+      { x: 11, y: 4, to: 'mentor_house', tx: 3, ty: 3 }, // 中央=師の家
+      { x: 4, y: 5, to: 'home', tx: 3, ty: 3 }, // 左=わが家
+      { x: 19, y: 5, to: 'inn', tx: 3, ty: 3 }, // 右=宿屋
     ],
     npcs: [
       {
-        x: 6,
-        y: 4,
+        x: 14,
+        y: 9,
+        kind: 'shop',
+        name: '道具屋のラル',
+        emoji: '🛒',
+      },
+      {
+        x: 16,
+        y: 8,
         kind: 'villager',
         name: '老人モーリス',
         emoji: '👴',
@@ -61,16 +158,15 @@ export const MAPS: Record<string, GameMap> = {
         ],
       },
       {
-        x: 2,
-        y: 5,
+        x: 7,
+        y: 9,
         kind: 'villager',
         name: '子供ティナ',
         emoji: '🧒',
         lines: ['ねえねえ、幻獣つれてるの！？ いいなあ！ あたしも錬獣師になるんだ！', '強くなったら、また見せてね。約束だよ！'],
       },
-      { x: 6, y: 5, kind: 'shop', name: '道具屋のラル', emoji: '🛒' },
     ],
-    intro: '錬金工房が並ぶ静かな村。家の扉から中へ。村の出口の先に緑霧の森が広がる。',
+    intro: '錬金工房が並ぶ静かな村。家の扉から中へ。南の門の先に緑霧の森が広がる。',
   },
   mentor_house: {
     id: 'mentor_house',
@@ -78,7 +174,7 @@ export const MAPS: Record<string, GameMap> = {
     biome: 'town',
     indoor: true,
     grid: ['#######', '#.....#', '#.....#', '#.....#', '#.....#', '#######'],
-    warps: [{ x: 3, y: 4, to: 'rapis', tx: 4, ty: 3 }],
+    warps: [{ x: 3, y: 4, to: 'rapis', tx: 11, ty: 5 }],
     npcs: [{ x: 3, y: 1, kind: 'mentor', name: '師ガレン' }],
     intro: '錬金道具と古びた書物が並ぶ、師の家。',
   },
@@ -88,9 +184,8 @@ export const MAPS: Record<string, GameMap> = {
     biome: 'town',
     indoor: true,
     grid: ['#######', '#.....#', '#.....#', '#.....#', '#.....#', '#######'],
-    // (3,4)=外への扉、(5,1)=2階への階段
     warps: [
-      { x: 3, y: 4, to: 'rapis', tx: 2, ty: 3 },
+      { x: 3, y: 4, to: 'rapis', tx: 4, ty: 6 },
       { x: 5, y: 1, to: 'home2f', tx: 4, ty: 4 },
     ],
     npcs: [{ x: 3, y: 1, kind: 'mom', name: 'おかあさん' }],
@@ -102,7 +197,6 @@ export const MAPS: Record<string, GameMap> = {
     biome: 'town',
     indoor: true,
     grid: ['#######', '#.....#', '#.....#', '#.....#', '#.....#', '#######'],
-    // (4,4)=1階への階段
     warps: [{ x: 4, y: 4, to: 'home', tx: 5, ty: 2 }],
     intro: '自分の部屋。窓から朝の光が差し込んでいる。',
   },
@@ -112,69 +206,50 @@ export const MAPS: Record<string, GameMap> = {
     biome: 'town',
     indoor: true,
     grid: ['#######', '#.....#', '#.....#', '#.....#', '#.....#', '#######'],
-    warps: [{ x: 3, y: 4, to: 'rapis', tx: 6, ty: 3 }],
+    warps: [{ x: 3, y: 4, to: 'rapis', tx: 19, ty: 6 }],
     npcs: [{ x: 3, y: 1, kind: 'inn', name: '宿屋の主人' }],
-    // (宿屋の戻り先は村の右の家の前)
     intro: '暖炉のぬくもりが心地よい宿屋。',
   },
   forest: {
     id: 'forest',
     name: '緑霧の森',
     biome: 'forest',
-    grid: [
-      '#########',
-      '#...L...#',
-      '#.GGGGG.#',
-      '#.GGGGG.#',
-      '#.GGGGG.#',
-      '#.GGGGG.#',
-      '#...W...#',
-      '#########',
-    ],
+    grid: buildForest(),
     warps: [
-      { x: 4, y: 6, to: 'rapis', tx: 4, ty: 5 },
-      { x: 7, y: 4, to: 'coast_road', tx: 1, ty: 3, gate: '新緑の記章' }, // 東=海へ(要・新緑の記章)
+      { x: 12, y: 18, to: 'rapis', tx: 11, ty: 15 }, // 南=村へ
+      { x: 22, y: 10, to: 'coast_road', tx: 2, ty: 6, gate: '新緑の記章' }, // 東=海へ(要・新緑の記章)
     ],
-    leader: { x: 4, y: 1, trainerId: 'gym_forest' },
+    leader: { x: 12, y: 2, trainerId: 'gym_forest' },
     encounter: {
       pool: ['portabupa', 'venomite', 'sporin', 'hobgobalt', 'tsunousa', 'falcone', 'briezel', 'pibit'],
       min: 4,
       max: 8,
     },
-    intro: '霧が立ちこめる森。草むらには野生の幻獣がひそむ。奥に錬獣師の気配……。',
+    intro: '霧が立ちこめる森。高草には野生の幻獣がひそむ。奥に錬獣師の気配……。',
   },
   coast_road: {
     id: 'coast_road',
     name: '潮騒の道',
     biome: 'sea',
-    grid: ['#########', '#.......#', '#.GGGGG.#', '#.GGGGG.#', '#.......#', '#########'],
+    grid: buildCoast(),
     warps: [
-      { x: 1, y: 3, to: 'forest', tx: 7, ty: 4 }, // 西=森へ
-      { x: 7, y: 2, to: 'port', tx: 4, ty: 6 }, // 東=港町へ
+      { x: 1, y: 6, to: 'forest', tx: 21, ty: 10 }, // 西=森へ
+      { x: 20, y: 6, to: 'port', tx: 2, ty: 8 }, // 東=港町へ
     ],
     encounter: { pool: ['shelk', 'frost', 'aquab', 'teary', 'pibit', 'briezel'], min: 9, max: 13 },
-    intro: '潮の香りが満ちる海沿いの道。水辺の幻獣が現れる。',
+    intro: '潮の香りが満ちる海沿いの道。葦のしげみに水辺の幻獣が現れる。',
   },
   port: {
     id: 'port',
     name: '潮鳴りの港町',
     biome: 'sea',
-    grid: [
-      '#########',
-      '#...L...#',
-      '#.......#',
-      '#.......#',
-      '#.......#',
-      '#.......#',
-      '#.......#',
-      '#########',
-    ],
-    warps: [{ x: 4, y: 6, to: 'coast_road', tx: 7, ty: 2 }],
-    leader: { x: 4, y: 1, trainerId: 'gym_port' },
+    grid: buildPort(),
+    warps: [{ x: 1, y: 8, to: 'coast_road', tx: 19, ty: 6 }], // 西=潮騒の道へ
+    leader: { x: 12, y: 2, trainerId: 'gym_port' },
     npcs: [
       {
-        x: 2,
-        y: 4,
+        x: 8,
+        y: 8,
         kind: 'villager',
         name: '船乗り',
         emoji: '🧑‍✈️',
@@ -211,5 +286,5 @@ export const TRAINERS: Record<string, TrainerData> = {
 export const ENCOUNTER_RATE = 0.18
 
 export function isWall(ch: string): boolean {
-  return ch === '#' || ch === 'H'
+  return ch === '#' || ch === 'H' || ch === 'W'
 }
