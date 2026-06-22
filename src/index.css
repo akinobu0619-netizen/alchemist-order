@@ -791,6 +791,49 @@ button:disabled {
 .trainer-portrait .leader-sprite { filter: drop-shadow(0 3px 5px rgba(0,0,0,0.7)); }
 .battle-portrait-img { filter: drop-shadow(0 4px 10px rgba(0,0,0,0.6)); }
 
+/* ── メニュー(つよさ/どうぐ) ── */
+.menu-tabs { display: flex; gap: 8px; margin: 4px 0 12px; }
+.menu-tab { flex: 1; padding: 10px; border-radius: 10px; background: rgba(42,36,25,0.7); border: 1px solid var(--border); color: var(--ink-dim); font-size: 15px; font-weight: 700; cursor: pointer; }
+.menu-tab.on { background: var(--gold); color: #2a2419; border-color: var(--gold); }
+.detail-card { padding: 14px; }
+.lead-tag { font-size: 11px; background: var(--gold); color: #2a2419; border-radius: 6px; padding: 1px 7px; margin-left: 8px; font-weight: 700; }
+.detail-top { display: flex; gap: 14px; align-items: center; margin: 6px 0 12px; }
+.detail-portrait { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.stat-line { display: flex; gap: 8px; align-items: baseline; font-size: 13px; color: var(--ink); }
+.stat-line span:first-child { width: 36px; color: var(--ink-dim); }
+.ink-dim { color: var(--ink-dim); }
+.stat-grid { display: flex; flex-direction: column; gap: 6px; margin: 4px 0 10px; }
+.stat-row { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.stat-name { width: 84px; color: var(--ink-dim); }
+.stat-val { width: 34px; text-align: right; color: var(--gold-bright); font-weight: 700; font-variant-numeric: tabular-nums; }
+.stat-bar { flex: 1; height: 8px; background: rgba(0,0,0,0.35); border-radius: 5px; overflow: hidden; }
+.stat-fill { height: 100%; background: linear-gradient(90deg, #b9923e, #e2c23b); border-radius: 5px; }
+.mini-title { font-size: 13px; color: var(--gold-bright); margin: 10px 0 6px; }
+.move-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.move-chip { background: rgba(0,0,0,0.22); border: 1px solid var(--border); border-radius: 8px; padding: 6px 8px; }
+.mc-name { display: block; font-size: 14px; color: var(--gold-bright); }
+.mc-meta { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--ink-dim); }
+.party-list { display: flex; flex-direction: column; gap: 8px; }
+.party-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 10px; background: rgba(42,36,25,0.55); border: 1px solid var(--border); cursor: pointer; text-align: left; }
+.party-row.sel { border-color: var(--gold); background: rgba(60,50,30,0.7); }
+.pr-info { flex: 1; min-width: 0; }
+.pr-head { display: flex; align-items: baseline; gap: 6px; }
+.pr-name { font-size: 15px; color: var(--ink); }
+.pr-lv { margin-left: auto; font-size: 12px; color: var(--ink-dim); }
+.pr-hpbar { height: 6px; background: rgba(0,0,0,0.35); border-radius: 4px; overflow: hidden; margin: 4px 0 2px; }
+.pr-hpfill { height: 100%; border-radius: 4px; }
+.pr-hptext { font-size: 11px; color: var(--ink-dim); font-variant-numeric: tabular-nums; }
+.items-pane { display: flex; flex-direction: column; gap: 8px; }
+.money-box { background: rgba(42,36,25,0.6); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; font-size: 15px; }
+.money-box b { color: var(--gold-bright); font-size: 19px; }
+.item-row { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 10px; background: rgba(42,36,25,0.55); border: 1px solid var(--border); }
+.item-ico { font-size: 24px; }
+.item-name { font-size: 15px; color: var(--ink); }
+.item-desc { font-size: 12px; color: var(--ink-dim); }
+.item-count { font-size: 17px; color: var(--gold-bright); font-weight: 700; }
+.badge-list { display: flex; flex-wrap: wrap; gap: 8px; }
+.badge-pill { background: rgba(60,50,30,0.7); border: 1px solid var(--gold); border-radius: 999px; padding: 5px 12px; font-size: 13px; color: var(--gold-bright); }
+
 /* ── 幻獣入手の演出 ── */
 .get-overlay { position: fixed; inset: 0; z-index: 130; display: flex; align-items: center; justify-content: center; background: rgba(10,8,5,0.82); animation: get-fade 0.25s ease; }
 @keyframes get-fade { from { opacity: 0 } to { opacity: 1 } }
