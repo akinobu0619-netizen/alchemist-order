@@ -26,11 +26,11 @@ function tileType(ch: string, indoor: boolean): string {
   if (ch === ',') return 'lawn'
   if (ch === 'F') return 'flower'
   if (ch === '~') return 'sand'
-  return 'path'
+  return indoor ? 'floor' : 'path'
 }
 
 // public/tiles/<type>.png があれば差し替え。1度だけ存在確認(セッション内キャッシュ)
-const TILE_NAMES = ['path', 'lawn', 'grass', 'tree', 'wall', 'house', 'water', 'sand', 'flower']
+const TILE_NAMES = ['path', 'floor', 'lawn', 'grass', 'tree', 'wall', 'house', 'water', 'sand', 'flower']
 const tileAvail: Record<string, boolean> = {}
 let tileProbed = false
 
