@@ -26,6 +26,12 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n))
 const randInt = (lo: number, hi: number) => lo + Math.floor(Math.random() * (hi - lo + 1))
 
+// 技の最大PP(威力/カテゴリから導出)
+const maxPP = (m: Move): number =>
+  m.category === 'status' ? 10 : m.power >= 85 ? 5 : m.power >= 75 ? 10 : m.power <= 40 ? 35 : 20
+const initPP = (moves: Move[]): Record<string, number> =>
+  Object.fromEntries(moves.map((m) => [m.id, maxPP(m)]))
+
 function makeWild(playerLevel: number, config: Extract<BattleConfig, { kind: 'wild' }>): Combatant {
   // DEVデモ用: localStorage.demo_enemy が指定されていればその種を出す(本番では無効)
   if (import.meta.env.DEV) {
@@ -102,6 +108,10 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
   const logEndRef = useRef<HTMLDivElement>(null)
 
   const playerMoves = useMemo(() => getMoveset(player.data, player.level), [player.data, player.level])
+  const [pp, setPp] = useState<Record<string, number>>(() => initPP(getMoveset(player.data, player.level)))
+  const struggle: Move = { id: 'struggle', name: 'あがき', type: player.data.type, category: 'phys', power: 30, acc: 1, desc: 'PPが尽きたときの最後のあがき。少し反動を受ける。' }
+  const ppOf = (mv: Move) => pp[mv.id] ?? maxPP(mv)
+  const allEmpty = playerMoves.every((mv) => ppOf(mv) <= 0)
 
   useEffect(() => {
     if (config.kind === 'trainer') {
@@ -144,6 +154,7 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
   }
 
   function onEnemyDown() {
+    audio.sfx('faint')
     const expMsgs = gainExp(expReward(enemy.level))
     if (config.kind === 'trainer') {
       const team = teamRef.current
@@ -165,6 +176,7 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
           : [...s.defeatedTrainers, config.trainer.id],
       }))
       pushLog(`${enemy.data.name}を たおした！`, ...expMsgs, `${config.trainer.name}に かった！`, `🎖 ${config.trainer.badge}を 手に入れた！`, `💰 ${prize}ゲルを 手に入れた！`)
+      audio.sfx('badge')
       audio.playVictory()
       setPhase('won')
       return
@@ -199,6 +211,7 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
 
   // プレイヤーの個体が倒れた時: 生存仲間がいれば交代を促し、いなければ敗北
   function handlePlayerDown(msg: string) {
+    audio.sfx('faint')
     pushLog(msg)
     if (switchTargets.length > 0) {
       pushLog('次の幻獣を 選ぼう！')
@@ -232,6 +245,7 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
     if (eMove.category === 'status') {
       if (eMove.heal) {
         setEnemy((prev) => ({ ...prev, hp: Math.min(prev.maxHp, prev.hp + Math.floor(prev.maxHp * (eMove.heal ?? 0))) }))
+        audio.sfx('heal')
         pushLog(`${e.data.name}は HPを 回復した！`)
       } else if (eMove.inflict && !p.status) {
         const st = eMove.inflict.status
@@ -247,6 +261,7 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
     setPlayer((prev) => ({ ...prev, hp: pHp }))
     setFx({ hit: 'p', flash: r.eff >= 2 })
     showPopup('p', `-${r.damage}`, r.eff >= 2 ? 'crit' : 'dmg')
+    audio.sfx(r.eff >= 2 ? 'crit' : 'hit')
     const msg = effMessage(r.eff)
     if (msg) pushLog(msg)
     await sleep(440)
@@ -269,6 +284,7 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
     setCurUid(uid)
     const newC = mk(target)
     setPlayer(newC)
+    setPp(initPP(getMoveset(newC.data, newC.level)))
     pushLog(`ゆけ、${newC.data.name}！`)
     setMustSwitch(false)
     setMenu('root')
@@ -285,6 +301,7 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
     busy.current = true
     setActing(true)
     setMenu('root')
+    if (pMove.id !== 'struggle') setPp((prev) => ({ ...prev, [pMove.id]: Math.max(0, (prev[pMove.id] ?? maxPP(pMove)) - 1) }))
 
     const p: Combatant = { ...player }
     const e: Combatant = { ...enemy }
@@ -329,6 +346,7 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
           }
           sync(atkSide)
           showPopup(atkSide, `+${amt}`, 'heal')
+          audio.sfx('heal')
           pushLog(`${attacker.data.name}は HPを 回復した！`)
         } else if (move.inflict) {
           applyInflict(defSide, move.inflict.status)
@@ -342,6 +360,7 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
       defender.hp = Math.max(0, defender.hp - r.damage)
       setFx({ hit: defSide, flash: r.eff >= 2 })
       showPopup(defSide, `-${r.damage}`, r.eff >= 2 ? 'crit' : 'dmg')
+      audio.sfx(r.eff >= 2 ? 'crit' : 'hit')
       sync(defSide)
       const msg = effMessage(r.eff)
       if (msg) pushLog(msg)
@@ -350,6 +369,14 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
       if (defender.hp > 0 && move.inflict && Math.random() < move.inflict.chance) {
         applyInflict(defSide, move.inflict.status)
         await sleep(250)
+      }
+      if (move.id === 'struggle' && attacker.hp > 0) {
+        const rec = Math.max(1, Math.floor(r.damage * 0.25))
+        attacker.hp = Math.max(0, attacker.hp - rec)
+        sync(atkSide)
+        showPopup(atkSide, `-${rec}`, 'dmg')
+        pushLog(`${attacker.data.name}は 反動を受けた！`)
+        await sleep(320)
       }
     }
 
@@ -428,6 +455,7 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
         exp: 0,
       }
       setState((s) => withCaught({ ...s, collection: [...s.collection, caught] }, enemy.data.id))
+      audio.sfx('catch')
       pushLog(`やった！ 野生の ${enemy.data.name}を 捕まえた！`, '🔮 図鑑に 登録された。')
       setPhase('caught')
     } else {
@@ -461,6 +489,7 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
     const nh = Math.min(player.maxHp, before + amt)
     setPlayer((p) => ({ ...p, hp: nh }))
     showPopup('p', `+${nh - before}`, 'heal')
+    audio.sfx('heal')
     pushLog(`${kind === 'heal2' ? '上傷薬' : '傷薬'}を つかった！ ${player.data.name}の HPが 回復した。`)
     await sleep(700)
     await enemyTurn({ ...player, hp: nh })
@@ -599,17 +628,17 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
             </div>
           ) : menu === 'root' ? (
             <div className="cmd-grid">
-              <button className="cmd-btn" disabled={acting} onClick={() => setMenu('fight')}>
+              <button className="cmd-btn" disabled={acting} onClick={() => { audio.sfx('select'); setMenu('fight') }}>
                 たたかう
               </button>
               <button
                 className="cmd-btn"
                 disabled={acting || (state.items.heal <= 0 && state.items.heal2 <= 0)}
-                onClick={() => setMenu('item')}
+                onClick={() => { audio.sfx('select'); setMenu('item') }}
               >
                 どうぐ<span className="cmd-sub">傷薬{state.items.heal}/上{state.items.heal2}</span>
               </button>
-              <button className="cmd-btn" disabled={acting || switchTargets.length === 0} onClick={() => setMenu('switch')}>
+              <button className="cmd-btn" disabled={acting || switchTargets.length === 0} onClick={() => { audio.sfx('select'); setMenu('switch') }}>
                 いれかえ<span className="cmd-sub">仲間{switchTargets.length}</span>
               </button>
               {config.kind === 'wild' && (
@@ -625,15 +654,27 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
             </div>
           ) : (
             <div className="cmd-grid moves">
-              {playerMoves.map((mv) => (
-                <button key={mv.id} className="cmd-btn move" disabled={acting} onClick={() => takeTurn(mv)} title={mv.desc}>
-                  <span className="m-name">{mv.name}</span>
-                  <span className="m-meta">
-                    <TypeBadge t={mv.type} />
-                    {mv.category === 'status' ? (mv.heal ? '回復' : '状態') : `威${mv.power}`}・中{Math.round(mv.acc * 100)}
-                  </span>
+              {allEmpty ? (
+                <button className="cmd-btn move struggle" disabled={acting} onClick={() => takeTurn(struggle)} title={struggle.desc}>
+                  <span className="m-name">あがき</span>
+                  <span className="m-meta">技のPPが 尽きた……反動あり</span>
                 </button>
-              ))}
+              ) : (
+                playerMoves.map((mv) => {
+                  const cur = ppOf(mv)
+                  const lowPP = cur <= Math.ceil(maxPP(mv) * 0.25)
+                  return (
+                    <button key={mv.id} className="cmd-btn move" disabled={acting || cur <= 0} onClick={() => takeTurn(mv)} title={mv.desc}>
+                      <span className="m-name">{mv.name}</span>
+                      <span className="m-meta">
+                        <TypeBadge t={mv.type} />
+                        {mv.category === 'status' ? (mv.heal ? '回復' : '状態') : `威${mv.power}`}
+                        <span className={`pp-tag${lowPP ? ' low' : ''}`}>PP {cur}/{maxPP(mv)}</span>
+                      </span>
+                    </button>
+                  )
+                })
+              )}
               <button className="cmd-btn back" disabled={acting} onClick={() => setMenu('root')}>
                 ← もどる
               </button>

@@ -57,6 +57,9 @@ export default function App() {
   const [dialogue, setDialogue] = useState<DialogueData | null>(null)
   const [starterOpen, setStarterOpen] = useState(false)
   const [shopOpen, setShopOpen] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const [vol, setVol] = useState(audio.getVolume())
+  const [sfxOn, setSfxOn] = useState(audio.isSfxOn())
 
   useEffect(() => {
     saveGame(game)
@@ -237,10 +240,58 @@ export default function App() {
 
   return (
     <div className="app">
-      <button className="mute-btn" onClick={() => setMuted(audio.toggleMute())} aria-label="BGMオン/オフ" title="BGMオン/オフ">
-        {muted ? '🔇' : '🔊'}
-      </button>
+      <div className="topbar-btns">
+        <button className="mute-btn" onClick={() => setMuted(audio.toggleMute())} aria-label="BGMオン/オフ" title="BGMオン/オフ">
+          {muted ? '🔇' : '🔊'}
+        </button>
+        <button className="mute-btn" onClick={() => setSettingsOpen(true)} aria-label="設定" title="設定">
+          ⚙
+        </button>
+      </div>
       {content}
+
+      {settingsOpen && (
+        <div className="modal-backdrop" onClick={() => setSettingsOpen(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="card-head">
+              <span className="mon-name">⚙ 設定</span>
+              <button className="modal-close" onClick={() => setSettingsOpen(false)}>×</button>
+            </div>
+            <div className="setting-row">
+              <span className="setting-label">音量　<b>{Math.round(vol * 100)}</b></span>
+              <input
+                type="range"
+                min={0}
+                max={100}
+                value={Math.round(vol * 100)}
+                onChange={(e) => {
+                  const v = Number(e.target.value) / 100
+                  setVol(v)
+                  audio.setVolume(v)
+                }}
+              />
+            </div>
+            <div className="setting-row">
+              <span className="setting-label">BGM</span>
+              <button
+                className={`toggle-btn ${muted ? '' : 'on'}`}
+                onClick={() => setMuted(audio.toggleMute())}
+              >
+                {muted ? 'オフ' : 'オン'}
+              </button>
+            </div>
+            <div className="setting-row">
+              <span className="setting-label">効果音</span>
+              <button
+                className={`toggle-btn ${sfxOn ? 'on' : ''}`}
+                onClick={() => setSfxOn(audio.toggleSfx())}
+              >
+                {sfxOn ? 'オン' : 'オフ'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {dialogue && (
         <Dialogue
