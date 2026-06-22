@@ -227,6 +227,26 @@ export function PropToken({ kind, emoji, size = 30 }: { kind: string; emoji?: st
   return <span style={{ fontSize: size * 0.82, lineHeight: 1 }}>{emoji ?? PROP_EMOJI[kind] ?? '◽'}</span>
 }
 
+// アイテムのアイコン。public/ui/item_<kind>.png があれば画像、無ければ絵文字。
+const ITEM_EMOJI: Record<string, string> = { heal: '🧪', heal2: '🧪', flask: '🔮', money: '💰' }
+const itemImgState: Record<string, boolean> = {}
+export function ItemIcon({ kind, size = 26 }: { kind: string; size?: number }) {
+  const [failed, setFailed] = useState(!!itemImgState[kind])
+  if (failed) return <span style={{ fontSize: size, lineHeight: 1 }}>{ITEM_EMOJI[kind] ?? '❔'}</span>
+  return (
+    <img
+      className="item-icon-img"
+      src={`${import.meta.env.BASE_URL}ui/item_${kind}.png`}
+      alt=""
+      style={{ width: size, height: size, objectFit: 'contain' }}
+      onError={() => {
+        itemImgState[kind] = true
+        setFailed(true)
+      }}
+    />
+  )
+}
+
 // 宝箱。public/ui/chest(_open).png があれば画像、無ければCSSの宝箱。openで開いた見た目。
 const chestImgState = { missing: false }
 export function ChestToken({ open = false, size = 30 }: { open?: boolean; size?: number }) {

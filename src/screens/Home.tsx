@@ -3,7 +3,7 @@ import type { GameState, OwnedMonster } from '../types'
 import { DEX_TOTAL, expToNext, species } from '../game/state'
 import { statAt } from '../engine/battleEngine'
 import { getMoveset } from '../game/moves'
-import { Sprite, TypeBadge } from '../ui'
+import { ItemIcon, Sprite, TypeBadge } from '../ui'
 
 interface Props {
   state: GameState
@@ -164,7 +164,7 @@ export default function Home({ state, setActive, onField, onDex }: Props) {
         <div className="items-pane">
           <div className="money-box">所持金 <b>💰 {state.money}</b> ゲル</div>
           <div className="item-row">
-            <span className="item-ico">🧪</span>
+            <span className="item-ico"><ItemIcon kind="heal" size={32} /></span>
             <div className="grow">
               <div className="item-name">傷薬</div>
               <div className="item-desc">HPを60%回復する</div>
@@ -172,7 +172,7 @@ export default function Home({ state, setActive, onField, onDex }: Props) {
             <span className="item-count">×{state.items.heal}</span>
           </div>
           <div className="item-row">
-            <span className="item-ico">🧪</span>
+            <span className="item-ico"><ItemIcon kind="heal2" size={32} /></span>
             <div className="grow">
               <div className="item-name">上傷薬</div>
               <div className="item-desc">HPを全回復する</div>
@@ -180,7 +180,7 @@ export default function Home({ state, setActive, onField, onDex }: Props) {
             <span className="item-count">×{state.items.heal2}</span>
           </div>
           <div className="item-row">
-            <span className="item-ico">🔮</span>
+            <span className="item-ico"><ItemIcon kind="flask" size={32} /></span>
             <div className="grow">
               <div className="item-name">封獣フラスコ</div>
               <div className="item-desc">野生の幻獣を捕まえる</div>
