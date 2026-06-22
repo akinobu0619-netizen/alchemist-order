@@ -43,6 +43,7 @@ const PROP_SCALE: Record<string, number> = {
   bed: 1.25, bookshelf: 1.4, cauldron: 1.1, candle: 0.8, fireplace: 1.25, plant: 1.0,
   rug: 1.0, window: 1.05, fountain: 1.3, barrel: 1.0, crate: 1.0, lamp: 1.2, flower: 0.75,
   fence: 1.0, sign: 1.1, rock: 1.05, mushroom: 0.85, log: 1.0, anchor: 1.2, shell: 0.7,
+  table: 1.0, chair: 0.7, shelf: 1.25, pot: 0.6, painting: 0.95, clock: 0.6, stove: 1.05, vase: 0.62,
 }
 
 const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n))

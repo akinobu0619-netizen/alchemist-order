@@ -205,6 +205,7 @@ const PROP_EMOJI: Record<string, string> = {
   bed: '🛏️', bookshelf: '📚', books: '📖', cauldron: '⚗️', candle: '🕯️', plant: '🪴',
   rug: '🟥', window: '🪟', fireplace: '🔥', fountain: '⛲', barrel: '🛢️', crate: '📦',
   lamp: '🏮', flower: '🌷', sign: '🪧', rock: '🪨', mushroom: '🍄', log: '🪵', anchor: '⚓', shell: '🐚',
+  table: '🍽️', chair: '🪑', shelf: '🗄️', pot: '🍲', painting: '🖼️', clock: '🕰️', stove: '🍳', vase: '🏺',
 }
 const propImgState: Record<string, boolean> = {}
 export function PropToken({ kind, emoji, size = 30 }: { kind: string; emoji?: string; size?: number }) {

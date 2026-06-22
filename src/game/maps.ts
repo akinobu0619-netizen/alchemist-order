@@ -275,16 +275,21 @@ export const MAPS: Record<string, GameMap> = {
     warps: [{ x: 5, y: 8, to: 'rapis', tx: 17, ty: 7 }],
     npcs: [{ x: 5, y: 2, kind: 'mentor', name: '師ガレン' }],
     props: [
+      // 壁の装飾
+      { x: 2, y: 0, kind: 'window' }, { x: 8, y: 0, kind: 'painting' }, { x: 6, y: 0, kind: 'clock' },
+      // 蔵書(左右の本棚)
       { x: 1, y: 1, kind: 'bookshelf', solid: true, name: '蔵書', lines: ['錬金術の古い写本がぎっしりだ。読めない記号が並んでいる。'] },
       { x: 2, y: 1, kind: 'bookshelf', solid: true, name: '蔵書', lines: ['「賢者の石」について記された頁に、栞がはさまれている……。'] },
-      { x: 8, y: 1, kind: 'bookshelf', solid: true },
-      { x: 9, y: 1, kind: 'bookshelf', solid: true },
+      { x: 8, y: 1, kind: 'bookshelf', solid: true }, { x: 9, y: 1, kind: 'bookshelf', solid: true },
+      // 錬成工房(左)
       { x: 1, y: 6, kind: 'cauldron', solid: true, name: '錬成釜', lines: ['師の錬成釜。底に、虹色の残滓がこびりついている。'] },
-      { x: 9, y: 6, kind: 'candle', solid: true },
-      { x: 5, y: 5, kind: 'rug' },
-      { x: 3, y: 0, kind: 'window' },
-      { x: 7, y: 0, kind: 'window' },
-      { x: 3, y: 6, kind: 'plant', solid: true },
+      { x: 2, y: 6, kind: 'pot', solid: true },
+      { x: 1, y: 3, kind: 'shelf', solid: true, name: '薬棚', lines: ['色とりどりの薬瓶と乾いた薬草が並ぶ。'] },
+      // 書斎(右)
+      { x: 8, y: 5, kind: 'table', solid: true }, { x: 8, y: 6, kind: 'chair', solid: true },
+      { x: 9, y: 5, kind: 'candle', solid: true }, { x: 9, y: 3, kind: 'vase', solid: true },
+      // 中央・緑
+      { x: 5, y: 5, kind: 'rug' }, { x: 9, y: 7, kind: 'plant', solid: true },
     ],
     intro: '錬金道具と古びた書物が並ぶ、広い師の家。',
   },
@@ -300,14 +305,18 @@ export const MAPS: Record<string, GameMap> = {
     ],
     npcs: [{ x: 3, y: 2, kind: 'mom', name: 'おかあさん' }],
     props: [
-      { x: 1, y: 1, kind: 'fireplace', solid: true, name: '暖炉', lines: ['ぱちぱちと薪がはぜている。あたたかい。'] },
-      { x: 1, y: 6, kind: 'plant', solid: true },
-      { x: 9, y: 6, kind: 'plant', solid: true },
-      { x: 7, y: 1, kind: 'bookshelf', solid: true },
-      { x: 4, y: 5, kind: 'rug' },
-      { x: 3, y: 0, kind: 'window' },
-      { x: 7, y: 0, kind: 'window' },
-      { x: 3, y: 6, kind: 'crate', solid: true },
+      // 壁
+      { x: 3, y: 0, kind: 'window' }, { x: 7, y: 0, kind: 'painting' }, { x: 5, y: 0, kind: 'clock' },
+      // 台所(左上)
+      { x: 1, y: 1, kind: 'stove', solid: true }, { x: 2, y: 1, kind: 'shelf', solid: true, name: '食器棚' },
+      { x: 1, y: 2, kind: 'pot', solid: true }, { x: 1, y: 4, kind: 'vase', solid: true },
+      // 食卓(中央)
+      { x: 4, y: 5, kind: 'table', solid: true }, { x: 3, y: 5, kind: 'chair', solid: true }, { x: 4, y: 6, kind: 'chair', solid: true },
+      // 暖炉のある居間(右)
+      { x: 9, y: 4, kind: 'fireplace', solid: true, name: '暖炉', lines: ['ぱちぱちと薪がはぜている。あたたかい。'] },
+      { x: 8, y: 5, kind: 'rug' }, { x: 9, y: 6, kind: 'plant', solid: true }, { x: 1, y: 6, kind: 'plant', solid: true },
+      // 玄関マット
+      { x: 5, y: 7, kind: 'rug' },
     ],
     intro: 'あたたかな わが家。奥の階段を上ると自分の部屋がある。',
   },
@@ -319,13 +328,17 @@ export const MAPS: Record<string, GameMap> = {
     grid: room(11, 9, 5),
     warps: [{ x: 5, y: 8, to: 'home', tx: 9, ty: 2 }], // 階段(下)
     props: [
+      // 壁
+      { x: 5, y: 0, kind: 'window' }, { x: 3, y: 0, kind: 'painting' }, { x: 8, y: 0, kind: 'clock' },
+      // 寝床(左)
       { x: 1, y: 1, kind: 'bed', solid: true, name: 'ベッド', lines: ['よく眠った。……今日から、旅が始まる。'] },
+      { x: 2, y: 2, kind: 'rug' }, { x: 1, y: 6, kind: 'plant', solid: true },
+      // 学習机(右)
       { x: 9, y: 1, kind: 'bookshelf', solid: true, name: '本棚', lines: ['古い幻獣図鑑。いつか、自分の見つけた幻獣を ここに書き足すんだ。'] },
-      { x: 9, y: 6, kind: 'candle', solid: true },
+      { x: 8, y: 2, kind: 'table', solid: true }, { x: 8, y: 3, kind: 'chair', solid: true },
+      { x: 9, y: 2, kind: 'candle', solid: true }, { x: 9, y: 6, kind: 'vase', solid: true },
+      // 中央
       { x: 5, y: 5, kind: 'rug' },
-      { x: 5, y: 0, kind: 'window' },
-      { x: 8, y: 0, kind: 'window' },
-      { x: 1, y: 6, kind: 'plant', solid: true },
     ],
     intro: '自分の部屋。窓から朝の光が差し込んでいる。',
   },
@@ -338,16 +351,18 @@ export const MAPS: Record<string, GameMap> = {
     warps: [{ x: 5, y: 8, to: 'rapis', tx: 26, ty: 10 }],
     npcs: [{ x: 5, y: 2, kind: 'inn', name: '宿屋の主人' }],
     props: [
-      { x: 1, y: 1, kind: 'bed', solid: true },
-      { x: 2, y: 1, kind: 'bed', solid: true },
-      { x: 8, y: 1, kind: 'bed', solid: true },
-      { x: 9, y: 1, kind: 'bed', solid: true },
+      // 壁
+      { x: 3, y: 0, kind: 'window' }, { x: 7, y: 0, kind: 'window' }, { x: 5, y: 0, kind: 'clock' },
+      // 客室のベッド(四隅上)
+      { x: 1, y: 1, kind: 'bed', solid: true }, { x: 2, y: 1, kind: 'bed', solid: true },
+      { x: 8, y: 1, kind: 'bed', solid: true }, { x: 9, y: 1, kind: 'bed', solid: true },
+      // 酒場のカウンター(主人の前)
+      { x: 4, y: 3, kind: 'table', solid: true }, { x: 3, y: 3, kind: 'chair', solid: true }, { x: 6, y: 3, kind: 'chair', solid: true },
+      { x: 1, y: 3, kind: 'shelf', solid: true, name: '酒棚' }, { x: 9, y: 3, kind: 'shelf', solid: true },
+      // 暖炉と樽
       { x: 1, y: 6, kind: 'fireplace', solid: true, name: '暖炉', lines: ['旅人たちが暖を取っている。'] },
-      { x: 9, y: 6, kind: 'plant', solid: true },
+      { x: 2, y: 6, kind: 'rug' }, { x: 7, y: 6, kind: 'barrel', solid: true }, { x: 8, y: 6, kind: 'barrel', solid: true }, { x: 9, y: 6, kind: 'plant', solid: true },
       { x: 5, y: 5, kind: 'rug' },
-      { x: 3, y: 0, kind: 'window' },
-      { x: 7, y: 0, kind: 'window' },
-      { x: 7, y: 6, kind: 'barrel', solid: true },
     ],
     intro: '暖炉のぬくもりが心地よい広い宿屋。',
   },
