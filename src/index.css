@@ -844,6 +844,8 @@ button:disabled {
 .rare-tag { font-size: 11px; background: linear-gradient(90deg,#d7b56a,#f0d99a); color: #2a2419; font-weight: 800; border-radius: 6px; padding: 1px 8px; margin-right: 6px; }
 .fuse-mats { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
 .fuse-mats .toggle-btn { width: 100%; }
+.shop-clerk { display: flex; gap: 10px; align-items: center; }
+.clerk-portrait { height: 84px; width: auto; border-radius: 8px; flex-shrink: 0; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.5)); }
 
 /* ── 幻獣入手の演出 ── */
 .get-overlay { position: fixed; inset: 0; z-index: 130; display: flex; align-items: center; justify-content: center; background: rgba(10,8,5,0.82); animation: get-fade 0.25s ease; }

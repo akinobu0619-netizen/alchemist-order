@@ -269,7 +269,7 @@ export const MAPS: Record<string, GameMap> = {
     warps: [{ x: 5, y: 8, to: 'rapis', tx: 17, ty: 7 }],
     npcs: [
       { x: 5, y: 2, kind: 'mentor', name: '師ガレン' },
-      { x: 2, y: 5, kind: 'alchemist', name: '錬成師ミルカ', emoji: '🧑‍🔬' }, // 錬成釜のそば
+      { x: 2, y: 5, kind: 'alchemist', name: '錬成師ミルカ', emoji: '🧑‍🔬', sprite: 'npc_mirka' }, // 錬成釜のそば
     ],
     props: [
       // 壁の装飾

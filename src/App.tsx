@@ -483,7 +483,10 @@ export default function App() {
               <span className="mon-name">🛒 道具屋のラル</span>
               <button className="modal-close" onClick={() => setShopOpen(false)}>×</button>
             </div>
-            <p className="dex-text">「いらっしゃい。何にするね？」　所持金 <ItemIcon kind="money" size={22} /> {game.money} ゲル</p>
+            <div className="shop-clerk">
+              <img className="clerk-portrait" src={`${import.meta.env.BASE_URL}portraits/laru.png`} alt="" onError={(e) => (e.currentTarget.style.display = 'none')} />
+              <p className="dex-text">「いらっしゃい。何にするね？」　所持金 <ItemIcon kind="money" size={22} /> {game.money} ゲル</p>
+            </div>
             {SHOP_ITEMS.map((it) => (
               <div key={it.key} className="shop-row">
                 <span className="shop-name">{it.name}<span className="cmd-sub">　{it.desc}</span></span>
@@ -510,13 +513,16 @@ export default function App() {
         <div className="modal-backdrop" onClick={() => setFusionOpen(false)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <div className="card-head">
-              <span className="mon-name">⚗️ 錬成釜</span>
+              <span className="mon-name">⚗️ 錬成釜（錬成師ミルカ）</span>
               <button className="modal-close" onClick={() => setFusionOpen(false)}>×</button>
             </div>
-            <p className="dex-text">
-              「ベースと素材を選んでおくれ。ベースが進化し、才能が宿る。」　費用 <ItemIcon kind="money" size={20} />{FUSION_COST}
-              ・所持 <ItemIcon kind="money" size={20} />{game.money}
-            </p>
+            <div className="shop-clerk">
+              <img className="clerk-portrait" src={`${import.meta.env.BASE_URL}portraits/mirka.png`} alt="" onError={(e) => (e.currentTarget.style.display = 'none')} />
+              <p className="dex-text">
+                「ベースと素材を選んでおくれ。ベースが進化し、才能が宿る。」　費用 <ItemIcon kind="money" size={20} />{FUSION_COST}
+                ・所持 <ItemIcon kind="money" size={20} />{game.money}
+              </p>
+            </div>
             {(() => {
               const a = game.collection.find((o) => o.uid === fuseA)
               const b = game.collection.find((o) => o.uid === fuseB)
