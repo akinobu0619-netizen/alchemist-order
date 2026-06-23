@@ -84,6 +84,7 @@ export interface GameState {
   daily?: { date: string; wild: number; claimed: boolean } // 当日のデイリー進捗
   achievements?: string[] // 解除済み実績id
   dexClaimed?: number[] // 受取済みの図鑑マイルストーン
+  mats?: { talentStone: number; slotCharm: number } // プレミアム錬成素材
 }
 
 // トレーナー(ジム支部長など)

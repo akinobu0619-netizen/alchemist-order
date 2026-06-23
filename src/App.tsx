@@ -42,6 +42,20 @@ const SHOP_ITEMS: { key: string; name: string; desc: string; price: number; appl
   { key: 'heal', name: '傷薬', desc: 'HP60%回復', price: 200, apply: (s) => ({ ...s, items: { ...s.items, heal: s.items.heal + 1 } }) },
   { key: 'heal2', name: '上傷薬', desc: 'HP全回復', price: 600, apply: (s) => ({ ...s, items: { ...s.items, heal2: s.items.heal2 + 1 } }) },
   { key: 'flask', name: '封獣フラスコ', desc: '幻獣を捕まえる', price: 150, apply: (s) => ({ ...s, flasks: s.flasks + 1 }) },
+  {
+    key: 'talentStone',
+    name: '才能の結晶',
+    desc: '錬成で才能+1追加',
+    price: 1500,
+    apply: (s) => ({ ...s, mats: { talentStone: (s.mats?.talentStone ?? 0) + 1, slotCharm: s.mats?.slotCharm ?? 0 } }),
+  },
+  {
+    key: 'slotCharm',
+    name: '継承の符',
+    desc: '錬成で遺伝枠+1',
+    price: 1200,
+    apply: (s) => ({ ...s, mats: { talentStone: s.mats?.talentStone ?? 0, slotCharm: (s.mats?.slotCharm ?? 0) + 1 } }),
+  },
 ]
 
 const titleBg = {
@@ -64,6 +78,8 @@ export default function App() {
   const [fusionOpen, setFusionOpen] = useState(false)
   const [fuseA, setFuseA] = useState<string | null>(null)
   const [fuseB, setFuseB] = useState<string | null>(null)
+  const [fuseStone, setFuseStone] = useState(false)
+  const [fuseCharm, setFuseCharm] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [vol, setVol] = useState(audio.getVolume())
   const [sfxOn, setSfxOn] = useState(audio.isSfxOn())
@@ -206,6 +222,8 @@ export default function App() {
       } else {
         setFuseA(null)
         setFuseB(null)
+        setFuseStone(false)
+        setFuseCharm(false)
         setFusionOpen(true)
       }
     } else {
@@ -222,12 +240,20 @@ export default function App() {
     const a = game.collection.find((o) => o.uid === fuseA)
     const b = game.collection.find((o) => o.uid === fuseB)
     if (!a || !b || a.uid === b.uid || game.money < FUSION_COST) return
-    const r = fuseResult(a, b)
+    const stone = fuseStone && (game.mats?.talentStone ?? 0) > 0
+    const charm = fuseCharm && (game.mats?.slotCharm ?? 0) > 0
+    const r = fuseResult(a, b, { stone, charm })
     const result = { ...makeOwned(r.speciesId, r.level), talent: r.talent, inheritedMoves: r.inherited }
     setGame((s) => {
       const coll = [...s.collection.filter((o) => o.uid !== a.uid && o.uid !== b.uid), result]
       const activeUid = s.activeUid === a.uid || s.activeUid === b.uid ? result.uid : s.activeUid
-      let ns: GameState = { ...s, collection: coll, activeUid, money: s.money - FUSION_COST }
+      let ns: GameState = {
+        ...s,
+        collection: coll,
+        activeUid,
+        money: s.money - FUSION_COST,
+        mats: { talentStone: (s.mats?.talentStone ?? 0) - (stone ? 1 : 0), slotCharm: (s.mats?.slotCharm ?? 0) - (charm ? 1 : 0) },
+      }
       ns = withCaught(withSeen(ns, r.speciesId), r.speciesId)
       return ns
     })
@@ -235,8 +261,10 @@ export default function App() {
     setFusionOpen(false)
     setFuseA(null)
     setFuseB(null)
+    setFuseStone(false)
+    setFuseCharm(false)
     const sp = species(r.speciesId)
-    setGetMon({ id: r.speciesId, name: sp.name, type: sp.type, label: `が 錬成された！ 才能★${r.talent}` })
+    setGetMon({ id: r.speciesId, name: sp.name, type: sp.type, label: r.rare ? `✦レア錬成！ ${sp.name}が誕生！ 才能★${r.talent}` : `が 錬成された！ 才能★${r.talent}` })
   }
 
   // 宝箱を開ける(開封済みは flag で保存)
@@ -489,7 +517,9 @@ export default function App() {
             {(() => {
               const a = game.collection.find((o) => o.uid === fuseA)
               const b = game.collection.find((o) => o.uid === fuseB)
-              const prev = a && b && a.uid !== b.uid ? fuseResult(a, b) : null
+              const stoneN = game.mats?.talentStone ?? 0
+              const charmN = game.mats?.slotCharm ?? 0
+              const prev = a && b && a.uid !== b.uid ? fuseResult(a, b, { stone: fuseStone && stoneN > 0, charm: fuseCharm && charmN > 0 }) : null
               return (
                 <>
                   <div className="fuse-slots">
@@ -506,6 +536,7 @@ export default function App() {
                   <div className="fuse-preview">
                     {prev ? (
                       <span>
+                        {prev.rare && <span className="rare-tag">✦レア配合</span>}
                         → <b>{species(prev.speciesId).name}</b> Lv{prev.level}・才能★{prev.talent}
                         {prev.evolved ? '（進化！）' : ''}
                         {prev.inherited.length > 0 && <><br />遺伝技: {prev.inherited.map((m) => m.name).join('、')}</>}
@@ -514,8 +545,23 @@ export default function App() {
                       <span className="cmd-sub">2体を選ぶと結果が表示されます</span>
                     )}
                   </div>
+                  {/* プレミアム錬成素材 */}
+                  {(stoneN > 0 || charmN > 0) && (
+                    <div className="fuse-mats">
+                      {stoneN > 0 && (
+                        <button className={`toggle-btn ${fuseStone ? 'on' : ''}`} onClick={() => setFuseStone((v) => !v)}>
+                          才能の結晶 ×{stoneN}（才能+1追加）
+                        </button>
+                      )}
+                      {charmN > 0 && (
+                        <button className={`toggle-btn ${fuseCharm ? 'on' : ''}`} onClick={() => setFuseCharm((v) => !v)}>
+                          継承の符 ×{charmN}（遺伝枠+1）
+                        </button>
+                      )}
+                    </div>
+                  )}
                   <button className="title-btn primary" style={{ width: '100%', marginTop: 8 }} disabled={!prev || game.money < FUSION_COST} onClick={doFuse}>
-                    錬成する（素材は消費されます）
+                    錬成する 💰{FUSION_COST}（素材は消費されます）
                   </button>
                   <div className="party-list" style={{ marginTop: 12 }}>
                     {game.collection.map((o) => {

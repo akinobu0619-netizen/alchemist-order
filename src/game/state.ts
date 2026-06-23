@@ -32,6 +32,7 @@ export function newGame(): GameState {
     items: { heal: 0, heal2: 0 },
     money: 0,
     flags: [],
+    mats: { talentStone: 0, slotCharm: 0 },
   }
 }
 
@@ -47,6 +48,7 @@ export function loadGame(): GameState | null {
     merged.money = p.money ?? 0
     merged.achievements = p.achievements ?? []
     merged.dexClaimed = p.dexClaimed ?? []
+    merged.mats = { talentStone: p.mats?.talentStone ?? 0, slotCharm: p.mats?.slotCharm ?? 0 }
     return merged
   } catch {
     return null
@@ -134,24 +136,59 @@ export function pendingDexMilestones(s: GameState): { n: number; reward: Reward 
 // ── 錬成(融合) ──
 export const FUSION_COST = 300 // 錬成の費用(ゲル)
 export const TALENT_MAX = 10
-export const MAX_INHERITED = 2 // 遺伝技の保持上限
-/** ベースaを素材bで錬成した結果。aは可能なら進化、才能+1、素材の必殺技を遺伝技として継承 */
-export function fuseResult(a: OwnedMonster, b: OwnedMonster): { speciesId: string; level: number; talent: number; evolved: boolean; inherited: Move[] } {
+export const MAX_INHERITED = 2 // 遺伝技の保持上限(継承の符で+1)
+
+// 隠し配合: 特定の2種(順不同)で伝説種＋専用技。発見要素
+const rmove = (key: string, name: string, type: string, power: number): Move => ({
+  id: `rare_${key}`,
+  name,
+  type,
+  category: 'spec',
+  power,
+  acc: 0.95,
+  desc: '隠し配合でのみ得られる専用技。',
+})
+export interface Recipe {
+  base: string
+  material: string
+  result: string
+  move: Move
+}
+export const RECIPES: Recipe[] = [
+  { base: 'volcadon', material: 'ignisleo', result: 'ignaros', move: rmove('ignaros', '原初の業火', '火', 110) },
+  { base: 'leviaran', material: 'krakent', result: 'abystia', move: rmove('abystia', '原初の大海', '水', 110) },
+  { base: 'grandroc', material: 'tempesta', result: 'tempestroc', move: rmove('tempestroc', '原初の嵐', '風', 110) },
+  { base: 'archange', material: 'undine', result: 'sol', move: rmove('sol', '太陽神光', '聖', 115) },
+  { base: 'nightmare', material: 'lich', result: 'luna', move: rmove('luna', '月幻の蝕', '冥', 115) },
+  { base: 'mysticchimera', material: 'archange', result: 'celestialchimera', move: rmove('chimera', '天翔ける黄金光', '聖', 120) },
+]
+export function findRecipe(aId: string, bId: string): Recipe | undefined {
+  return RECIPES.find((r) => (r.base === aId && r.material === bId) || (r.base === bId && r.material === aId))
+}
+
+/** 錬成結果。隠し配合なら伝説種＋専用技。stone=才能+1追加, charm=遺伝枠+1 */
+export function fuseResult(
+  a: OwnedMonster,
+  b: OwnedMonster,
+  opts?: { stone?: boolean; charm?: boolean },
+): { speciesId: string; level: number; talent: number; evolved: boolean; inherited: Move[]; rare: boolean } {
+  const recipe = findRecipe(a.speciesId, b.speciesId)
   const sp = species(a.speciesId)
-  const evolvedId = sp.to && DEX.some((d) => d.id === sp.to) ? (sp.to as string) : a.speciesId
+  const evolvedId = recipe ? recipe.result : sp.to && DEX.some((d) => d.id === sp.to) ? (sp.to as string) : a.speciesId
   const level = Math.max(5, Math.min(60, Math.round((a.level + b.level) / 2) + 3))
-  const talent = Math.min(TALENT_MAX, Math.max(a.talent ?? 0, b.talent ?? 0) + 1)
-  // 素材の必殺技＋両者の既存遺伝技を、id重複を除いて末尾2つに
+  const talent = Math.min(TALENT_MAX, Math.max(a.talent ?? 0, b.talent ?? 0) + 1 + (opts?.stone ? 1 : 0))
+  const cap = MAX_INHERITED + (opts?.charm ? 1 : 0)
   const resultNatural = getMoveset(species(evolvedId), level)
-  const pool = [signatureMove(species(b.speciesId)), ...(a.inheritedMoves ?? []), ...(b.inheritedMoves ?? [])]
   const inherited: Move[] = []
+  if (recipe) inherited.push(recipe.move) // 専用技は必ず先頭で確保
+  const pool = [signatureMove(species(b.speciesId)), ...(a.inheritedMoves ?? []), ...(b.inheritedMoves ?? [])]
   for (const mv of pool) {
+    if (inherited.length >= cap) break
     if (inherited.some((m) => m.id === mv.id)) continue
     if (resultNatural.some((m) => m.id === mv.id)) continue
     inherited.push(mv)
-    if (inherited.length >= MAX_INHERITED) break
   }
-  return { speciesId: evolvedId, level, talent, evolved: evolvedId !== a.speciesId, inherited }
+  return { speciesId: evolvedId, level, talent, evolved: evolvedId !== a.speciesId, inherited, rare: !!recipe }
 }
 
 /** 所有個体の実際の技セット(習得技＋遺伝技、id重複除く) */
