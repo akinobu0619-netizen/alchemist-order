@@ -417,12 +417,12 @@ export default function Field({ state, setState, onStartBattle, onTrainer, onChe
             ))}
             {map.npcs?.map((n) => (
               <span key={`n${n.x}-${n.y}`} className="world-token person-token" style={{ left: n.x * TILE, top: n.y * TILE, width: TILE, height: TILE, zIndex: 107 + n.y * 10 }}>
-                <NpcToken kind={n.kind} emoji={n.emoji} sprite={n.sprite} size={TILE * 1.55} />
+                <NpcToken kind={n.kind} emoji={n.emoji} sprite={n.sprite} size={TILE * 1.5} />
               </span>
             ))}
             {map.leader && (
               <span className="world-token person-token" style={{ left: map.leader.x * TILE, top: map.leader.y * TILE, width: TILE, height: TILE, zIndex: 107 + map.leader.y * 10 }}>
-                <LeaderToken trainerId={map.leader.trainerId} defeated={leaderDefeated} size={TILE * 1.65} />
+                <LeaderToken trainerId={map.leader.trainerId} defeated={leaderDefeated} size={TILE * 1.5} />
               </span>
             )}
             {forestCanopies.map(({ rx, ry, h, openX, openY }) => {
@@ -453,7 +453,7 @@ export default function Field({ state, setState, onStartBattle, onTrainer, onChe
               )
             })}
             <span className="world-token player-token person-token" style={{ left: x * TILE, top: y * TILE, width: TILE, height: TILE, zIndex: 107 + y * 10 }}>
-              <PlayerToken dir={dir} step={step} size={TILE * 1.6} />
+              <PlayerToken dir={dir} step={step} size={TILE * 1.5} />
             </span>
           </div>
         </div>

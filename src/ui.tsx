@@ -116,7 +116,7 @@ export function PlayerToken({ dir = 'down', step = 0, size = 34 }: { dir?: Dir; 
         className="player-sprite"
         src={`${import.meta.env.BASE_URL}ui/player_${useDir}_${frame}.png`}
         alt=""
-        style={{ width: size, height: size, transform: flip ? 'scaleX(-1)' : undefined }}
+        style={{ height: size, width: 'auto', transform: flip ? 'scaleX(-1)' : undefined }}
       />
     )
   }
@@ -130,7 +130,7 @@ export function PlayerToken({ dir = 'down', step = 0, size = 34 }: { dir?: Dir; 
       className="player-sprite"
       src={`${import.meta.env.BASE_URL}ui/player.png`}
       alt=""
-      style={{ width: size, height: size, transform }}
+      style={{ height: size, width: 'auto', transform }}
       onError={() => {
         playerSprite.legacyMissing = true
         force((n) => n + 1)

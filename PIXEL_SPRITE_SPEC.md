@@ -1,73 +1,93 @@
-# フィールド ドット絵 統一規格（16bit 昔風ピクセル）
+# フィールド ドット絵 統一規格（16bit 昔風・全員サイズ統一）
 
-**基準は既存の「森の番人 シルヴァ」= `public/ui/gym_forest.png`。** 全フィールドキャラ（プレイヤー／村人NPC／支部長）を**この絵柄に統一**する。
-※対象は**フィールドの歩きキャラ（ドット絵）のみ**。バトル/図鑑の幻獣スプライトは従来の水彩のまま（混ぜない）。会話の立ち絵 `portraits/` は別管理（水彩のままでも、ドットに寄せてもよい）。
+**対象＝フィールドの歩きキャラ全員**（主人公／村人NPC／支部長／四賢／ライバル／ボス）。
+**絵柄の基準は「森の番人 シルヴァ」=`public/ui/gym_forest.png`**（16bit昔風・きれいすぎない）。
+※バトル/図鑑の幻獣スプライトは従来の水彩のまま（混ぜない）。
+
+> **なぜ作り直すか**：現状はキャラごとに「フレーム内で占める大きさ」がバラバラで、NPCが主人公より大きく見えていた。ゲームは画像を**高さ基準**で表示するため、**全スプライトを同じフレーム規格で描けばサイズが必ず揃う**。
 
 ---
 
-## 0. マスター・スタイル（各プロンプトの先頭に貼る）
+## 0. マスター・スタイル（各プロンプト先頭に貼る）
 ```
 STYLE — apply identically to EVERY field sprite:
-16-bit era pixel art, SNES/GBA classic JRPG overworld character sprite.
-Hand-pixeled, NOT smooth, NOT AI-glossy: chunky visible square pixels, hard edges, NO anti-aliasing,
-NO soft gradients, NO blur. Limited retro palette (about 12-20 colors), simple dithering only where needed,
-a clean 1px darker outline, flat cel shading with one light source from the upper-left.
-Camera: 3/4 top-down oblique to match the tile map (slight downward tilt, not pure side, not pure top).
-Proportions: 2.5-3 heads tall, slightly chibi, bold readable silhouette, feet at the bottom-center,
-a small built-in oval shadow under the feet. Transparent background. Single character, full body, centered.
-Match the look of the reference sprite (the forest guardian): same pixel size, outline weight, and muted storybook palette.
+16-bit era pixel art, SNES/GBA classic JRPG overworld character. Hand-pixeled, NOT smooth, NOT AI-glossy:
+chunky visible square pixels, hard edges, NO anti-aliasing, NO soft gradients, NO blur.
+Limited retro palette (about 12-20 colors), minimal dithering, a clean 1px darker outline,
+flat cel shading, single light from the upper-left. 3/4 top-down oblique view (slight downward tilt).
+Match the reference sprite "the forest guardian": same pixel chunkiness, outline weight, muted storybook palette.
 ```
 
-**解像度のコツ（AI生成時）**：論理サイズは小さく（**48〜64px相当**のドット感）。大きく生成した場合は**ニアレストネイバーで縮小**してギザギザを保つ（なめらかにしない）。書き出しは透過PNG、各コマ **64〜128px**。
+## ★0.5 統一フレーム規格（サイズを必ず揃える・最重要）
+**全キャラでこれを厳守。**ここが揃えば表示サイズが揃う。
+```
+FRAMING — identical for EVERY character (this guarantees equal on-screen size):
+- Canvas: a TALL rectangle, aspect ~3:4 (e.g., 192 x 256 px). Transparent background.
+- The character is drawn at the SAME full-body height in EVERY sprite:
+  head top near the very top, FEET resting ON the bottom edge, centered horizontally.
+- Character height = about 90% of the canvas height (fills it vertically). 2.5-3 heads tall.
+- Do NOT shrink a character inside the frame; do NOT add empty padding above/below.
+  Only WIDTH varies by build (a fat innkeeper is wider, a child is slimmer) — HEIGHT stays the same.
+- A small built-in oval shadow directly under the feet.
+- One character only, full body, no frame, no text, no ground tiles.
+```
+- **書き出し**：透過PNG、**高さ256px**（幅は120〜200pxでキャラ次第）。ゲーム側は高さ基準で約1.5タイルに統一表示。
+- 子供（ティナ等）も“縮めて小さく”ではなく**同じ全身高さ**で頭身を低め（2〜2.3頭身）にして表現＝並んでも極端な段差にしない。
 
-**実装メモ（Codex）**：ドット絵をくっきり拡大表示するには、フィールドのキャラ画像に `image-rendering: pixelated`（`auto`/`high-quality`をやめる）。現状は非ドット前提で外しているため、ドット統一に合わせて**キャラ系imgだけpixelatedへ**戻すと締まる（タイル/水彩幻獣はそのまま）。
+## ★0.6 実装メモ（反映済み/Codex）
+- 描画は**全トークン高さ基準・倍率`TILE*1.5`に統一済み**（player/npc/leader）。PlayerTokenも`height:size, width:auto`に修正済み。→ あとは**上のフレーム規格で描けば**サイズが揃う。
+- くっきり拡大には**キャラ系imgだけ**`image-rendering: pixelated`（任意・Codex）。
 
 ---
 
-## 1. 歩行フレーム仕様（プレイヤー）
-4方向 × 3コマ（0=直立 / 1=右足前 / 2=左足前）。`left`は`right`の左右反転で代用可。
-ファイル例：`ui/player_<down|up|right>_<a|b>.png`（既存命名に合わせる）。
-NPCは原則1コマ（向きは`down`相当の手前向き）で可。動かす場合のみ多コマ。
+## 1. 主人公（4方向 × 2コマ）
+ファイル：`ui/player_<down|up|right>_<a|b>.png`（`left`は`right`の左右反転で自動対応）。a=直立 / b=歩き。
+※既存の主人公ドットも**この統一フレームで描き直し**（今は正方形フレームで小さく見えるため）。
+```
+<STYLE> <FRAMING> Pose: facing {toward viewer (down) / away, seen from the back (up) / to the right},
+{standing still / mid-stride one foot forward}.
+Subject: a young alchemist apprentice in travel clothes and a short mantle, a round capture-flask on the belt,
+satchel, gender-neutral, brown short hair.
+```
+必要4枚（×2コマ=8）：`player_down_a/b`, `player_up_a/b`, `player_right_a/b`。
 
-前文（プレイヤー各コマ）：
-```
-<STYLE> Pose: facing {toward viewer / away (back) / to the right}, {standing still / mid-stride right foot forward / left foot forward}.
-Subject: a young alchemist apprentice in travel clothes and a short mantle, a round capture-flask on the belt, gender-neutral.
-```
-
-## 2. 村人NPC（ラピス村・拡充分＋既存）
-前文（NPC共通）：
-```
-<STYLE> Single standing overworld NPC sprite, facing toward the viewer (front), one frame. Subject:
-```
+## 2. 村人・施設NPC（1コマ・手前向き）
+前文：`<STYLE> <FRAMING> Single standing NPC, facing the viewer (front), one frame. Subject:`
 | ファイル | 名前 | Subject |
 |---|---|---|
-| `npc_peddler` | 行商人ドラン | a weathered traveling merchant, big bulging backpack, hooded travel cloak, walking staff, coin pouch |
-| `npc_flowergirl` | 花売りのノラ | a cheerful little village girl holding a woven basket of colorful flowers, apron dress, short hair |
-| `npc_scholar` | 司書エルマ | a calm scholarly woman, round glasses, long buttoned coat, a thick tome under one arm |
-| `npc_oldwoman` | 老婆ハーゼル | a hunched kindly old woman, head shawl, knitted shawl, wooden cane |
-| `npc_guard` | 門番ゴルド | a stout village guard, leather-and-brass armor, simple helmet, holding a spear |
-| `npc_bard` | 吟遊詩人リコ | a slim bard, feathered cap, short cape, playing a fiddle (or lute) |
-| `npc_mentor` | 師ガレン | an old master alchemist, long white beard, deep teal-green robe with brass clasps, wooden staff |
-| `npc_mom` | 母リーゼ | a gentle middle-aged woman, chestnut hair tied with cloth, apron over a dress |
-| `npc_inn` | 宿屋ボルガ | a portly cheerful innkeeper, vest and apron, holding a wooden mug |
-| `npc_shop` | 道具屋ラル | a friendly merchant, leather apron, bandolier of potion vials, coin pouch |
-| `npc_mirka` | 錬成師ミルカ | a young alchemist, brass goggles on forehead, rune-trimmed coat, glowing flask |
-| `npc_morris` | 老人モーリス | a wizened old villager, hunched, plain clothes and shawl |
-| `npc_tina` | 子供ティナ | an energetic little girl, short braids, simple dress |
-| `npc_storage` | 預かり所の管理人 | a round friendly caretaker behind a counter look, apron, holding a ledger, crates motif |
-| `npc_portal` | 転送門 | （キャラではなく装置）a glowing arcane warp gate: stone arch with swirling blue-violet portal energy, runes |
+| `npc_mentor` | 師ガレン | old master alchemist, long white beard, deep teal-green robe with brass clasps, wooden staff |
+| `npc_mom` | 母リーゼ | gentle middle-aged woman, chestnut hair tied with cloth, apron over a dress |
+| `npc_inn` | 宿屋ボルガ | portly cheerful innkeeper, vest and apron, holding a wooden mug |
+| `npc_laru` | 道具屋ラル | friendly merchant, leather apron, bandolier of potion vials, coin pouch |
+| `npc_mirka` | 錬成師ミルカ | young alchemist, brass goggles on forehead, rune-trimmed coat, glowing flask |
+| `npc_morris` | 老人モーリス | wizened old villager, hunched, plain clothes and shawl, cane |
+| `npc_tina` | 子供ティナ | energetic little girl, short braids, simple dress（低頭身・但し全身高さは統一） |
+| `npc_peddler` | 行商人ドラン | weathered traveling merchant, big backpack, hooded cloak, walking staff |
+| `npc_flowergirl` | 花売りノラ | cheerful girl holding a basket of colorful flowers, apron dress |
+| `npc_scholar` | 司書エルマ | scholarly woman, round glasses, long coat, a thick tome under one arm |
+| `npc_oldwoman` | 老婆ハーゼル | hunched kindly old woman, head & shoulder shawl, wooden cane |
+| `npc_guard` | 門番ゴルド | stout village guard, leather-and-brass armor, helmet, holding a spear |
+| `npc_bard` | 吟遊詩人リコ | slim bard, feathered cap, short cape, playing a fiddle |
+| `npc_storage` | 預かり所の管理人 | round friendly caretaker, apron, holding a ledger, a stacked-crates motif beside |
+| `npc_records` | 記録係エイダ | calm clerk woman, quill and a big record book/scroll, neat vest |
+| `npc_sailor` | 船乗り | weathered sailor, striped shirt, knit cap, rolled sleeves |
+| `npc_kaito` | ライバル カイト | confident teen boy, reddish-brown hair, cocky grin, travel outfit, one sleeve rolled |
+| `npc_portal` | 転送門（装置） | NOT a person: a glowing arcane warp gate — stone arch + swirling blue-violet portal energy + runes（同フレーム・足元=台座） |
 
-> 既存の `npc_mentor/mom/inn/shop/mirka/morris/tina` も**このピクセル規格で描き直して差し替え**（ファイル名据え置きで自動反映）。
+## 3. 支部長・四賢・ボス（同規格で順次）
+基準の `gym_forest`(=済) に**サイズ・絵柄を合わせて**残りを統一。容姿は `CHARACTERS.md` 準拠。
+| ファイル | 対象 |
+|---|---|
+| `gym_port` `gym_volcano` `gym_peak` `gym_volt` `gym_works` `gym_tomb` `gym_astra` | 支部長8（forest以外）※既存があれば統一フレームで描き直し |
+| `sage_*` ×4、`magnus`、`sinel` | 四賢・ラスボス・シネル |
 
-## 3. 支部長・主要キャラ（同規格で順次）
-`ui/gym_forest`（=基準・済）に合わせて、`gym_port`(マレア) ほか支部長8、ライバル カイト、ラスボス等もフィールド用は同じ16bitドットで。容姿は `CHARACTERS.md` 準拠。
+前文は §2 と同じ（`<STYLE> <FRAMING> Single standing character, facing the viewer, one frame. Subject: …`）。
 
 ---
 
-## 4. 当面の優先
-1. 村人6人（peddler/flowergirl/scholar/oldwoman/guard/bard）＝今回ゲームに追加済み（今は絵文字表示）→ ドットを置けば反映
-2. プレイヤー4方向＝既存があれば16bitへ統一
-3. 既存村人NPC（mentor/mom/inn/shop/mirka/morris/tina）の描き直し
-4. 転送門の装置ドット（`npc_portal`）／預かり所（`npc_storage`）
-5. （Codex）キャラimgの `image-rendering: pixelated` 復帰
+## 4. 優先順
+1. **主人公4方向**（統一フレームで描き直し）＝まず基準を作る
+2. **村人・施設NPC**（§2）を統一フレームで（既存npc_morris/tina/mentor/mom/inn/sailor/kaito も描き直し）
+3. 転送門`npc_portal`・記録係`npc_records`
+4. 支部長（forest以外）→ 四賢・ボス
+> 差し替えはファイル名据え置きで自動反映。`gym_forest`の“サイズ感”に全員を合わせるのが合言葉。
