@@ -90,7 +90,7 @@ export default function Home({ state, setState, setActive, onField, onDex }: Pro
         <div className="home-stats">
           <span>📖 {state.caught.length}/{DEX_TOTAL}</span>
           <span>🎖 {state.badges.length}</span>
-          <span>💰 {state.money}</span>
+          <span><ItemIcon kind="money" size={22} /> {state.money}</span>
         </div>
       </header>
 
@@ -265,7 +265,7 @@ export default function Home({ state, setState, setActive, onField, onDex }: Pro
         </>
       ) : (
         <div className="items-pane">
-          <div className="money-box">所持金 <b>💰 {state.money}</b> ゲル</div>
+          <div className="money-box">所持金 <b><ItemIcon kind="money" size={24} /> {state.money}</b> ゲル</div>
           <div className="item-row">
             <span className="item-ico"><ItemIcon kind="heal" size={32} /></span>
             <div className="grow">

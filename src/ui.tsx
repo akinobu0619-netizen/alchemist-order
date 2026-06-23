@@ -239,7 +239,7 @@ export function ItemIcon({ kind, size = 26 }: { kind: string; size?: number }) {
       className="item-icon-img"
       src={`${import.meta.env.BASE_URL}ui/item_${kind}.png`}
       alt=""
-      style={{ width: size, height: size, objectFit: 'contain' }}
+      style={{ width: size, height: size, objectFit: 'contain', display: 'inline-block', verticalAlign: 'middle' }}
       onError={() => {
         itemImgState[kind] = true
         setFailed(true)

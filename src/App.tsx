@@ -18,7 +18,7 @@ import {
   withSeen,
 } from './game/state'
 import * as audio from './game/audio'
-import { GetMonsterOverlay, Sprite, TitleLogo, TypeBadge } from './ui'
+import { GetMonsterOverlay, ItemIcon, Sprite, TitleLogo, TypeBadge } from './ui'
 import Home from './screens/Home'
 import Battle from './screens/Battle'
 import Dex from './screens/Dex'
@@ -483,11 +483,11 @@ export default function App() {
               <span className="mon-name">🛒 道具屋のラル</span>
               <button className="modal-close" onClick={() => setShopOpen(false)}>×</button>
             </div>
-            <p className="dex-text">「いらっしゃい。何にするね？」　所持金 💰{game.money} ゲル</p>
+            <p className="dex-text">「いらっしゃい。何にするね？」　所持金 <ItemIcon kind="money" size={22} /> {game.money} ゲル</p>
             {SHOP_ITEMS.map((it) => (
               <div key={it.key} className="shop-row">
                 <span className="shop-name">{it.name}<span className="cmd-sub">　{it.desc}</span></span>
-                <span className="shop-price">💰{it.price}</span>
+                <span className="shop-price"><ItemIcon kind="money" size={20} />{it.price}</span>
                 <button
                   className="title-btn"
                   style={{ padding: '6px 14px', fontSize: 14 }}
@@ -513,7 +513,10 @@ export default function App() {
               <span className="mon-name">⚗️ 錬成釜</span>
               <button className="modal-close" onClick={() => setFusionOpen(false)}>×</button>
             </div>
-            <p className="dex-text">「ベースと素材を選んでおくれ。ベースが進化し、才能が宿る。」　費用 💰{FUSION_COST}・所持 💰{game.money}</p>
+            <p className="dex-text">
+              「ベースと素材を選んでおくれ。ベースが進化し、才能が宿る。」　費用 <ItemIcon kind="money" size={20} />{FUSION_COST}
+              ・所持 <ItemIcon kind="money" size={20} />{game.money}
+            </p>
             {(() => {
               const a = game.collection.find((o) => o.uid === fuseA)
               const b = game.collection.find((o) => o.uid === fuseB)
@@ -561,7 +564,7 @@ export default function App() {
                     </div>
                   )}
                   <button className="title-btn primary" style={{ width: '100%', marginTop: 8 }} disabled={!prev || game.money < FUSION_COST} onClick={doFuse}>
-                    錬成する 💰{FUSION_COST}（素材は消費されます）
+                    錬成する <ItemIcon kind="money" size={20} />{FUSION_COST}（素材は消費されます）
                   </button>
                   <div className="party-list" style={{ marginTop: 12 }}>
                     {game.collection.map((o) => {
