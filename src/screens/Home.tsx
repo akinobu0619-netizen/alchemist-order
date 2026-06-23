@@ -54,6 +54,7 @@ function ownedStats(o: OwnedMonster) {
 export default function Home({ state, setState, setActive, onField, onDex }: Props) {
   const active = state.collection.find((o) => o.uid === state.activeUid) ?? state.collection[0]
   const [tab, setTab] = useState<'party' | 'items' | 'note'>('party')
+  const [zoom, setZoom] = useState(false) // 幻獣の大きい表示
 
   // やりこみ: 受け取り処理
   const dailyDone = !!state.daily && state.daily.wild >= DAILY_GOAL
@@ -224,12 +225,13 @@ export default function Home({ state, setState, setActive, onField, onDex }: Pro
               <span className="mon-lv">Lv.{sel.level}</span>
             </div>
             <div className="detail-top">
-              <div className="detail-portrait">
-                <Sprite id={sp.id} type={sp.type} size={96} />
+              <div className="detail-portrait" onClick={() => setZoom(true)} style={{ cursor: 'zoom-in' }} title="タップで大きく見る">
+                <Sprite id={sp.id} type={sp.type} size={120} />
                 <div className="badges">
                   <TypeBadge t={sp.type} />
                   {sp.type2 && <TypeBadge t={sp.type2} />}
                 </div>
+                <span className="dex-text" style={{ marginTop: 2, fontSize: 11, opacity: 0.7 }}>🔍 タップで拡大</span>
               </div>
               <div className="grow">
                 <div className="stat-line">
@@ -356,6 +358,31 @@ export default function Home({ state, setState, setActive, onField, onDex }: Pro
           <span className="move-meta">{state.caught.length}/{DEX_TOTAL} 体を記録</span>
         </button>
       </div>
+
+      {/* 幻獣の大きい表示(タップで開閉) */}
+      {zoom && (
+        <div
+          onClick={() => setZoom(false)}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 300, cursor: 'zoom-out',
+            background: 'radial-gradient(circle at 50% 38%, rgba(40,32,20,0.96), rgba(8,6,4,0.97))',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, padding: 16,
+          }}
+        >
+          <Sprite id={sp.id} type={sp.type} size={Math.min(300, Math.round(window.innerWidth * 0.74))} />
+          <div style={{ fontSize: 22, fontWeight: 700, color: '#f3e6c4', textAlign: 'center' }}>
+            {sp.name}
+            <span style={{ fontSize: 15, opacity: 0.8, marginLeft: 8 }}>Lv.{sel.level}</span>
+            {sel.talent ? <span style={{ fontSize: 14, marginLeft: 8, color: '#c79be8' }}>才能★{sel.talent}</span> : null}
+          </div>
+          <div className="badges">
+            <TypeBadge t={sp.type} />
+            {sp.type2 && <TypeBadge t={sp.type2} />}
+          </div>
+          <p className="dex-text" style={{ maxWidth: 360, textAlign: 'center', color: '#d9c9a6' }}>{sp.dex_text}</p>
+          <div style={{ color: '#b8a888', fontSize: 13, marginTop: 4 }}>タップで とじる</div>
+        </div>
+      )}
     </div>
   )
 }
