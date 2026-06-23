@@ -11,8 +11,10 @@ import {
 } from '../engine/battleEngine'
 import {
   DEX,
+  PARTY_MAX,
   catchChance,
   expReward,
+  getParty,
   grantExp,
   species,
   today,
@@ -110,7 +112,9 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
     if (typeof o.hp === 'number' && o.hp > 0) c.hp = Math.min(c.maxHp, o.hp)
     return c
   }
-  const switchTargets = state.collection.filter((o) => o.uid !== curUid && (o.hp == null || o.hp > 0))
+  // 交代対象は「パーティ内」の生存個体のみ(預かりボックスは戦闘に出せない)
+  const party = getParty(state)
+  const switchTargets = state.collection.filter((o) => party.includes(o.uid) && o.uid !== curUid && (o.hp == null || o.hp > 0))
   const [fx, setFx] = useState<Fx>({})
   const [popup, setPopup] = useState<Popup | null>(null)
   const busy = useRef(false)
@@ -473,9 +477,14 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
         level: enemy.level,
         exp: 0,
       }
-      setState((s) => withCaught({ ...s, collection: [...s.collection, caught] }, enemy.data.id))
+      setState((s) => {
+        const pty = getParty(s)
+        const np = pty.length < PARTY_MAX ? [...pty, caught.uid] : pty // 空きがあればパーティへ、無ければ預かり
+        return withCaught({ ...s, collection: [...s.collection, caught], party: np }, enemy.data.id)
+      })
       audio.sfx('catch')
-      pushLog(`やった！ 野生の ${enemy.data.name}を 捕まえた！`, '🔮 図鑑に 登録された。')
+      const toParty = getParty(state).length < PARTY_MAX
+      pushLog(`やった！ 野生の ${enemy.data.name}を 捕まえた！`, toParty ? '🔮 図鑑に 登録された。' : '🔮 図鑑に 登録された。(パーティが満員のため 預かり所へ)')
       setCaught({ id: enemy.data.id, name: enemy.data.name, type: enemy.data.type })
       setPhase('caught')
     } else {
@@ -528,10 +537,11 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
       // 終了時のアクティブを、最後に出していた生存個体へ寄せる(塔の連戦・次エンカに引き継ぐ)
       let activeUid = s.activeUid
       if (phase !== 'lost') {
+        const pty = getParty(s)
         const cur = collection.find((o) => o.uid === curUid)
-        if (cur && (cur.hp == null || cur.hp > 0)) activeUid = curUid
+        if (cur && pty.includes(curUid) && (cur.hp == null || cur.hp > 0)) activeUid = curUid
         else {
-          const living = collection.find((o) => o.hp == null || o.hp > 0)
+          const living = collection.find((o) => pty.includes(o.uid) && (o.hp == null || o.hp > 0))
           if (living) activeUid = living.uid
         }
       }

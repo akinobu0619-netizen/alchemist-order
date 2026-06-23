@@ -18,9 +18,39 @@ export function species(id: string): MonsterData {
 const SAVE_KEY = 'alchemist-order-save-v1'
 const MAX_LEVEL = 100
 
+export const PARTY_MAX = 6 // 戦うパーティの上限。残りは預かりボックス
+
+// パーティの uid 列を返す(旧セーブ移行: party未設定なら先頭PARTY_MAX体)。collectionに無いidは除外
+export function getParty(s: GameState): string[] {
+  const ids = new Set(s.collection.map((o) => o.uid))
+  if (s.party && s.party.length) return s.party.filter((uid) => ids.has(uid))
+  return s.collection.slice(0, PARTY_MAX).map((o) => o.uid)
+}
+// 預ける(パーティ→ボックス)。最後の1体は預けられない。リーダーを預けたら次の先頭へ
+export function depositToBox(s: GameState, uid: string): GameState {
+  const p = getParty(s)
+  if (p.length <= 1 || !p.includes(uid)) return s
+  const party = p.filter((x) => x !== uid)
+  const activeUid = s.activeUid === uid ? party[0] : s.activeUid
+  return { ...s, party, activeUid }
+}
+// 連れる(ボックス→パーティ)。満員なら不可
+export function withdrawToParty(s: GameState, uid: string): GameState {
+  const p = getParty(s)
+  if (p.length >= PARTY_MAX || p.includes(uid) || !s.collection.some((o) => o.uid === uid)) return s
+  return { ...s, party: [...p, uid] }
+}
+// 先頭(リーダー)にする＝パーティ先頭へ並べ替え＋activeUid更新
+export function setLeader(s: GameState, uid: string): GameState {
+  const p = getParty(s)
+  if (!p.includes(uid)) return s
+  return { ...s, party: [uid, ...p.filter((x) => x !== uid)], activeUid: uid }
+}
+
 export function newGame(): GameState {
   return {
     collection: [],
+    party: [],
     seen: [],
     caught: [],
     activeUid: null,
@@ -49,6 +79,10 @@ export function loadGame(): GameState | null {
     merged.achievements = p.achievements ?? []
     merged.dexClaimed = p.dexClaimed ?? []
     merged.mats = { talentStone: p.mats?.talentStone ?? 0, slotCharm: p.mats?.slotCharm ?? 0 }
+    // パーティ移行(旧セーブはparty無し→先頭PARTY_MAX体)。collectionに無いidは除外
+    merged.party = getParty(merged)
+    // リーダー(activeUid)は必ずパーティ内に
+    if (merged.activeUid == null || !merged.party.includes(merged.activeUid)) merged.activeUid = merged.party[0] ?? null
     return merged
   } catch {
     return null

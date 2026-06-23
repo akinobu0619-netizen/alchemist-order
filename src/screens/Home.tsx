@@ -6,10 +6,14 @@ import {
   DAILY_REWARD,
   DEX_MILESTONES,
   DEX_TOTAL,
+  PARTY_MAX,
+  depositToBox,
   expToNext,
+  getParty,
   grantReward,
   ownedMoveset,
   species,
+  withdrawToParty,
 } from '../game/state'
 import { statAt } from '../engine/battleEngine'
 import * as audio from '../game/audio'
@@ -72,6 +76,54 @@ export default function Home({ state, setState, setActive, onField, onDex }: Pro
 
   const [selUid, setSelUid] = useState(active.uid)
   const sel = state.collection.find((o) => o.uid === selUid) ?? active
+
+  // パーティ編成(パーティ最大PARTY_MAX＋預かりボックス)
+  const partyIds = getParty(state)
+  const partyMons = partyIds.map((uid) => state.collection.find((o) => o.uid === uid)).filter(Boolean) as OwnedMonster[]
+  const boxMons = state.collection.filter((o) => !partyIds.includes(o.uid))
+  const selInParty = partyIds.includes(sel.uid)
+  const deposit = (uid: string) => setState((s) => depositToBox(s, uid))
+  const withdraw = (uid: string) => setState((s) => withdrawToParty(s, uid))
+
+  // 手持ち一覧の1行(編成ボタンつき)
+  const monRow = (o: OwnedMonster, where: 'party' | 'box') => {
+    const st = ownedStats(o)
+    const hp = o.hp == null ? st.maxHp : o.hp
+    const ratio = Math.max(0, Math.min(1, hp / st.maxHp))
+    const col = ratio > 0.5 ? '#43c463' : ratio > 0.2 ? '#e2c23b' : '#e2563b'
+    const btnS = { padding: '4px 10px', fontSize: 12, whiteSpace: 'nowrap' as const }
+    return (
+      <div key={o.uid} style={{ display: 'flex', gap: 6, alignItems: 'stretch', marginBottom: 6 }}>
+        <button className={`party-row ${o.uid === selUid ? 'sel' : ''}`} style={{ flex: 1, marginBottom: 0 }} onClick={() => setSelUid(o.uid)}>
+          <Sprite id={st.sp.id} type={st.sp.type} size={44} />
+          <div className="pr-info">
+            <div className="pr-head">
+              <span className="pr-name">{st.sp.name}</span>
+              {o.uid === active.uid && <span className="lead-tag">先頭</span>}
+              <span className="pr-lv">Lv.{o.level}</span>
+            </div>
+            <div className="pr-hpbar">
+              <div className="pr-hpfill" style={{ width: `${ratio * 100}%`, background: col }} />
+            </div>
+            <div className="pr-hptext">HP {hp}/{st.maxHp}</div>
+          </div>
+          <TypeBadge t={st.sp.type} />
+        </button>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, justifyContent: 'center' }}>
+          {where === 'party' ? (
+            <>
+              {o.uid !== active.uid && (
+                <button className="title-btn" style={btnS} onClick={() => setActive(o.uid)}>先頭</button>
+              )}
+              <button className="title-btn" style={btnS} disabled={partyMons.length <= 1} onClick={() => deposit(o.uid)}>預ける</button>
+            </>
+          ) : (
+            <button className="title-btn" style={btnS} disabled={partyMons.length >= PARTY_MAX} onClick={() => withdraw(o.uid)}>連れる</button>
+          )}
+        </div>
+      </div>
+    )
+  }
 
   const { sp, maxHp, values } = ownedStats(sel)
   const curHp = sel.hp == null ? maxHp : sel.hp
@@ -228,39 +280,33 @@ export default function Home({ state, setState, setActive, onField, onDex }: Pro
             </div>
 
             <p className="dex-text">{sp.dex_text}</p>
-            {!isActive && (
-              <button className="title-btn primary" style={{ width: '100%', marginTop: 6 }} onClick={() => setActive(sel.uid)}>
-                先頭にする
-              </button>
-            )}
+            {selInParty
+              ? !isActive && (
+                  <button className="title-btn primary" style={{ width: '100%', marginTop: 6 }} onClick={() => setActive(sel.uid)}>
+                    先頭にする
+                  </button>
+                )
+              : (
+                  <button
+                    className="title-btn primary"
+                    style={{ width: '100%', marginTop: 6 }}
+                    disabled={partyMons.length >= PARTY_MAX}
+                    onClick={() => withdraw(sel.uid)}
+                  >
+                    {partyMons.length >= PARTY_MAX ? 'パーティが満員' : 'パーティに連れる'}
+                  </button>
+                )}
           </div>
 
-          {/* 手持ち一覧 */}
-          <h3 className="section-title">手持ち {state.collection.length}体（タップで詳細）</h3>
+          {/* パーティ(戦う編成・先頭=リーダー) */}
+          <h3 className="section-title">パーティ {partyMons.length}/{PARTY_MAX}（戦う編成・先頭=リーダー）</h3>
+          <div className="party-list">{partyMons.map((o) => monRow(o, 'party'))}</div>
+
+          {/* 預かりボックス */}
+          <h3 className="section-title">📦 預かり所 {boxMons.length}体</h3>
           <div className="party-list">
-            {state.collection.map((o) => {
-              const st = ownedStats(o)
-              const hp = o.hp == null ? st.maxHp : o.hp
-              const ratio = Math.max(0, Math.min(1, hp / st.maxHp))
-              const col = ratio > 0.5 ? '#43c463' : ratio > 0.2 ? '#e2c23b' : '#e2563b'
-              return (
-                <button key={o.uid} className={`party-row ${o.uid === selUid ? 'sel' : ''}`} onClick={() => setSelUid(o.uid)}>
-                  <Sprite id={st.sp.id} type={st.sp.type} size={44} />
-                  <div className="pr-info">
-                    <div className="pr-head">
-                      <span className="pr-name">{st.sp.name}</span>
-                      {o.uid === active.uid && <span className="lead-tag">先頭</span>}
-                      <span className="pr-lv">Lv.{o.level}</span>
-                    </div>
-                    <div className="pr-hpbar">
-                      <div className="pr-hpfill" style={{ width: `${ratio * 100}%`, background: col }} />
-                    </div>
-                    <div className="pr-hptext">HP {hp}/{st.maxHp}</div>
-                  </div>
-                  <TypeBadge t={st.sp.type} />
-                </button>
-              )
-            })}
+            {boxMons.length === 0 && <span className="ink-dim">預かり所は からっぽ。捕まえすぎたら ここに あずかるよ。</span>}
+            {boxMons.map((o) => monRow(o, 'box'))}
           </div>
         </>
       ) : (

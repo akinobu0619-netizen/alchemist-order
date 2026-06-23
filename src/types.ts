@@ -66,7 +66,8 @@ export interface OwnedMonster {
 
 // セーブされるゲーム全体の状態
 export interface GameState {
-  collection: OwnedMonster[]
+  collection: OwnedMonster[] // 所持する全個体(パーティ＋預かりボックス)
+  party: string[] // 戦うパーティの uid 列(先頭=リーダー、最大 PARTY_MAX)。残りは預かりボックス
   seen: string[] // 出会った種のid
   caught: string[] // 捕獲した種のid
   activeUid: string | null // 手持ちの先頭(バトルに出す個体)

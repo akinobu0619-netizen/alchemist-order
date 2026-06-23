@@ -18,7 +18,7 @@ function wildOfTypes(types: string[], maxStage = 1, opts: { genOnly?: boolean } 
   ).map((d) => d.id)
 }
 
-export type NpcKind = 'mentor' | 'mom' | 'inn' | 'sign' | 'villager' | 'shop' | 'alchemist' | 'portal'
+export type NpcKind = 'mentor' | 'mom' | 'inn' | 'sign' | 'villager' | 'shop' | 'alchemist' | 'portal' | 'storage'
 export interface Npc {
   x: number
   y: number
@@ -238,6 +238,8 @@ export const MAPS: Record<string, GameMap> = {
       },
       // ── 転送門(本拠地ハブ): 調べると世界選択(App側で処理) ──
       { x: 17, y: 20, kind: 'portal', name: '転送門', emoji: '🌀' },
+      // ── 預かり所: 調べるとメニュー(手持ち/編成)へ ──
+      { x: 20, y: 18, kind: 'storage', name: '預かり所の管理人', emoji: '📦' },
     ],
     buildings: [
       { x: 6, y: 6, w: 3, h: 2, kind: 'home' }, // わが家(左)

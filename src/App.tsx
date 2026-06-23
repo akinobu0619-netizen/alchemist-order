@@ -4,9 +4,11 @@ import type { Chest, Npc } from './game/maps'
 import { WORLDS } from './game/maps'
 import {
   FUSION_COST,
+  PARTY_MAX,
   STARTER_IDS,
   applyDailyLogin,
   currentObjective,
+  getParty,
   fuseResult,
   hasFlag,
   healParty,
@@ -14,6 +16,7 @@ import {
   makeOwned,
   newGame,
   saveGame,
+  setLeader,
   species,
   withCaught,
   withFlag,
@@ -244,6 +247,12 @@ export default function App() {
       })
     } else if (npc.kind === 'shop') {
       setShopOpen(true)
+    } else if (npc.kind === 'storage') {
+      setDialogue({
+        speaker: npc.name,
+        lines: ['預かり所へ ようこそ。たくさんの幻獣を あずかっているよ。', 'パーティの 入れ替え・並び替えは メニューの「手持ち」から どうぞ。'],
+        after: () => setScreen('home'),
+      })
     } else if (npc.kind === 'portal') {
       if (game.collection.length === 0) {
         setDialogue({ lines: ['転送門は静かに眠っている。', 'まずは師ガレンに 話しかけて 最初の幻獣を 受け取ろう。'] })
@@ -288,7 +297,8 @@ export default function App() {
     // 公平性のため満タンで開始し、生存個体を先頭に
     setGame((s) => {
       const healed = healParty(s)
-      const living = healed.collection.find((o) => o.hp == null || o.hp > 0)
+      const pty = getParty(healed)
+      const living = healed.collection.find((o) => pty.includes(o.uid) && (o.hp == null || o.hp > 0))
       return { ...healed, activeUid: living ? living.uid : healed.activeUid }
     })
     setTower({ floor: 1, cleared: 0 })
@@ -308,10 +318,17 @@ export default function App() {
     const result = { ...makeOwned(r.speciesId, r.level), talent: r.talent, inheritedMoves: r.inherited }
     setGame((s) => {
       const coll = [...s.collection.filter((o) => o.uid !== a.uid && o.uid !== b.uid), result]
-      const activeUid = s.activeUid === a.uid || s.activeUid === b.uid ? result.uid : s.activeUid
+      // パーティ更新: 素材2体を外し、どちらかがパーティ内だった場合は結果を空きへ
+      const oldParty = getParty(s)
+      const wasInParty = oldParty.includes(a.uid) || oldParty.includes(b.uid)
+      let party = oldParty.filter((uid) => uid !== a.uid && uid !== b.uid)
+      if (wasInParty && party.length < PARTY_MAX) party = [...party, result.uid]
+      const activeUid =
+        s.activeUid && party.includes(s.activeUid) ? s.activeUid : party.includes(result.uid) ? result.uid : party[0] ?? result.uid
       let ns: GameState = {
         ...s,
         collection: coll,
+        party,
         activeUid,
         money: s.money - FUSION_COST,
         mats: { talentStone: (s.mats?.talentStone ?? 0) - (stone ? 1 : 0), slotCharm: (s.mats?.slotCharm ?? 0) - (charm ? 1 : 0) },
@@ -358,7 +375,7 @@ export default function App() {
   const pickStarter = (id: string) => {
     const owned = makeOwned(id, STARTER_LEVEL)
     setGame((s) => {
-      let next: GameState = { ...s, collection: [owned], activeUid: owned.uid, flasks: STARTER_FLASKS }
+      let next: GameState = { ...s, collection: [owned], party: [owned.uid], activeUid: owned.uid, flasks: STARTER_FLASKS }
       next = withCaught(withSeen(next, id), id)
       return next
     })
@@ -424,7 +441,7 @@ export default function App() {
       <Home
         state={game}
         setState={setGame}
-        setActive={(uid) => setGame((s) => ({ ...s, activeUid: uid }))}
+        setActive={(uid) => setGame((s) => setLeader(s, uid))}
         onField={() => setScreen('field')}
         onDex={() => setScreen('dex')}
       />
