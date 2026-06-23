@@ -343,22 +343,22 @@ export const MAPS: Record<string, GameMap> = {
     indoor: true,
     grid: room(11, 9, 5),
     warps: [{ x: 5, y: 8, to: 'rapis', tx: 26, ty: 10 }],
-    npcs: [{ x: 5, y: 2, kind: 'inn', name: '宿屋の主人' }],
+    npcs: [{ x: 8, y: 6, kind: 'inn', name: '宿屋の主人' }], // 右下の受付に
     props: [
       // 壁
       { x: 3, y: 0, kind: 'window' }, { x: 7, y: 0, kind: 'window' }, { x: 5, y: 0, kind: 'clock' },
-      // 客室のベッド(四隅上)
+      // 客室のベッド(上の四隅)
       { x: 1, y: 1, kind: 'bed', solid: true }, { x: 2, y: 1, kind: 'bed', solid: true },
       { x: 8, y: 1, kind: 'bed', solid: true }, { x: 9, y: 1, kind: 'bed', solid: true },
-      // 酒場のカウンター(主人の前)
-      { x: 4, y: 3, kind: 'table', solid: true }, { x: 3, y: 3, kind: 'chair', solid: true }, { x: 6, y: 3, kind: 'chair', solid: true },
-      { x: 1, y: 3, kind: 'shelf', solid: true, name: '酒棚' }, { x: 9, y: 3, kind: 'shelf', solid: true },
-      // 暖炉と樽
+      // 受付カウンター(右下・主人を机で囲む。手前(8,7)から話しかける)
+      { x: 7, y: 5, kind: 'table', solid: true }, { x: 8, y: 5, kind: 'table', solid: true }, { x: 9, y: 5, kind: 'table', solid: true },
+      { x: 7, y: 6, kind: 'table', solid: true }, { x: 9, y: 6, kind: 'shelf', solid: true, name: '宿帳棚' },
+      // 暖炉のある休憩スペース(左下)
       { x: 1, y: 6, kind: 'fireplace', solid: true, name: '暖炉', lines: ['旅人たちが暖を取っている。'] },
-      { x: 2, y: 6, kind: 'rug' }, { x: 7, y: 6, kind: 'barrel', solid: true }, { x: 8, y: 6, kind: 'barrel', solid: true }, { x: 9, y: 6, kind: 'plant', solid: true },
-      { x: 5, y: 5, kind: 'rug' },
+      { x: 2, y: 6, kind: 'rug' }, { x: 1, y: 3, kind: 'shelf', solid: true, name: '酒棚' }, { x: 1, y: 4, kind: 'barrel', solid: true },
+      { x: 3, y: 5, kind: 'plant', solid: true }, { x: 5, y: 5, kind: 'rug' },
     ],
-    intro: '暖炉のぬくもりが心地よい広い宿屋。',
+    intro: '暖炉のぬくもりが心地よい広い宿屋。受付は右奥。',
   },
   shop: {
     id: 'shop',
