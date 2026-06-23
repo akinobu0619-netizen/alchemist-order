@@ -240,6 +240,31 @@ export const MAPS: Record<string, GameMap> = {
       { x: 17, y: 20, kind: 'portal', name: '転送門', emoji: '🌀' },
       // ── 預かり所: 調べるとメニュー(手持ち/編成)へ ──
       { x: 20, y: 18, kind: 'storage', name: '預かり所の管理人', emoji: '📦' },
+      // ── 村人(拡充): 世界観・ヒント・人々の暮らし ──
+      {
+        x: 8, y: 21, kind: 'villager', name: '行商人ドラン', emoji: '🧳', sprite: 'npc_peddler', portrait: 'peddler',
+        lines: ['よう、錬獣師さん。あちこちの世界を渡り歩いて 商売してるのさ。', '転送門が開けば 行ける土地も増える。記章を集めることだな。', '……どの世界も、灰化のせいで景気は さっぱりだがね。'],
+      },
+      {
+        x: 5, y: 16, kind: 'villager', name: '花売りのノラ', emoji: '💐', sprite: 'npc_flowergirl', portrait: 'flowergirl',
+        lines: ['お花、いかが？ 緑霧の森で摘んできたの。', 'あなたの幻獣さんにも、元気が移るといいな！'],
+      },
+      {
+        x: 30, y: 17, kind: 'villager', name: '司書エルマ', emoji: '📚', sprite: 'npc_scholar', portrait: 'scholar',
+        lines: ['この大陸の空には《エーテル》が満ちている。幻獣はそれが象を結んだ姿よ。', '錬成――幻獣を掛け合わせる術も、元をたどれば賢者の石の研究から生まれたの。', '知りたいことがあれば、いつでもおいで。'],
+      },
+      {
+        x: 22, y: 22, kind: 'villager', name: '老婆ハーゼル', emoji: '👵', sprite: 'npc_oldwoman', portrait: 'oldwoman',
+        lines: ['灰化はねえ……ただの病じゃない。色を奪い、心まで奪っていく。', '昔の言い伝えでは、灰は"満たされぬ願い"から生まれるという。', '気をつけて行きなされ、若いの。'],
+      },
+      {
+        x: 14, y: 22, kind: 'villager', name: '門番ゴルド', emoji: '💂', sprite: 'npc_guard', portrait: 'guard',
+        lines: ['村の守りは おれの仕事だ。安心して旅立ちな。', 'そこの転送門から、各地の世界へ跳べる。まずは緑霧の森だ。'],
+      },
+      {
+        x: 30, y: 6, kind: 'villager', name: '吟遊詩人リコ', emoji: '🎻', sprite: 'npc_bard', portrait: 'bard',
+        lines: ['♪ 八つの記章を集めし者 ―― 灰の王と相見えん……', 'おっと、これは古い詩さ。だが、あながち作り話でもないらしいぜ。'],
+      },
     ],
     buildings: [
       { x: 6, y: 6, w: 3, h: 2, kind: 'home' }, // わが家(左)
