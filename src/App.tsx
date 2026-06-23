@@ -6,6 +6,7 @@ import {
   FUSION_COST,
   STARTER_IDS,
   applyDailyLogin,
+  currentObjective,
   fuseResult,
   hasFlag,
   healParty,
@@ -422,6 +423,28 @@ export default function App() {
         </button>
       </div>
       {content}
+
+      {phase === 'game' && screen === 'field' && !dialogue && !getMon && (() => {
+        const obj = currentObjective(game)
+        if (!obj) return null
+        return (
+          <div
+            style={{
+              position: 'absolute', top: 46, left: '50%', transform: 'translateX(-50%)', zIndex: 150,
+              maxWidth: '90%', display: 'flex', alignItems: 'center', gap: 8, padding: '6px 14px',
+              borderRadius: 999, background: 'rgba(22,17,10,0.88)', border: '1px solid rgba(212,175,90,0.5)',
+              color: '#f3e6c4', fontSize: 13, fontWeight: 600, lineHeight: 1.35, textAlign: 'center',
+              boxShadow: '0 3px 12px rgba(0,0,0,0.4)', pointerEvents: 'none',
+            }}
+          >
+            <span style={{ fontSize: 16, flexShrink: 0 }}>🎯</span>
+            <span>
+              <span style={{ opacity: 0.65, marginRight: 6 }}>{obj.icon} 目標</span>
+              {obj.text}
+            </span>
+          </div>
+        )
+      })()}
 
       {settingsOpen && (
         <div className="modal-backdrop" onClick={() => setSettingsOpen(false)}>

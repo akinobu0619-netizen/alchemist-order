@@ -6,6 +6,7 @@ const PAGES: string[][] = [
   ['幻獣を操る者は《錬獣師》と呼ばれ、', 'その頂点に立つ秩序こそ――《アルケミスト・オーダー》。'],
   ['ここは錬金の大陸アルケミア。あなたは地方の村ラピスで学ぶ、ひとりの見習い。', '今日は――師から はじめての幻獣を授かる、旅立ちの日。'],
   ['朝の光が、窓から差し込む。', 'さあ……ゆっくりと、目を覚まそう。'],
+  ['【操作】矢印キー、または画面の十字ボタンで移動。人や物に向かって進むと調べられる。', '画面上の 🎯 が、つねに次の目標を教えてくれる。それに従って進もう。'],
 ]
 
 export default function Opening({ onDone }: { onDone: () => void }) {
@@ -30,7 +31,7 @@ export default function Opening({ onDone }: { onDone: () => void }) {
           {i + 1} / {PAGES.length}
         </span>
         <button className="opening-next" onClick={next}>
-          {last ? '相棒を選ぶ ▶' : '次へ ▶'}
+          {last ? '目を覚ます ▶' : '次へ ▶'}
         </button>
       </div>
     </div>

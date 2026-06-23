@@ -243,6 +243,26 @@ export function hasFlag(s: GameState, f: string): boolean {
 export function withFlag(s: GameState, f: string): GameState {
   return s.flags.includes(f) ? s : { ...s, flags: [...s.flags, f] }
 }
+
+// チュートリアル兼メインクエストの「現在の目標」を状態から導出。最初のステージ攻略で完了→null。
+export function currentObjective(g: GameState): { icon: string; text: string } | null {
+  if (g.defeatedTrainers.includes('gym_forest')) return null // 最初のステージ攻略=チュートリアル完了
+  if (g.collection.length === 0) {
+    // まだ相棒がいない → 起床〜相棒入手まで誘導
+    if (g.pos.mapId === 'home2f') return { icon: '🚶', text: '階段(部屋の下側のマス)から 1階へ降りよう' }
+    if (g.pos.mapId === 'home') {
+      if (!hasFlag(g, 'mom_gift')) return { icon: '💬', text: 'おかあさんに話しかけて 傷薬を受け取ろう' }
+      return { icon: '🚪', text: '玄関(下の扉)から 村へ出よう' }
+    }
+    if (g.pos.mapId === 'mentor_house') return { icon: '💬', text: '師ガレンに話しかけて 最初の相棒を選ぼう' }
+    if (g.pos.mapId === 'rapis') return { icon: '🏠', text: '中央上の「師ガレンの家」へ。最初の相棒をもらおう' }
+    return { icon: '🏠', text: '本拠地ラピス村へ戻り、師ガレンを訪ねよう' }
+  }
+  // 相棒あり・最初のステージ未攻略 → 転送門〜森ボスへ誘導
+  if (g.pos.mapId === 'forest') return { icon: '⚔️', text: '高草で仲間を増やし鍛え、最奥の支部長シルヴァに挑もう' }
+  if (g.pos.mapId === 'rapis') return { icon: '🌀', text: '中央広場の転送門(🌀)に触れて「緑霧の森」へワープしよう' }
+  return { icon: '🌀', text: '本拠地へ戻り、転送門から緑霧の森へ向かおう' }
+}
 /** 手持ち全員のHPを満タンに(宿屋) */
 export function healParty(s: GameState): GameState {
   return { ...s, collection: s.collection.map((o) => ({ ...o, hp: undefined })) }
