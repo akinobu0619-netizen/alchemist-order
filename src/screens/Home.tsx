@@ -13,12 +13,16 @@ import {
   grantReward,
   ownedMoveset,
   playerTitle,
+  releaseMon,
+  sellMon,
+  sellPrice,
   species,
   withdrawToParty,
 } from '../game/state'
+import typechart from '../../data/typechart.json'
 import { statAt } from '../engine/battleEngine'
 import * as audio from '../game/audio'
-import { ItemIcon, RarityBadge, Sprite, TypeBadge } from '../ui'
+import { ItemIcon, RarityBadge, Sprite, TypeBadge, TYPE_COLORS } from '../ui'
 
 interface Props {
   state: GameState
@@ -57,6 +61,9 @@ export default function Home({ state, setState, setActive, onField, onDex, initi
   const active = state.collection.find((o) => o.uid === state.activeUid) ?? state.collection[0]
   const [tab, setTab] = useState<'party' | 'items' | 'note' | 'record'>(initialTab)
   const [zoom, setZoom] = useState(false) // 幻獣の大きい表示
+  const [boxSort, setBoxSort] = useState<'dex' | 'level' | 'rarity' | 'type'>('dex') // 預かりの並び替え
+  const [confirm, setConfirm] = useState<{ uid: string; sell: boolean } | null>(null) // 逃がす/売る確認
+  const [showHelp, setShowHelp] = useState(false) // 遊び方・相性表
 
   // やりこみ: 受け取り処理
   const dailyDone = !!state.daily && state.daily.wild >= DAILY_GOAL
@@ -87,6 +94,19 @@ export default function Home({ state, setState, setActive, onField, onDex, initi
   const selInParty = partyIds.includes(sel.uid)
   const deposit = (uid: string) => setState((s) => depositToBox(s, uid))
   const withdraw = (uid: string) => setState((s) => withdrawToParty(s, uid))
+  const doRelease = (uid: string, sell: boolean) => {
+    audio.sfx(sell ? 'coin' : 'select')
+    setState((s) => (sell ? sellMon(s, uid) : releaseMon(s, uid)))
+    if (selUid === uid) setSelUid(active.uid)
+    setConfirm(null)
+  }
+  // 預かりの並び替え
+  const sortedBox = [...boxMons].sort((a, b) => {
+    if (boxSort === 'level') return b.level - a.level
+    if (boxSort === 'rarity') return (b.talent ?? 0) - (a.talent ?? 0)
+    if (boxSort === 'type') return species(a.speciesId).type.localeCompare(species(b.speciesId).type) || species(a.speciesId).dex - species(b.speciesId).dex
+    return species(a.speciesId).dex - species(b.speciesId).dex
+  })
 
   // 手持ち一覧の1行(編成ボタンつき)
   const monRow = (o: OwnedMonster, where: 'party' | 'box') => {
@@ -121,8 +141,18 @@ export default function Home({ state, setState, setActive, onField, onDex, initi
               )}
               <button className="title-btn" style={btnS} disabled={partyMons.length <= 1} onClick={() => deposit(o.uid)}>預ける</button>
             </>
+          ) : confirm?.uid === o.uid ? (
+            <>
+              <span className="cmd-sub" style={{ whiteSpace: 'nowrap' }}>{confirm.sell ? `売値${sellPrice(o)}?` : '逃がす?'}</span>
+              <button className="title-btn" style={btnS} onClick={() => doRelease(o.uid, confirm.sell)}>はい</button>
+              <button className="title-btn" style={btnS} onClick={() => setConfirm(null)}>やめる</button>
+            </>
           ) : (
-            <button className="title-btn" style={btnS} disabled={partyMons.length >= PARTY_MAX} onClick={() => withdraw(o.uid)}>連れる</button>
+            <>
+              <button className="title-btn" style={btnS} disabled={partyMons.length >= PARTY_MAX} onClick={() => withdraw(o.uid)}>連れる</button>
+              <button className="title-btn" style={btnS} onClick={() => setConfirm({ uid: o.uid, sell: true })}>売る</button>
+              <button className="title-btn" style={btnS} onClick={() => setConfirm({ uid: o.uid, sell: false })}>逃がす</button>
+            </>
           )}
         </div>
       </div>
@@ -312,10 +342,24 @@ export default function Home({ state, setState, setActive, onField, onDex, initi
           <div className="party-list">{partyMons.map((o) => monRow(o, 'party'))}</div>
 
           {/* 預かりボックス */}
-          <h3 className="section-title">📦 預かり所 {boxMons.length}体</h3>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+            <h3 className="section-title" style={{ margin: '12px 0 6px' }}>📦 預かり所 {boxMons.length}体</h3>
+            {boxMons.length > 1 && (
+              <select
+                value={boxSort}
+                onChange={(e) => setBoxSort(e.target.value as typeof boxSort)}
+                style={{ fontSize: 12, padding: '3px 6px', borderRadius: 6, background: 'rgba(20,16,10,0.5)', color: '#f3e6c4', border: '1px solid rgba(212,175,90,0.4)' }}
+              >
+                <option value="dex">図鑑番号順</option>
+                <option value="level">レベル順</option>
+                <option value="rarity">レア度順</option>
+                <option value="type">タイプ順</option>
+              </select>
+            )}
+          </div>
           <div className="party-list">
             {boxMons.length === 0 && <span className="ink-dim">預かり所は からっぽ。捕まえすぎたら ここに あずかるよ。</span>}
-            {boxMons.map((o) => monRow(o, 'box'))}
+            {sortedBox.map((o) => monRow(o, 'box'))}
           </div>
         </>
       ) : tab === 'record' ? (
@@ -418,7 +462,67 @@ export default function Home({ state, setState, setActive, onField, onDex, initi
           <span className="move-name">📖 幻獣図鑑をひらく</span>
           <span className="move-meta">{state.caught.length}/{DEX_TOTAL} 体を記録</span>
         </button>
+        <button className="move-btn" onClick={() => setShowHelp(true)}>
+          <span className="move-name">📘 遊び方・相性表</span>
+          <span className="move-meta">タイプ相性と基本ルール</span>
+        </button>
       </div>
+
+      {/* 遊び方・相性表 */}
+      {showHelp && (() => {
+        const types = typechart.types as string[]
+        const chart = typechart.chart as Record<string, Record<string, number>>
+        const cell = (atk: string, def: string) => {
+          const v = chart[atk]?.[def] ?? 1
+          if (v >= 2) return { t: '◎', c: '#43c463' }
+          if (v === 0) return { t: '✕', c: '#888' }
+          if (v < 1) return { t: '△', c: '#e2563b' }
+          return { t: '', c: '' }
+        }
+        return (
+          <div onClick={() => setShowHelp(false)} style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(10,8,5,0.94)', overflow: 'auto', padding: 16 }}>
+            <div onClick={(e) => e.stopPropagation()} style={{ maxWidth: 560, margin: '0 auto', color: '#f3e6c4' }}>
+              <div className="card-head">
+                <span className="mon-name">📘 遊び方・タイプ相性</span>
+                <button className="modal-close" onClick={() => setShowHelp(false)}>×</button>
+              </div>
+              <ul className="dex-text" style={{ paddingLeft: 18, lineHeight: 1.7 }}>
+                <li>高草を歩くと野生の幻獣が現れる。フラスコで捕獲、戦って育てよう。</li>
+                <li>技には<b>タイプ相性</b>があり、効果ばつぐん(◎=2倍)を突くと有利。✕は無効。</li>
+                <li>同じ幻獣でも<b>レア度(★)</b>で強さが違う。配合(錬成)で更に強い個体が生まれる。</li>
+                <li>本拠地の転送門から各世界へ。守護者を倒し記章を集めよう。</li>
+              </ul>
+              <h3 className="section-title">タイプ相性表（縦＝攻撃 / 横＝防御）</h3>
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ borderCollapse: 'collapse', fontSize: 12, margin: '0 auto' }}>
+                  <thead>
+                    <tr>
+                      <th style={{ padding: 2 }}></th>
+                      {types.map((d) => (
+                        <th key={d} style={{ padding: '2px 1px', color: TYPE_COLORS[d], fontWeight: 700 }}>{d}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {types.map((atk) => (
+                      <tr key={atk}>
+                        <th style={{ padding: '2px 4px', color: TYPE_COLORS[atk], fontWeight: 700, textAlign: 'right' }}>{atk}</th>
+                        {types.map((def) => {
+                          const c = cell(atk, def)
+                          return (
+                            <td key={def} style={{ width: 22, height: 22, textAlign: 'center', border: '1px solid rgba(255,255,255,0.08)', color: c.c, fontWeight: 700 }}>{c.t}</td>
+                          )
+                        })}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <p className="cmd-sub" style={{ textAlign: 'center', marginTop: 8 }}>◎=こうかばつぐん(2倍) ／ △=いまひとつ(0.5倍) ／ ✕=効果なし ／ 空欄=等倍</p>
+            </div>
+          </div>
+        )
+      })()}
 
       {/* 幻獣の大きい表示(タップで開閉) */}
       {zoom && (

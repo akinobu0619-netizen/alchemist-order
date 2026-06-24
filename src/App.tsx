@@ -8,7 +8,9 @@ import {
   STARTER_IDS,
   applyDailyLogin,
   currentObjective,
+  exportSave,
   getParty,
+  importSave,
   rollTalent,
   fuseResult,
   hasFlag,
@@ -90,6 +92,8 @@ export default function App() {
   const [fuseStone, setFuseStone] = useState(false)
   const [fuseCharm, setFuseCharm] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [backupCode, setBackupCode] = useState('') // セーブ書き出し表示用
+  const [importText, setImportText] = useState('') // セーブ読み込み入力
   const [vol, setVol] = useState(audio.getVolume())
   const [sfxOn, setSfxOn] = useState(audio.isSfxOn())
 
@@ -561,6 +565,57 @@ export default function App() {
                 {sfxOn ? 'オン' : 'オフ'}
               </button>
             </div>
+
+            {/* セーブのバックアップ(書き出し/読み込み) */}
+            <h3 className="section-title" style={{ marginTop: 14 }}>セーブのバックアップ</h3>
+            <p className="cmd-sub" style={{ marginTop: 0 }}>機種変更やデータ消去に備え、コードを控えておくと復元できます。</p>
+            <div className="setting-row">
+              <button
+                className="title-btn"
+                style={{ padding: '6px 14px', fontSize: 14 }}
+                onClick={() => {
+                  const code = exportSave()
+                  setBackupCode(code)
+                  try { navigator.clipboard?.writeText(code) } catch { /* 手動コピー用に下に表示 */ }
+                }}
+              >
+                セーブを書き出す（コピー）
+              </button>
+              <span className="cmd-sub">{backupCode ? 'コピーしました' : ''}</span>
+            </div>
+            {backupCode && (
+              <textarea
+                readOnly
+                value={backupCode}
+                onFocusCapture={(e) => e.currentTarget.select()}
+                style={{ width: '100%', height: 56, fontSize: 11, fontFamily: 'monospace', background: 'rgba(20,16,10,0.5)', color: '#cdbf9c', border: '1px solid rgba(212,175,90,0.4)', borderRadius: 8, padding: 6, resize: 'vertical' }}
+              />
+            )}
+            <textarea
+              placeholder="ここにセーブコードを貼り付けて読み込み"
+              value={importText}
+              onChange={(e) => setImportText(e.target.value)}
+              style={{ width: '100%', height: 48, fontSize: 11, fontFamily: 'monospace', marginTop: 6, background: 'rgba(20,16,10,0.5)', color: '#f3e6c4', border: '1px solid rgba(212,175,90,0.4)', borderRadius: 8, padding: 6, resize: 'vertical' }}
+            />
+            <button
+              className="title-btn"
+              style={{ padding: '6px 14px', fontSize: 14, width: '100%', marginTop: 4 }}
+              disabled={!importText.trim()}
+              onClick={() => {
+                const loaded = importSave(importText)
+                if (loaded) {
+                  setGame(loaded)
+                  setImportText('')
+                  setSettingsOpen(false)
+                  setScreen('field')
+                  setDialogue({ lines: ['セーブを 読み込んだ！'] })
+                } else {
+                  setDialogue({ lines: ['コードが 正しくないようだ……', 'もう一度 確認してね。'] })
+                }
+              }}
+            >
+              セーブを読み込む
+            </button>
           </div>
         </div>
       )}

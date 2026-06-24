@@ -279,6 +279,47 @@ export function saveGame(s: GameState): void {
   }
 }
 
+// ── セーブのバックアップ(書き出し/読み込み) ──
+// 書き出し=現在のセーブをbase64コードに。読み込み=コード(またはJSON)を検証して復元。
+export function exportSave(): string {
+  const raw = localStorage.getItem(SAVE_KEY) ?? ''
+  try {
+    return btoa(unescape(encodeURIComponent(raw)))
+  } catch {
+    return raw
+  }
+}
+export function importSave(code: string): GameState | null {
+  try {
+    const t = code.trim()
+    const json = t.startsWith('{') ? t : decodeURIComponent(escape(atob(t)))
+    const p = JSON.parse(json)
+    if (!p || !Array.isArray(p.collection)) return null // 最低限の妥当性チェック
+    localStorage.setItem(SAVE_KEY, JSON.stringify(p))
+    return loadGame() // 既定値補完・移行を通す
+  } catch {
+    return null
+  }
+}
+
+// ── 個体の売却・逃がす ──
+// 売値: レベル＋レア度(才能)に応じる
+export function sellPrice(o: OwnedMonster): number {
+  return 20 + o.level * 8 + (o.talent ?? 0) * 30
+}
+// 逃がす(パーティ個体は不可。先にボックスへ)
+export function releaseMon(s: GameState, uid: string): GameState {
+  if (getParty(s).includes(uid)) return s
+  return { ...s, collection: s.collection.filter((o) => o.uid !== uid) }
+}
+// 売る(逃がす＋売値を入手)
+export function sellMon(s: GameState, uid: string): GameState {
+  if (getParty(s).includes(uid)) return s
+  const o = s.collection.find((x) => x.uid === uid)
+  if (!o) return s
+  return { ...s, money: s.money + sellPrice(o), collection: s.collection.filter((x) => x.uid !== uid) }
+}
+
 let uidSeq = 0
 export function makeUid(): string {
   return `m${Date.now().toString(36)}_${(uidSeq++).toString(36)}`
