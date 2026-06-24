@@ -456,10 +456,10 @@ export const MAPS: Record<string, GameMap> = {
     ],
     leader: { x: 17, y: 3, trainerId: 'gym_forest' },
     encounter: {
-      // 既定の固有幻獣 ＋ 森に合う生成幻獣(地/毒/風/雷/火の1段階目)
+      // 既定の固有幻獣 ＋ 森に合う生成幻獣(地/毒/風の1段階目)。草・植物=地、毛虫/蜂系=毒/風でカバー。火/雷は火山・嵐嶺など後の世界へ
       pool: [
         'portabupa', 'venomite', 'sporin', 'hobgobalt', 'tsunousa', 'falcone', 'briezel', 'pibit',
-        ...wildOfTypes(['地', '毒', '風', '雷', '火'], 1, { genOnly: true }),
+        ...wildOfTypes(['地', '毒', '風'], 1, { genOnly: true }),
       ],
       min: 4,
       max: 8,
