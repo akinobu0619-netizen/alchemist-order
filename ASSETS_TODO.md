@@ -71,7 +71,7 @@
 - **既存フィールドドットの16bit描き直し**（統一感UP）：`ui/player_*`、`ui/npc_mentor/mom/inn/morris/tina/sailor/kaito`、`ui/gym_port`〜（gym_forest以外の支部長フィールド絵）。ファイル名据え置きで差し替え。仕様＝`PIXEL_SPRITE_SPEC.md`。
 - **将来世界のバトル背景**＝水彩 `bg/battle/`：`volcano` `peak`(嵐嶺) `volt`(雷) `works`(錬成) `tomb`(冥) `astra`(聖) など（GAME_STRUCTUREの8地域分）。
 - **街/室内アセット**（Codexの街・室内描画刷新に合わせて）：`ART_PROMPTS_TOWN_INTERIOR.md` 参照（地面/壁/家具/街灯/井戸 等）。
-- **ボスのバトル大スプライト**：マグヌス/アビス・キメラ（`ui/magnus.png`はフィールド用。バトル表示用が要るか要確認）。
+- **ボスのバトル大スプライト**＝水彩：マグヌス→`public/sprites/301.png`、アビス・キメラ→`302.png`（図鑑外・プロンプトは `MONSTER_ART_PROMPTS.md` のボス節）。※`ui/magnus.png`はフィールド用で別。
 - **OGP大画像** `public/og.png`（X共有見栄え）、**転送門の専用装飾**など。
 
 ---

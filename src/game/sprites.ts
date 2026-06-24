@@ -6,8 +6,9 @@ const DEX_NO: Record<string, string> = {}
 ;(monstersJson.dex as { id: string; dex: number }[]).forEach((d) => {
   DEX_NO[d.id] = String(d.dex).padStart(3, '0')
 })
-DEX_NO['magnus'] = '101'
-DEX_NO['abysschimera'] = '102'
+// ボスは図鑑外。生成種(101-300)とスプライト番号が衝突しないよう 301- を使う
+DEX_NO['magnus'] = '301'
+DEX_NO['abysschimera'] = '302'
 
 /** スプライト画像のファイル名(拡張子なし)。例: 'ignif' → '001' */
 export function spriteFileNo(id: string): string {
