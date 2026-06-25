@@ -24,6 +24,7 @@ import {
   withSeen,
 } from '../game/state'
 import { getMoveset } from '../game/moves'
+import { ABILITIES, heldItemOf } from '../game/abilities'
 import * as audio from '../game/audio'
 import { BattlePortrait, GetMonsterOverlay, HpBar, Sprite, StatusBadge, TypeBadge } from '../ui'
 
@@ -92,7 +93,7 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
   const ownedRef = useRef<OwnedMonster>({ ...active })
 
   const [player, setPlayer] = useState<Combatant>(() => {
-    const c = makeCombatant(species(active.speciesId), active.level, active.talent ?? 0)
+    const c = makeCombatant(species(active.speciesId), active.level, active.talent ?? 0, active.heldItem)
     if (typeof active.hp === 'number' && active.hp > 0) c.hp = Math.min(c.maxHp, active.hp)
     return c
   })
@@ -110,7 +111,7 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
 
   // 手持ちの生存メンバー(現在出ている個体を除く)
   const mk = (o: OwnedMonster): Combatant => {
-    const c = makeCombatant(species(o.speciesId), o.level, o.talent ?? 0)
+    const c = makeCombatant(species(o.speciesId), o.level, o.talent ?? 0, o.heldItem)
     if (typeof o.hp === 'number' && o.hp > 0) c.hp = Math.min(c.maxHp, o.hp)
     return c
   }
@@ -282,15 +283,29 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
       return
     }
     const r = calcDamage(e, p, eMove)
-    const pHp = Math.max(0, p.hp - r.damage)
-    setPlayer((prev) => ({ ...prev, hp: pHp }))
+    let dealt = r.damage
+    const sturdyHeld = p.ability === 'sturdy' && p.hp === p.maxHp && dealt >= p.hp
+    if (sturdyHeld) dealt = p.hp - 1
+    let pHp = Math.max(0, p.hp - dealt)
     setFx({ hit: 'p', flash: r.eff >= 2 })
-    showPopup('p', `-${r.damage}`, r.eff >= 2 ? 'crit' : 'dmg')
+    showPopup('p', `-${dealt}`, r.eff >= 2 ? 'crit' : 'dmg')
     audio.sfx(r.eff >= 2 ? 'crit' : 'hit')
     const msg = effMessage(r.eff)
     if (msg) pushLog(msg)
+    // もちもの:回復の実(プレイヤー)
+    const berry = heldItemOf(p.heldItem)
+    let usedBerry = false
+    if (berry?.pinchHeal && !p.berryUsed && pHp > 0 && pHp <= p.maxHp * 0.25) {
+      pHp = Math.min(p.maxHp, pHp + Math.floor(p.maxHp * berry.pinchHeal))
+      usedBerry = true
+    }
+    p.hp = pHp
+    if (usedBerry) p.berryUsed = true
+    setPlayer((prev) => ({ ...prev, hp: pHp, berryUsed: prev.berryUsed || usedBerry }))
     await sleep(440)
     setFx({})
+    if (sturdyHeld) { pushLog(`${p.data.name}は ふんばって 耐えた！(頑丈)`); await sleep(220) }
+    if (usedBerry) { audio.sfx('heal'); showPopup('p', `+${Math.floor(p.maxHp * (berry?.pinchHeal ?? 0))}`, 'heal'); pushLog(`${p.data.name}は ${berry?.name}で HPを回復した！`); await sleep(280) }
     if (pHp <= 0) handlePlayerDown(`${p.data.name}は たおれてしまった……`)
   }
 
@@ -382,15 +397,37 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
       }
 
       const r = calcDamage(attacker, defender, move)
-      defender.hp = Math.max(0, defender.hp - r.damage)
+      let dealt = r.damage
+      // 特性:頑丈 — 満タンからの致死を耐える(HP1で残る)
+      if (defender.ability === 'sturdy' && defender.hp === defender.maxHp && dealt >= defender.hp) dealt = defender.hp - 1
+      const sturdyHeld = defender.hp === defender.maxHp && dealt < r.damage
+      defender.hp = Math.max(0, defender.hp - dealt)
       setFx({ hit: defSide, flash: r.eff >= 2 })
-      showPopup(defSide, `-${r.damage}`, r.eff >= 2 ? 'crit' : 'dmg')
+      showPopup(defSide, `-${dealt}`, r.eff >= 2 ? 'crit' : 'dmg')
       audio.sfx(r.eff >= 2 ? 'crit' : 'hit')
       sync(defSide)
       const msg = effMessage(r.eff)
       if (msg) pushLog(msg)
       await sleep(440)
       setFx({})
+      if (sturdyHeld) { pushLog(`${defender.data.name}は ふんばって 耐えた！(頑丈)`); await sleep(250) }
+      // もちもの:回復の実 — HP25%以下で1度だけ自動回復
+      const berry = heldItemOf(defender.heldItem)
+      if (berry?.pinchHeal && !defender.berryUsed && defender.hp > 0 && defender.hp <= defender.maxHp * 0.25) {
+        const heal = Math.floor(defender.maxHp * berry.pinchHeal)
+        defender.hp = Math.min(defender.maxHp, defender.hp + heal)
+        defender.berryUsed = true
+        sync(defSide)
+        showPopup(defSide, `+${heal}`, 'heal')
+        audio.sfx('heal')
+        pushLog(`${defender.data.name}は ${berry.name}で HPを回復した！`)
+        await sleep(320)
+      }
+      // 特性:毒手 — 物理ヒットで30%どく
+      if (defender.hp > 0 && attacker.ability === 'toxictouch' && move.category === 'phys' && !defender.status && Math.random() < 0.3) {
+        applyInflict(defSide, 'どく')
+        await sleep(250)
+      }
       if (defender.hp > 0 && move.inflict && Math.random() < move.inflict.chance) {
         applyInflict(defSide, move.inflict.status)
         await sleep(250)
@@ -436,6 +473,14 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
           showPopup(side, `-${st.dmg}`, 'dmg')
           if (st.msg) pushLog(st.msg)
           await sleep(500)
+        }
+        // 特性:自然回復 — ターン終了時にHPを1/16回復
+        if (c.ability === 'regen' && c.hp > 0 && c.hp < c.maxHp) {
+          const heal = Math.max(1, Math.floor(c.maxHp / 16))
+          c.hp = Math.min(c.maxHp, c.hp + heal)
+          sync(side)
+          showPopup(side, `+${heal}`, 'heal')
+          await sleep(300)
         }
         if (e.hp <= 0) {
           outcome = 'enemyDown'
@@ -579,6 +624,7 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
         <TypeBadge t={c.data.type} />
         {c.data.type2 && <TypeBadge t={c.data.type2} />}
         <StatusBadge status={c.status} />
+        {c.ability && ABILITIES[c.ability] && <span className="cmd-sub" style={{ fontSize: 10 }}>✦{ABILITIES[c.ability].name}</span>}
       </div>
       <HpBar c={c} />
     </div>

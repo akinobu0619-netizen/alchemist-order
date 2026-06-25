@@ -14,6 +14,7 @@ export interface MonsterData {
   stats: number[] // [HP, ATK, DEF, SPD, MAG]
   sig: string
   dex_text: string
+  ability?: string // 特性id(省略時はタイプ既定。abilities.ts参照)
 }
 
 // 相性表データの型 (data/typechart.json と対応)
@@ -30,6 +31,9 @@ export interface Combatant {
   data: MonsterData
   level: number
   talent?: number // 個体の質(0-10)。レア度＆全能力+4%/段の倍率。野生でロール、配合で上昇
+  ability?: string // 特性id(バトル中の判定に使用)
+  heldItem?: string // もちものid
+  berryUsed?: boolean // 回復系もちものを使ったか(1戦1回)
   maxHp: number
   hp: number
   atk: number
@@ -63,6 +67,7 @@ export interface OwnedMonster {
   hp?: number // 現在HP(未設定=満タン)。バトル間で持続
   talent?: number // 才能(錬成で上昇)。0〜10。全能力に+4%/段
   inheritedMoves?: Move[] // 遺伝技(錬成で素材から受け継いだ技)
+  heldItem?: string // もちものid(heldItems参照)。1体1つ
 }
 
 // セーブされるゲーム全体の状態

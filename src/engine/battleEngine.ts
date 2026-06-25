@@ -1,6 +1,7 @@
 // バトルエンジン — 純粋関数の集合。UI から分離してテスト可能に保つ。
 import type { Combatant, Move, MonsterData, TypeChart } from '../types'
 import typechartJson from '../../data/typechart.json'
+import { abilityIdOf, heldItemOf } from '../game/abilities'
 
 const TC = typechartJson as unknown as TypeChart
 
@@ -10,21 +11,31 @@ export function statAt(base: number, level: number, isHp = false): number {
   return isHp ? core + level + 10 : core + 5
 }
 
-/** MonsterData から指定レベルのバトル個体を生成。talentで全能力に+4%/段 */
-export function makeCombatant(data: MonsterData, level: number, talent = 0): Combatant {
+/** MonsterData から指定レベルのバトル個体を生成。talentで全能力に+4%/段＋もちもの能力倍率＋特性(俊足) */
+export function makeCombatant(data: MonsterData, level: number, talent = 0, heldItem?: string): Combatant {
   const [hp, atk, def, spd, mag] = data.stats
   const m = 1 + Math.max(0, talent) * 0.04
-  const maxHp = Math.round(statAt(hp, level, true) * m)
+  const ability = abilityIdOf(data)
+  const sm = heldItemOf(heldItem)?.statMult ?? {}
+  const atkM = m * (sm.atk ?? 1)
+  const magM = m * (sm.mag ?? 1)
+  const hpM = m * (sm.hp ?? 1)
+  let spdM = m * (sm.spd ?? 1)
+  if (ability === 'swift') spdM *= 1.15 // 特性:俊足
+  const maxHp = Math.round(statAt(hp, level, true) * hpM)
   return {
     data,
     level,
     talent,
+    ability,
+    heldItem,
+    berryUsed: false,
     maxHp,
     hp: maxHp,
-    atk: Math.round(statAt(atk, level) * m),
+    atk: Math.round(statAt(atk, level) * atkM),
     def: Math.round(statAt(def, level) * m),
-    spd: Math.round(statAt(spd, level) * m),
-    mag: Math.round(statAt(mag, level) * m),
+    spd: Math.round(statAt(spd, level) * spdM),
+    mag: Math.round(statAt(mag, level) * magM),
     status: null,
     statusTurns: 0,
   }
@@ -54,20 +65,30 @@ export function calcDamage(
   rand: number = 0.85 + Math.random() * 0.15,
 ): DamageResult {
   if (move.category === 'status' || move.power <= 0) return { damage: 0, eff: 1, stab: false }
+  const stab = move.type === attacker.data.type || move.type === attacker.data.type2
+  // 特性:浮遊 — 地タイプ無効
+  if (move.type === '地' && defender.ability === 'levitate') return { damage: 0, eff: 0, stab }
   let atkStat = move.category === 'phys' ? attacker.atk : attacker.mag
   // やけど: 物理攻撃が半減
   if (attacker.status === 'やけど' && move.category === 'phys') atkStat = Math.floor(atkStat / 2)
+  // 特性:剛力 — 状態異常中は物理1.5倍
+  if (attacker.ability === 'guts' && attacker.status && move.category === 'phys') atkStat = Math.floor(atkStat * 1.5)
   const defStat = defender.def
-  const stab = move.type === attacker.data.type || move.type === attacker.data.type2
   const defTypes = [defender.data.type, defender.data.type2].filter(Boolean) as string[]
   const eff = effectiveness(move.type, defTypes)
+
+  // 補正倍率: 特性:烈火(自タイプ技・低HP) / 加護(被ダメ-15%) / もちもの:守りの護符
+  let mult = 1
+  if (attacker.ability === 'blaze' && attacker.hp <= attacker.maxHp / 3 && stab) mult *= 1.5
+  if (defender.ability === 'ward') mult *= 0.85
+  const dmgMult = heldItemOf(defender.heldItem)?.dmgTakenMult
+  if (dmgMult) mult *= dmgMult
+  if (attacker.status === '灰化') mult *= 0.85 // 灰化: 与ダメージ減
 
   const base = Math.floor(
     ((2 * attacker.level) / 5 + 2) * move.power * (atkStat / defStat) / 50 + 2,
   )
-  let dmg = eff === 0 ? 0 : Math.max(1, Math.floor(base * (stab ? 1.5 : 1) * eff * rand))
-  // 灰化: 与ダメージ減
-  if (attacker.status === '灰化') dmg = Math.max(1, Math.floor(dmg * 0.85))
+  const dmg = eff === 0 ? 0 : Math.max(1, Math.floor(base * (stab ? 1.5 : 1) * eff * rand * mult))
   return { damage: dmg, eff, stab }
 }
 

@@ -20,6 +20,7 @@ import {
   withdrawToParty,
 } from '../game/state'
 import typechart from '../../data/typechart.json'
+import { abilityOf, HELD_ITEMS, HELD_ITEM_IDS } from '../game/abilities'
 import { statAt } from '../engine/battleEngine'
 import * as audio from '../game/audio'
 import { ItemIcon, RarityBadge, Sprite, TypeBadge, TYPE_COLORS } from '../ui'
@@ -317,6 +318,33 @@ export default function Home({ state, setState, setActive, onField, onDex, initi
                 </div>
               ))}
             </div>
+
+            {/* 特性 */}
+            <h4 className="mini-title">とくせい</h4>
+            <div className="move-chip" style={{ display: 'block' }}>
+              <span className="mc-name">{abilityOf(sp).name}</span>
+              <span className="dex-text" style={{ display: 'block', marginTop: 2 }}>{abilityOf(sp).desc}</span>
+            </div>
+
+            {/* もちもの(装備) */}
+            <h4 className="mini-title">もちもの</h4>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <select
+                value={sel.heldItem ?? ''}
+                onChange={(e) => {
+                  const v = e.target.value || undefined
+                  audio.sfx('select')
+                  setState((s) => ({ ...s, collection: s.collection.map((o) => (o.uid === sel.uid ? { ...o, heldItem: v } : o)) }))
+                }}
+                style={{ flex: 1, fontSize: 13, padding: '5px 8px', borderRadius: 6, background: 'rgba(20,16,10,0.5)', color: '#f3e6c4', border: '1px solid rgba(212,175,90,0.4)' }}
+              >
+                <option value="">（なし）</option>
+                {HELD_ITEM_IDS.map((id) => (
+                  <option key={id} value={id}>{HELD_ITEMS[id].name}</option>
+                ))}
+              </select>
+            </div>
+            {sel.heldItem && HELD_ITEMS[sel.heldItem] && <p className="dex-text" style={{ marginTop: 4 }}>{HELD_ITEMS[sel.heldItem].desc}</p>}
 
             <p className="dex-text">{sp.dex_text}</p>
             {selInParty
