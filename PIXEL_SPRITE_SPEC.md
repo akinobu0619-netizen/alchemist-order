@@ -74,6 +74,26 @@ satchel, gender-neutral, brown short hair.
 | `npc_kaito` | ライバル カイト | confident teen boy, reddish-brown hair, cocky grin, travel outfit, one sleeve rolled |
 | `npc_portal` | 転送門（装置） | NOT a person: a glowing arcane warp gate — stone arch + swirling blue-violet portal energy + runes（同フレーム・足元=台座） |
 
+## 2b. 村のいきもの（猫・犬）＆子供
+**動物は人間枠と別扱い：**同じ128×192キャンバスだが、**キャラを満タン高さにせず“小さく”描く**（人より低い＝動物らしいスケール）。
+```
+ANIMAL FRAMING:
+- Canvas 128x192 transparent. The animal sits/stands on the BOTTOM edge, centered.
+- Animal height = about 50-60% of canvas height (so in-game it appears smaller than the ~full-height humans).
+- SIDE profile facing RIGHT (engine shows as-is; reads as a critter). 16-bit pixel, same palette as §0.
+- small built-in oval shadow under it. No frame, no text, no ground.
+```
+前文：`<STYLE> <ANIMAL FRAMING> Subject:`
+| ファイル | 名前 | Subject |
+|---|---|---|
+| `npc_cat` | 看板猫ミケ | a chubby calico village cat, sitting, tail curled, content half-closed eyes, side view facing right |
+| `npc_dog` | 番犬ロッキー | a loyal brown-and-tan watchdog, standing alert, ears up, tail wagging, side view facing right |
+
+子供（かくれんぼっ子）は**人間枠＝§0.5の統一フレーム**（低頭身2〜2.3）で：
+| ファイル | 名前 | Subject（`<STYLE> <FRAMING>`） |
+|---|---|---|
+| `npc_kid` | かくれんぼっ子 | a small village kid mid-hide, finger to lips ("shh"), peeking, simple tunic, low headcount |
+
 ## 3. 守護者・四賢・ボス（同規格で順次）
 基準の `gym_forest`(=済) に**サイズ・絵柄を合わせて**残りを統一。容姿は `CHARACTERS.md` 準拠。
 | ファイル | 対象 |
