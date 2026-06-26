@@ -148,12 +148,12 @@ function buildRapis(): string[] {
   fill(g, 26, 9, 26, 13, '.') // 宿屋(右)＋扉小道
   // 道具屋の露店
   fill(g, 20, 15, 22, 16, 'H')
-  // モブ民家(進入不可・扉なしの背景建物)で町並みを賑やかに
-  fill(g, 3, 4, 4, 4, 'H') // 民家A(北西)
-  fill(g, 11, 4, 12, 4, 'H') // 民家B(北・中央左)
-  fill(g, 21, 3, 22, 3, 'H') // 民家C(北・中央右)
-  fill(g, 29, 3, 30, 3, 'H') // 民家D(北東)
-  fill(g, 3, 19, 4, 19, 'H') // 民家E(南西)
+  // モブ民家(進入不可・扉なしの背景建物)で町並みを賑やかに。機能建物と同じ3x2に
+  fill(g, 3, 4, 5, 5, 'H') // 民家A(北西)
+  fill(g, 11, 4, 13, 5, 'H') // 民家B(北・中央左)
+  fill(g, 21, 3, 23, 4, 'H') // 民家C(北・中央右)
+  fill(g, 29, 3, 31, 4, 'H') // 民家D(北東)
+  fill(g, 3, 19, 5, 20, 'H') // 民家E(南西)
   // 花壇の装飾
   ;[[10, 9], [12, 6], [29, 11], [5, 18], [30, 20], [24, 19], [12, 21], [4, 9]].forEach(([x, y]) => set(g, x, y, 'F'))
   // 南の門(森へ)
@@ -297,12 +297,12 @@ export const MAPS: Record<string, GameMap> = {
       { x: 16, y: 4, w: 3, h: 2, kind: 'mentor' }, // 師の家(中央)
       { x: 25, y: 7, w: 3, h: 2, kind: 'inn' }, // 宿屋(右)
       { x: 20, y: 15, w: 3, h: 2, kind: 'shop' }, // 道具屋
-      // モブ民家(背景・入れない)。3バリアントに振り分けて単調さ回避
-      { x: 3, y: 4, w: 2, h: 1, kind: 'townhouse' },
-      { x: 11, y: 4, w: 2, h: 1, kind: 'townhouse2' },
-      { x: 21, y: 3, w: 2, h: 1, kind: 'townhouse3' },
-      { x: 29, y: 3, w: 2, h: 1, kind: 'townhouse' },
-      { x: 3, y: 19, w: 2, h: 1, kind: 'townhouse2' },
+      // モブ民家(背景・入れない)。機能建物と同じ3x2サイズ、3バリアントで単調さ回避
+      { x: 3, y: 4, w: 3, h: 2, kind: 'townhouse' },
+      { x: 11, y: 4, w: 3, h: 2, kind: 'townhouse2' },
+      { x: 21, y: 3, w: 3, h: 2, kind: 'townhouse3' },
+      { x: 29, y: 3, w: 3, h: 2, kind: 'townhouse' },
+      { x: 3, y: 19, w: 3, h: 2, kind: 'townhouse2' },
     ],
     props: [
       // ── 噴水広場(中央) ──
@@ -348,11 +348,11 @@ export const MAPS: Record<string, GameMap> = {
       { x: 10, y: 20, kind: 'sign', emoji: '🌾', name: 'かかし', lines: ['畑のかかし。なぜか 錬獣師のローブを 着せられている。', '……どこかの 子供の イタズラだろうか。'] },
       { x: 16, y: 12, kind: 'sign', name: '張り紙', lines: ['「ねこ さがしています。みつけたら 噴水前まで。 ―ミケの飼い主」', '（……張り紙の すぐ横で、当の猫が のんびり 寝ている。）'] },
       { x: 12, y: 20, kind: 'barrel', solid: true, name: '古い樽', lines: ['樽の中を のぞいてみた。……空っぽだ。', 'いや、底に 古いゲル硬貨が 1枚 こびりついている。（もったいないので そのままにした）'] },
-      { x: 5, y: 4, kind: 'sign', name: '古い石碑', lines: ['苔むした石碑。「ラピス建村 ―― 賢者ここに 幻獣と憩いし地」', '……最後の一行は 削られていて 読めない。'] },
+      { x: 8, y: 4, kind: 'sign', name: '古い石碑', lines: ['苔むした石碑。「ラピス建村 ―― 賢者ここに 幻獣と憩いし地」', '……最後の一行は 削られていて 読めない。'] },
     ],
     chests: [
       { x: 31, y: 22, id: 'rapis_corner', item: 'heal', amount: 2 }, // 村の隅
-      { x: 3, y: 5, id: 'rapis_garden', item: 'money', amount: 150 }, // 家の脇
+      { x: 2, y: 11, id: 'rapis_garden', item: 'money', amount: 150 }, // 村の西側
       { x: 2, y: 20, id: 'rapis_hidden', item: 'flask', amount: 2 }, // 民家Eの裏の隠し宝箱
       { x: 31, y: 24, id: 'rapis_corner2', item: 'heal2', amount: 1 }, // 南東の隅の隠し宝箱
     ],
