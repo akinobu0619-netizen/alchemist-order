@@ -23,12 +23,13 @@ import {
   withCaught,
   withSeen,
 } from '../game/state'
-import { getMoveset } from '../game/moves'
+import { getMoveset, moveById } from '../game/moves'
 import { ABILITIES, heldItemOf } from '../game/abilities'
 import * as audio from '../game/audio'
 import { BattlePortrait, GetMonsterOverlay, HpBar, Sprite, StatusBadge, TypeBadge } from '../ui'
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
+const STAT_JP: Record<'atk' | 'def' | 'spd' | 'mag', string> = { atk: 'こうげき', def: 'ぼうぎょ', spd: 'すばやさ', mag: 'まりょく' }
 const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n))
 const randInt = (lo: number, hi: number) => lo + Math.floor(Math.random() * (hi - lo + 1))
 
@@ -87,7 +88,17 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
   const isTower = config.kind === 'wild' && !!config.tower
   const teamRef = useRef<Combatant[]>(
     config.kind === 'trainer'
-      ? config.trainer.team.map((t) => makeCombatant(species(t.speciesId), t.level))
+      ? config.trainer.team.map((t) => makeCombatant(species(t.speciesId), t.level, t.talent ?? 0, t.heldItem))
+      : [],
+  )
+  // 守護者のカスタム技リスト(moves指定があればそれ、無ければレベル既定)
+  const teamMovesRef = useRef<Move[][]>(
+    config.kind === 'trainer'
+      ? config.trainer.team.map((t) => {
+          const sp = species(t.speciesId)
+          const custom = t.moves?.map((id) => moveById(id, sp)).filter(Boolean) as Move[] | undefined
+          return custom && custom.length ? custom : getMoveset(sp, t.level)
+        })
       : [],
   )
   const ownedRef = useRef<OwnedMonster>({ ...active })
@@ -147,6 +158,15 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // 溜め技の自動解放: プレイヤーが溜め中なら次の自ターンで自動発動(選択不要)
+  useEffect(() => {
+    if (player.charging && phase === 'fighting' && !busy.current && !mustSwitch) {
+      const mv = playerMoves.find((m) => m.id === player.charging)
+      if (mv) void takeTurn(mv)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [player.charging, phase])
 
   function pushLog(...lines: string[]) {
     setLog((prev) => [...prev, ...lines])
@@ -214,11 +234,27 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
     setPhase('won')
   }
 
+  // 敵(現在出ている個体)の技リスト: トレーナーはカスタム/既定、野生はレベル既定
+  const enemyMoveList = (e: Combatant): Move[] => (isTrainer ? teamMovesRef.current[enemyIndex] : null) ?? getMoveset(e.data, e.level)
+
   function chooseEnemyMove(p: Combatant, e: Combatant): Move {
-    const ms = getMoveset(e.data, e.level)
+    const ms = enemyMoveList(e)
+    // 溜め中は解放を強制
+    if (e.charging) { const c = ms.find((x) => x.id === e.charging); if (c) return c }
     const r = Math.random()
-    for (const sm of ms.filter((x) => x.category === 'status')) {
+    const totalStage = e.stages.atk + e.stages.def + e.stages.spd + e.stages.mag
+    const status = ms.filter((x) => x.category === 'status')
+    // ボス開幕ギミック: エース登場初ターンにauraを使う(auraがあれば)
+    if (isTrainer && enemyIndex === teamRef.current.length - 1 && (e.lastMoveId == null) && (e.hp === e.maxHp)) {
+      const aura = status.find((x) => x.buffs?.some((b) => b.target === 'self') || x.guard)
+      if (aura) return aura
+    }
+    for (const sm of status) {
       if (sm.heal && e.hp < e.maxHp * 0.4 && r < 0.6) return sm
+      if (sm.guard && e.hp < e.maxHp * 0.4 && e.lastMoveId !== sm.id && r < 0.3) return sm
+      if (sm.resetStages && (p.stages.atk + p.stages.def + p.stages.spd + p.stages.mag) >= 3) return sm
+      if (sm.buffs?.some((b) => b.target === 'self') && e.hp > e.maxHp * 0.7 && totalStage < 4 && r < 0.4) return sm
+      if (sm.buffs?.some((b) => b.target === 'foe') && r < 0.3) return sm
       if (sm.inflict && !p.status && r < 0.35) return sm
     }
     const dmg = ms.filter((x) => x.category !== 'status')
@@ -226,6 +262,7 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
     let best = dmg[0]
     let bestScore = -1
     for (const mv of dmg) {
+      if (mv.charge && e.hp < e.maxHp * 0.5) continue // 低HPでは溜め技を避ける
       const score = mv.power * effectiveness(mv.type, pTypes) * (mv.type === e.data.type || mv.type === e.data.type2 ? 1.5 : 1)
       if (score > bestScore) {
         bestScore = score
@@ -359,11 +396,47 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
       pushLog(status === '灰化' ? `${tgt.data.name}は 灰化しはじめた……` : `${tgt.data.name}は ${status}状態になった！`)
     }
 
+    // 能力ランク操作
+    const applyBuffs = (buffs: NonNullable<Move['buffs']>, atkSide: Side, defSide: Side) => {
+      for (const b of buffs) {
+        const side = b.target === 'self' ? atkSide : defSide
+        const tgt = side === 'p' ? p : e
+        const cur = tgt.stages[b.stat]
+        const nv = Math.max(-3, Math.min(3, cur + b.delta))
+        if (nv === cur) {
+          pushLog(`${tgt.data.name}の ${STAT_JP[b.stat]}は もう ${b.delta > 0 ? '上がらない' : '下がらない'}！`)
+          continue
+        }
+        tgt.stages[b.stat] = nv
+        sync(side)
+        const up = b.delta > 0
+        const big = Math.abs(b.delta) >= 2
+        pushLog(`${tgt.data.name}の ${STAT_JP[b.stat]}が ${big ? (up ? 'ぐーんと上がった' : 'がくっと下がった') : up ? '上がった' : '下がった'}！`)
+      }
+    }
+
     const doMove = async (side: Side, move: Move) => {
       const atkSide = side
       const defSide: Side = side === 'p' ? 'e' : 'p'
       const attacker = side === 'p' ? p : e
       const defender = side === 'p' ? e : p
+
+      // 自分の行動開始時にガードを解除＋最後の技を記録
+      if (attacker.guarding) attacker.guarding = false
+      attacker.lastMoveId = move.id
+      sync(atkSide)
+
+      // 溜め技: 溜めターン(まだ溜めていない)なら溜めて終了
+      if (move.charge && attacker.charging !== move.id) {
+        attacker.charging = move.id
+        sync(atkSide)
+        setFx({ atk: atkSide })
+        pushLog(`${attacker.data.name}は 力を 溜めている……！`)
+        await sleep(500)
+        setFx({})
+        return
+      }
+      if (attacker.charging === move.id) { attacker.charging = undefined; sync(atkSide) } // 解放
 
       setFx({ atk: atkSide })
       await sleep(160)
@@ -377,7 +450,11 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
       }
 
       if (move.category === 'status') {
-        if (move.heal) {
+        if (move.guard) {
+          attacker.guarding = true
+          sync(atkSide)
+          pushLog(`${attacker.data.name}は 身を 固めた！`)
+        } else if (move.heal) {
           const amt = Math.min(attacker.maxHp - attacker.hp, Math.floor(attacker.maxHp * move.heal))
           attacker.hp += amt
           if (move.cures && attacker.status) {
@@ -388,30 +465,71 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
           showPopup(atkSide, `+${amt}`, 'heal')
           audio.sfx('heal')
           pushLog(`${attacker.data.name}は HPを 回復した！`)
+        } else if (move.resetStages) {
+          defender.stages = { atk: 0, def: 0, spd: 0, mag: 0 }
+          sync(defSide)
+          pushLog(`${defender.data.name}の 能力変化が 打ち消された！`)
         } else if (move.inflict) {
           applyInflict(defSide, move.inflict.status)
         }
+        if (move.buffs) applyBuffs(move.buffs, atkSide, defSide)
         await sleep(420)
         setFx({})
         return
       }
 
-      const r = calcDamage(attacker, defender, move)
-      let dealt = r.damage
-      // 特性:頑丈 — 満タンからの致死を耐える(HP1で残る)
-      if (defender.ability === 'sturdy' && defender.hp === defender.maxHp && dealt >= defender.hp) dealt = defender.hp - 1
-      const sturdyHeld = defender.hp === defender.maxHp && dealt < r.damage
-      defender.hp = Math.max(0, defender.hp - dealt)
-      setFx({ hit: defSide, flash: r.eff >= 2 })
-      showPopup(defSide, `-${dealt}`, r.eff >= 2 ? 'crit' : 'dmg')
-      audio.sfx(r.eff >= 2 ? 'crit' : 'hit')
-      sync(defSide)
-      const msg = effMessage(r.eff)
-      if (msg) pushLog(msg)
-      await sleep(440)
+      // ダメージ技(連続対応)
+      const hits = move.multi ? randInt(move.multi[0], move.multi[1]) : 1
+      let total = 0
+      let anyCrit = false
+      let lastEff = 1
+      let sturdyHeld = false
+      for (let h = 0; h < hits; h++) {
+        if (defender.hp <= 0) break
+        const r = calcDamage(attacker, defender, move)
+        lastEff = r.eff
+        let dealt = r.damage
+        if (defender.ability === 'sturdy' && defender.hp === defender.maxHp && dealt >= defender.hp) { dealt = defender.hp - 1; sturdyHeld = true }
+        defender.hp = Math.max(0, defender.hp - dealt)
+        total += dealt
+        if (r.crit) anyCrit = true
+        const strong = r.crit || r.eff >= 2
+        setFx({ hit: defSide, flash: strong })
+        showPopup(defSide, `-${dealt}`, strong ? 'crit' : 'dmg')
+        audio.sfx(strong ? 'crit' : 'hit')
+        sync(defSide)
+        await sleep(hits > 1 ? 240 : 440)
+      }
       setFx({})
-      if (sturdyHeld) { pushLog(`${defender.data.name}は ふんばって 耐えた！(頑丈)`); await sleep(250) }
-      // もちもの:回復の実 — HP25%以下で1度だけ自動回復
+      if (hits > 1 && total > 0) pushLog(`${hits}回 当たった！`)
+      if (anyCrit) pushLog('急所に 当たった！')
+      const msg = effMessage(lastEff)
+      if (msg) pushLog(msg)
+      if (sturdyHeld) { pushLog(`${defender.data.name}は ふんばって 耐えた！`); await sleep(220) }
+
+      // 吸収
+      if (move.drain && total > 0 && attacker.hp > 0) {
+        const heal = Math.min(attacker.maxHp - attacker.hp, Math.max(1, Math.floor(total * move.drain)))
+        if (heal > 0) {
+          attacker.hp += heal
+          sync(atkSide)
+          showPopup(atkSide, `+${heal}`, 'heal')
+          audio.sfx('heal')
+          pushLog(`${defender.data.name}から 体力を 吸い取った！`)
+          await sleep(300)
+        }
+      }
+      // 反動(タグ or あがき)
+      const recoilRate = move.recoil ?? (move.id === 'struggle' ? 0.25 : 0)
+      if (recoilRate > 0 && total > 0 && attacker.hp > 0) {
+        const rec = Math.max(1, Math.floor(total * recoilRate))
+        attacker.hp = Math.max(0, attacker.hp - rec)
+        sync(atkSide)
+        showPopup(atkSide, `-${rec}`, 'dmg')
+        pushLog(`${attacker.data.name}は 反動を 受けた！`)
+        await sleep(320)
+      }
+      // もちもの:回復の実
       const berry = heldItemOf(defender.heldItem)
       if (berry?.pinchHeal && !defender.berryUsed && defender.hp > 0 && defender.hp <= defender.maxHp * 0.25) {
         const heal = Math.floor(defender.maxHp * berry.pinchHeal)
@@ -423,27 +541,28 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
         pushLog(`${defender.data.name}は ${berry.name}で HPを回復した！`)
         await sleep(320)
       }
-      // 特性:毒手 — 物理ヒットで30%どく
+      // 特性:毒手
       if (defender.hp > 0 && attacker.ability === 'toxictouch' && move.category === 'phys' && !defender.status && Math.random() < 0.3) {
         applyInflict(defSide, 'どく')
         await sleep(250)
       }
+      // 追加効果(状態異常)
       if (defender.hp > 0 && move.inflict && Math.random() < move.inflict.chance) {
         applyInflict(defSide, move.inflict.status)
         await sleep(250)
       }
-      if (move.id === 'struggle' && attacker.hp > 0) {
-        const rec = Math.max(1, Math.floor(r.damage * 0.25))
-        attacker.hp = Math.max(0, attacker.hp - rec)
-        sync(atkSide)
-        showPopup(atkSide, `-${rec}`, 'dmg')
-        pushLog(`${attacker.data.name}は 反動を受けた！`)
-        await sleep(320)
+      // 攻撃技のランク操作(うずしお等)
+      if (move.buffs && (defender.hp > 0 || move.buffs.some((b) => b.target === 'self'))) {
+        applyBuffs(move.buffs, atkSide, defSide)
+        await sleep(250)
       }
     }
 
     const eMove = chooseEnemyMove(p, e)
-    const pFirst = effectiveSpeed(p) >= effectiveSpeed(e)
+    // 行動順: 優先度 → 実効すばやさ → プレイヤー優先
+    const pPri = pMove.priority ?? 0
+    const ePri = eMove.priority ?? 0
+    const pFirst = pPri !== ePri ? pPri > ePri : effectiveSpeed(p) >= effectiveSpeed(e)
     const queue: [Side, Move][] = pFirst ? [['p', pMove], ['e', eMove]] : [['e', eMove], ['p', pMove]]
     let outcome: 'none' | 'enemyDown' | 'playerDown' = 'none'
 
@@ -625,7 +744,24 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
         {c.data.type2 && <TypeBadge t={c.data.type2} />}
         <StatusBadge status={c.status} />
         {c.ability && ABILITIES[c.ability] && <span className="cmd-sub" style={{ fontSize: 10 }}>✦{ABILITIES[c.ability].name}</span>}
+        {c.guarding && <span className="cmd-sub" style={{ fontSize: 10, color: '#6fb3e2' }}>🛡防御</span>}
       </div>
+      {(() => {
+        const chips = (['atk', 'def', 'spd', 'mag'] as const)
+          .filter((k) => c.stages?.[k])
+          .map((k) => {
+            const v = c.stages[k]
+            const arrows = (v > 0 ? '▲' : '▼').repeat(Math.min(3, Math.abs(v)))
+            return `${STAT_JP[k]}${arrows}`
+          })
+        return chips.length ? (
+          <div className="ip-badges" style={{ fontSize: 10, fontWeight: 700 }}>
+            {chips.map((t, i) => (
+              <span key={i} style={{ color: t.includes('▲') ? '#e2563b' : '#6fb3e2' }}>{t}</span>
+            ))}
+          </div>
+        ) : null
+      })()}
       <HpBar c={c} />
     </div>
   )
@@ -756,12 +892,13 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
                 playerMoves.map((mv) => {
                   const cur = ppOf(mv)
                   const lowPP = cur <= Math.ceil(maxPP(mv) * 0.25)
+                  const guardBlocked = !!mv.guard && player.lastMoveId === mv.id // ガードは連続使用不可
                   return (
-                    <button key={mv.id} className="cmd-btn move" disabled={acting || cur <= 0} onClick={() => takeTurn(mv)} title={mv.desc}>
+                    <button key={mv.id} className="cmd-btn move" disabled={acting || cur <= 0 || guardBlocked} onClick={() => takeTurn(mv)} title={guardBlocked ? '連続では 使えない' : mv.desc}>
                       <span className="m-name">{mv.name}</span>
                       <span className="m-meta">
                         <TypeBadge t={mv.type} />
-                        {mv.category === 'status' ? (mv.heal ? '回復' : '状態') : `威${mv.power}`}
+                        {mv.category === 'status' ? (mv.guard ? '防御' : mv.heal ? '回復' : mv.buffs || mv.resetStages ? '能力' : '状態') : `威${mv.power}`}
                         <span className={`pp-tag${lowPP ? ' low' : ''}`}>PP {cur}/{maxPP(mv)}</span>
                       </span>
                     </button>

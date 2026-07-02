@@ -42,6 +42,11 @@ export interface Combatant {
   mag: number
   status: StatusKind | null
   statusTurns: number // ねむりの残りターン等
+  // ── 能力ランク(バフ/デバフ)。各 -3..+3。交代/登場でリセット ──
+  stages: { atk: number; def: number; spd: number; mag: number }
+  guarding?: boolean // guard中(次の自分の行動開始時に解除)。被ダメ×0.3
+  lastMoveId?: string // guard連続使用禁止の判定用
+  charging?: string // 溜め中の技id(次ターン自動解放)
 }
 
 // 技
@@ -56,6 +61,17 @@ export interface Move {
   inflict?: { status: StatusKind; chance: number } // 付与する状態異常
   heal?: number // 自分のHPを maxHp*heal 回復
   cures?: boolean // 自分の状態異常(灰化含む)を治す
+  // ── 深化タグ ──
+  priority?: number // 行動順ボーナス(+1=先制)。省略=0
+  multi?: [number, number] // 連続攻撃 [最小,最大]回。命中は1回、ダメージは各ヒットで乱数
+  recoil?: number // 与ダメ×この割合を自分が受ける(最低1)
+  drain?: number // 与ダメ×この割合を回復(最低1、maxHp上限)
+  guard?: boolean // このターン被ダメ×0.3。連続使用不可
+  charge?: boolean // 溜め技: T1溜め→T2解放(powerに2倍込みの値)
+  critBoost?: number // 会心率の上書き(既定0.06)
+  bonusVsStatus?: number // 相手が状態異常なら威力×この値
+  buffs?: { target: 'self' | 'foe'; stat: 'atk' | 'def' | 'spd' | 'mag'; delta: number }[] // ランク操作
+  resetStages?: boolean // 相手の能力ランクを全て0に戻す(ちょうりつ)
 }
 
 // プレイヤーが所有する個体 (永続データ)
@@ -100,7 +116,7 @@ export interface GameState {
 export interface TrainerData {
   id: string
   name: string
-  team: { speciesId: string; level: number }[]
+  team: { speciesId: string; level: number; talent?: number; heldItem?: string; moves?: string[] }[]
   badge: string
   portrait?: string // 立ち絵 portraits/<portrait>.png (戦前/戦後の会話・バナー)
   preBattle?: string[] // 戦闘前の台詞

@@ -11,6 +11,13 @@ export function statAt(base: number, level: number, isHp = false): number {
   return isHp ? core + level + 10 : core + 5
 }
 
+/** 能力ランク(-3..+3)→倍率。+1=1.33 +2=1.67 +3=2.0 / -1=0.75 -2=0.6 -3=0.5 */
+export function stageMult(stage: number): number {
+  const s = Math.max(-3, Math.min(3, stage))
+  return s >= 0 ? (3 + s) / 3 : 3 / (3 - s)
+}
+export const CRIT_BASE = 0.06 // 基礎会心率
+
 /** MonsterData から指定レベルのバトル個体を生成。talentで全能力に+4%/段＋もちもの能力倍率＋特性(俊足) */
 export function makeCombatant(data: MonsterData, level: number, talent = 0, heldItem?: string): Combatant {
   const [hp, atk, def, spd, mag] = data.stats
@@ -38,6 +45,7 @@ export function makeCombatant(data: MonsterData, level: number, talent = 0, held
     mag: Math.round(statAt(mag, level) * magM),
     status: null,
     statusTurns: 0,
+    stages: { atk: 0, def: 0, spd: 0, mag: 0 },
   }
 }
 
@@ -55,41 +63,47 @@ export interface DamageResult {
   damage: number
   eff: number // 相性倍率
   stab: boolean // タイプ一致
+  crit: boolean // 会心
 }
 
-/** ダメージ計算 (状態異常の補正込み) */
+/** ダメージ計算 (状態異常・能力ランク・会心・ガード込み) */
 export function calcDamage(
   attacker: Combatant,
   defender: Combatant,
   move: Move,
   rand: number = 0.85 + Math.random() * 0.15,
+  critRand: number = Math.random(),
 ): DamageResult {
-  if (move.category === 'status' || move.power <= 0) return { damage: 0, eff: 1, stab: false }
+  if (move.category === 'status' || move.power <= 0) return { damage: 0, eff: 1, stab: false, crit: false }
   const stab = move.type === attacker.data.type || move.type === attacker.data.type2
   // 特性:浮遊 — 地タイプ無効
-  if (move.type === '地' && defender.ability === 'levitate') return { damage: 0, eff: 0, stab }
-  let atkStat = move.category === 'phys' ? attacker.atk : attacker.mag
-  // やけど: 物理攻撃が半減
+  if (move.type === '地' && defender.ability === 'levitate') return { damage: 0, eff: 0, stab, crit: false }
+  // 攻撃実効値: 能力ランク → やけど半減 → 剛力 の順
+  let atkStat = Math.round((move.category === 'phys' ? attacker.atk : attacker.mag) * stageMult(move.category === 'phys' ? attacker.stages.atk : attacker.stages.mag))
   if (attacker.status === 'やけど' && move.category === 'phys') atkStat = Math.floor(atkStat / 2)
-  // 特性:剛力 — 状態異常中は物理1.5倍
   if (attacker.ability === 'guts' && attacker.status && move.category === 'phys') atkStat = Math.floor(atkStat * 1.5)
-  const defStat = defender.def
+  const defStat = Math.max(1, Math.round(defender.def * stageMult(defender.stages.def)))
   const defTypes = [defender.data.type, defender.data.type2].filter(Boolean) as string[]
   const eff = effectiveness(move.type, defTypes)
 
-  // 補正倍率: 特性:烈火(自タイプ技・低HP) / 加護(被ダメ-15%) / もちもの:守りの護符
+  // 補正倍率
   let mult = 1
-  if (attacker.ability === 'blaze' && attacker.hp <= attacker.maxHp / 3 && stab) mult *= 1.5
-  if (defender.ability === 'ward') mult *= 0.85
+  if (attacker.ability === 'blaze' && attacker.hp <= attacker.maxHp / 3 && stab) mult *= 1.5 // 烈火
+  if (move.bonusVsStatus && defender.status) mult *= move.bonusVsStatus // 状態異常特効
+  if (defender.ability === 'ward') mult *= 0.85 // 加護
   const dmgMult = heldItemOf(defender.heldItem)?.dmgTakenMult
-  if (dmgMult) mult *= dmgMult
-  if (attacker.status === '灰化') mult *= 0.85 // 灰化: 与ダメージ減
+  if (dmgMult) mult *= dmgMult // 守りの護符
+  if (defender.guarding) mult *= 0.3 // ガード中
+  if (attacker.status === '灰化') mult *= 0.85 // 灰化
+  // 会心(相性無効時は発生しない)
+  const crit = eff > 0 && critRand < (move.critBoost ?? CRIT_BASE)
+  if (crit) mult *= 1.5
 
   const base = Math.floor(
     ((2 * attacker.level) / 5 + 2) * move.power * (atkStat / defStat) / 50 + 2,
   )
   const dmg = eff === 0 ? 0 : Math.max(1, Math.floor(base * (stab ? 1.5 : 1) * eff * rand * mult))
-  return { damage: dmg, eff, stab }
+  return { damage: dmg, eff, stab, crit }
 }
 
 /** 相性倍率を日本語メッセージに */
@@ -103,7 +117,8 @@ export function effMessage(eff: number): string {
 
 /** まひ時はすばやさ半減 */
 export function effectiveSpeed(c: Combatant): number {
-  return c.status === 'まひ' ? Math.max(1, Math.floor(c.spd / 2)) : c.spd
+  const spd = Math.round(c.spd * stageMult(c.stages?.spd ?? 0))
+  return c.status === 'まひ' ? Math.max(1, Math.floor(spd / 2)) : spd
 }
 
 /** 行動前チェック(ねむり/こおり/まひ)。行動可否と状態変化後の値を返す */
