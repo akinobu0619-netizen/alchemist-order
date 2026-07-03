@@ -24,12 +24,14 @@ import {
   withSeen,
 } from '../game/state'
 import { getMoveset, moveById } from '../game/moves'
+import '../battle-fx.css'
 import { ABILITIES, heldItemOf } from '../game/abilities'
 import * as audio from '../game/audio'
 import { BattlePortrait, GetMonsterOverlay, HpBar, Sprite, StatusBadge, TypeBadge } from '../ui'
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 const STAT_JP: Record<'atk' | 'def' | 'spd' | 'mag', string> = { atk: 'こうげき', def: 'ぼうぎょ', spd: 'すばやさ', mag: 'まりょく' }
+const STATUS_AURA: Record<string, string> = { やけど: 'sa-burn', どく: 'sa-psn', まひ: 'sa-para', ねむり: 'sa-sleep', こおり: 'sa-frz', 灰化: 'sa-ash' }
 const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n))
 const randInt = (lo: number, hi: number) => lo + Math.floor(Math.random() * (hi - lo + 1))
 
@@ -72,7 +74,7 @@ function makeWild(playerLevel: number, config: Extract<BattleConfig, { kind: 'wi
 
 type Phase = 'fighting' | 'won' | 'lost' | 'caught' | 'fled'
 type Side = 'p' | 'e'
-interface Fx { atk?: Side; hit?: Side; flash?: boolean }
+interface Fx { atk?: Side; hit?: Side; flash?: boolean; strong?: boolean }
 interface Popup { side: Side; text: string; cls: string; key: number }
 
 interface Props {
@@ -131,7 +133,9 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
   const switchTargets = state.collection.filter((o) => party.includes(o.uid) && o.uid !== curUid && (o.hp == null || o.hp > 0))
   const [fx, setFx] = useState<Fx>({})
   const [popup, setPopup] = useState<Popup | null>(null)
+  const [burst, setBurst] = useState<{ type: string; side: Side; strong: boolean; key: number } | null>(null)
   const busy = useRef(false)
+  const burstKey = useRef(0)
   const popupKey = useRef(0)
   const logEndRef = useRef<HTMLDivElement>(null)
 
@@ -176,6 +180,13 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
     popupKey.current += 1
     setPopup({ side, text, cls, key: popupKey.current })
     setTimeout(() => setPopup((p) => (p && p.key === popupKey.current ? null : p)), 850)
+  }
+  // 被弾側にタイプ別エフェクトを重ねる
+  function fireBurst(type: string, side: Side, strong: boolean) {
+    burstKey.current += 1
+    const k = burstKey.current
+    setBurst({ type, side, strong, key: k })
+    setTimeout(() => setBurst((b) => (b && b.key === k ? null : b)), 560)
   }
 
   function gainExp(reward: number): string[] {
@@ -324,9 +335,12 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
     const sturdyHeld = p.ability === 'sturdy' && p.hp === p.maxHp && dealt >= p.hp
     if (sturdyHeld) dealt = p.hp - 1
     let pHp = Math.max(0, p.hp - dealt)
-    setFx({ hit: 'p', flash: r.eff >= 2 })
-    showPopup('p', `-${dealt}`, r.eff >= 2 ? 'crit' : 'dmg')
-    audio.sfx(r.eff >= 2 ? 'crit' : 'hit')
+    const eStrong = r.crit || r.eff >= 2
+    setFx({ hit: 'p', flash: eStrong, strong: eStrong })
+    fireBurst(eMove.type, 'p', eStrong)
+    showPopup('p', `-${dealt}`, eStrong ? 'crit' : 'dmg')
+    audio.sfx(eStrong ? 'crit' : 'hit')
+    if (r.crit) pushLog('急所に 当たった！')
     const msg = effMessage(r.eff)
     if (msg) pushLog(msg)
     // もちもの:回復の実(プレイヤー)
@@ -494,7 +508,8 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
         total += dealt
         if (r.crit) anyCrit = true
         const strong = r.crit || r.eff >= 2
-        setFx({ hit: defSide, flash: strong })
+        setFx({ hit: defSide, flash: strong, strong })
+        fireBurst(move.type, defSide, strong)
         showPopup(defSide, `-${dealt}`, strong ? 'crit' : 'dmg')
         audio.sfx(strong ? 'crit' : 'hit')
         sync(defSide)
@@ -766,21 +781,26 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
     </div>
   )
 
-  const combatant = (c: Combatant, who: Side) => (
+  const combatant = (c: Combatant, who: Side) => {
+    const auraCls = c.hp > 0 && c.status ? STATUS_AURA[c.status] : null
+    return (
     <div
-      className={`combatant ${who === 'e' ? 'enemy-side' : 'player-side'} ${fx.hit === who ? 'fx-hit' : ''} ${
+      className={`combatant ${who === 'e' ? 'enemy-side' : 'player-side'} ${fx.hit === who ? (fx.strong ? 'fx-hit fx-hit-strong' : 'fx-hit') : ''} ${
         fx.atk === who ? `fx-atk-${who}` : ''
       } ${c.hp <= 0 ? 'fainted' : ''}`}
     >
       {popup?.side === who && (
-        <span key={popup.key} className={`dmg-popup ${popup.cls}`}>
+        <span key={`pop${popup.key}`} className={`dmg-popup ${popup.cls}`}>
           {popup.text}
         </span>
       )}
+      {auraCls && <span className={`status-aura ${auraCls}`} aria-hidden />}
+      {burst?.side === who && <span key={`fx${burst.key}`} className={`move-fx fx-${burst.type}`} aria-hidden />}
       <Sprite id={c.data.id} type={c.data.type} size={who === 'e' ? 146 : 166} bare flip={who === 'e'} />
       <div className="ground-shadow" />
     </div>
-  )
+    )
+  }
 
   return (
     <div className="screen battle-screen">
