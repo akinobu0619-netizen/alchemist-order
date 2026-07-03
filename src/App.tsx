@@ -83,7 +83,7 @@ export default function App() {
   const [starterOpen, setStarterOpen] = useState(false)
   const [shopOpen, setShopOpen] = useState(false)
   const [worldsOpen, setWorldsOpen] = useState(false)
-  const [tower, setTower] = useState<{ floor: number; cleared: number } | null>(null)
+  const [tower, setTower] = useState<{ floor: number; cleared: number; seed: string } | null>(null)
   const [homeTab, setHomeTab] = useState<'party' | 'items' | 'note' | 'record'>('party')
   const [getMon, setGetMon] = useState<{ id: string; name: string; type: string; label?: string; talent?: number; after?: () => void } | null>(null)
   const [fusionOpen, setFusionOpen] = useState(false)
@@ -178,9 +178,9 @@ export default function App() {
     // 試練の塔: 勝てば次の階へ(再マウント)、倒れたら終了してスコア記録
     if (tower && cfg?.kind === 'wild' && cfg.tower) {
       if (won) {
-        const next = { floor: tower.floor + 1, cleared: tower.cleared + 1 }
+        const next = { floor: tower.floor + 1, cleared: tower.cleared + 1, seed: tower.seed }
         setTower(next)
-        setBattleConfig(towerConfig(next.floor)) // screenはbattleのまま、keyで再マウント
+        setBattleConfig(towerConfig(next.floor, next.seed)) // screenはbattleのまま、keyで再マウント
         return
       }
       const reached = tower.cleared // 制覇した階数=スコア
@@ -310,9 +310,10 @@ export default function App() {
   }
 
   // 試練の塔(スコアアタック): 階層ごとに敵レベルが上がる連戦。HPは継続、回復は道具のみ。
-  const towerConfig = (floor: number): BattleConfig => {
+  // ラン全体を1つのシードで決定論化(SPEC_RNG_REPLAY.md)。将来の週替わり塔は同じ枠でシードを週固定にする。
+  const towerConfig = (floor: number, seed: string): BattleConfig => {
     const lvl = Math.min(100, 4 + floor * 2)
-    return { kind: 'wild', tower: true, floor, min: lvl, max: lvl, biome: 'forest' }
+    return { kind: 'wild', tower: true, floor, min: lvl, max: lvl, biome: 'forest', seed }
   }
   const startTower = () => {
     setWorldsOpen(false)
@@ -323,9 +324,10 @@ export default function App() {
       const living = healed.collection.find((o) => pty.includes(o.uid) && (o.hp == null || o.hp > 0))
       return { ...healed, activeUid: living ? living.uid : healed.activeUid }
     })
-    setTower({ floor: 1, cleared: 0 })
+    const seed = `AO1|tower|${Date.now().toString(36)}${Math.floor(Math.random() * 36 ** 4).toString(36)}`
+    setTower({ floor: 1, cleared: 0, seed })
     audio.sfx('encounter')
-    setBattleConfig(towerConfig(1))
+    setBattleConfig(towerConfig(1, seed))
     setScreen('battle')
   }
 

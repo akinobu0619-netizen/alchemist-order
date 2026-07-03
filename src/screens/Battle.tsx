@@ -9,6 +9,7 @@ import {
   makeCombatant,
   preMoveCheck,
 } from '../engine/battleEngine'
+import { makeRng, systemRng, type Rng } from '../engine/rng'
 import {
   DEX,
   PARTY_MAX,
@@ -33,7 +34,6 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 const STAT_JP: Record<'atk' | 'def' | 'spd' | 'mag', string> = { atk: 'こうげき', def: 'ぼうぎょ', spd: 'すばやさ', mag: 'まりょく' }
 const STATUS_AURA: Record<string, string> = { やけど: 'sa-burn', どく: 'sa-psn', まひ: 'sa-para', ねむり: 'sa-sleep', こおり: 'sa-frz', 灰化: 'sa-ash' }
 const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n))
-const randInt = (lo: number, hi: number) => lo + Math.floor(Math.random() * (hi - lo + 1))
 
 // 技の最大PP(威力/カテゴリから導出)
 const maxPP = (m: Move): number =>
@@ -48,9 +48,10 @@ const withInherited = (data: Combatant['data'], level: number, inherited?: Move[
   return [...natural, ...extra]
 }
 
-function makeWild(playerLevel: number, config: Extract<BattleConfig, { kind: 'wild' }>): Combatant {
-  // DEVデモ用: localStorage.demo_enemy が指定されていればその種を出す(本番では無効)
-  if (import.meta.env.DEV) {
+function makeWild(playerLevel: number, config: Extract<BattleConfig, { kind: 'wild' }>, rng: Rng): Combatant {
+  // DEVデモ用: localStorage.demo_enemy が指定されていればその種を出す(本番では無効)。
+  // シード付きラン(塔)中は決定論を守るため無効(SPEC_RNG_REPLAY.md §8)
+  if (import.meta.env.DEV && !config.seed) {
     const forced = localStorage.getItem('demo_enemy')
     if (forced) {
       const lvl = Number(localStorage.getItem('demo_enemy_level')) || playerLevel
@@ -68,12 +69,12 @@ function makeWild(playerLevel: number, config: Extract<BattleConfig, { kind: 'wi
   const pool = config.pool?.length
     ? config.pool
     : DEX.filter((d) => d.role !== 'legendary' && d.stage <= 2).map((d) => d.id)
-  const id = pool[Math.floor(Math.random() * pool.length)]
+  const id = rng.pick(pool)
   const level =
     config.min != null && config.max != null
-      ? randInt(config.min, config.max)
-      : clamp(playerLevel + Math.floor(Math.random() * 4) - 2, 2, 100)
-  return makeCombatant(species(id), level, rollTalent()) // 個体差をロール(良個体は約5%)
+      ? rng.int(config.min, config.max)
+      : clamp(playerLevel + rng.int(-2, 1), 2, 100)
+  return makeCombatant(species(id), level, rollTalent(rng)) // 個体差をロール(良個体は約5%)
 }
 
 type Phase = 'fighting' | 'won' | 'lost' | 'caught' | 'fled'
@@ -92,6 +93,19 @@ interface Props {
 export default function Battle({ active, config, state, setState, onExit }: Props) {
   const isTrainer = config.kind === 'trainer'
   const isTower = config.kind === 'wild' && !!config.tower
+  // 乱数ストリーム(SPEC_RNG_REPLAY.md §3): 塔=シード付き(敵生成=floor/バトル内=battle)、他=非シード。
+  // 塔は階ごとにkey再マウントされるため、マウント毎にfloor:<階>から派生し直す。
+  const rngRef = useRef<{ floor: Rng; battle: Rng } | null>(null)
+  if (!rngRef.current) {
+    if (config.kind === 'wild' && config.seed) {
+      const floor = makeRng(config.seed).fork(`floor:${config.floor ?? 0}`)
+      rngRef.current = { floor, battle: floor.fork('battle') }
+    } else {
+      const sysR = systemRng()
+      rngRef.current = { floor: sysR, battle: sysR }
+    }
+  }
+  const brng = rngRef.current.battle
   const teamRef = useRef<Combatant[]>(
     config.kind === 'trainer'
       ? config.trainer.team.map((t) => makeCombatant(species(t.speciesId), t.level, t.talent ?? 0, t.heldItem))
@@ -115,7 +129,7 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
     return c
   })
   const [enemy, setEnemy] = useState<Combatant>(() =>
-    config.kind === 'trainer' ? teamRef.current[0] : makeWild(active.level, config),
+    config.kind === 'trainer' ? teamRef.current[0] : makeWild(active.level, config, rngRef.current!.floor),
   )
   const [enemyIndex, setEnemyIndex] = useState(0)
   const [log, setLog] = useState<string[]>([])
@@ -256,7 +270,7 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
     const ms = enemyMoveList(e)
     // 溜め中は解放を強制
     if (e.charging) { const c = ms.find((x) => x.id === e.charging); if (c) return c }
-    const r = Math.random()
+    const r = brng.next()
     const totalStage = e.stages.atk + e.stages.def + e.stages.spd + e.stages.mag
     const status = ms.filter((x) => x.category === 'status')
     // ボス開幕ギミック: エース登場初ターンにauraを使う(auraがあれば)
@@ -304,7 +318,7 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
   // 敵の1ターン(交代/どうぐ/捕獲失敗後に共通使用)。倒れたら handlePlayerDown
   async function enemyTurn(p: Combatant) {
     const e = { ...enemy }
-    const pre = preMoveCheck(e)
+    const pre = preMoveCheck(e, brng)
     if (pre.status !== e.status || pre.statusTurns !== e.statusTurns) {
       setEnemy((prev) => ({ ...prev, status: pre.status, statusTurns: pre.statusTurns }))
     }
@@ -314,7 +328,7 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
     setFx({ atk: 'e' })
     await sleep(160)
     pushLog(`${isTrainer ? '' : '野生の '}${e.data.name}の ${eMove.name}！`)
-    if (Math.random() > eMove.acc) {
+    if (!brng.chance(eMove.acc)) {
       pushLog('しかし 当たらなかった！')
       setFx({})
       await sleep(250)
@@ -327,14 +341,14 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
         pushLog(`${e.data.name}は HPを 回復した！`)
       } else if (eMove.inflict && !p.status) {
         const st = eMove.inflict.status
-        setPlayer((prev) => ({ ...prev, status: st, statusTurns: st === 'ねむり' ? randInt(2, 3) : 0 }))
+        setPlayer((prev) => ({ ...prev, status: st, statusTurns: st === 'ねむり' ? brng.int(2, 3) : 0 }))
         pushLog(st === '灰化' ? `${p.data.name}は 灰化しはじめた……` : `${p.data.name}は ${st}状態になった！`)
       }
       setFx({})
       await sleep(300)
       return
     }
-    const r = calcDamage(e, p, eMove)
+    const r = calcDamage(e, p, eMove, 0.85 + brng.next() * 0.15, brng.next())
     let dealt = r.damage
     const sturdyHeld = p.ability === 'sturdy' && p.hp === p.maxHp && dealt >= p.hp
     if (sturdyHeld) dealt = p.hp - 1
@@ -409,7 +423,7 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
         return
       }
       tgt.status = status
-      tgt.statusTurns = status === 'ねむり' ? randInt(2, 3) : 0
+      tgt.statusTurns = status === 'ねむり' ? brng.int(2, 3) : 0
       sync(side)
       pushLog(status === '灰化' ? `${tgt.data.name}は 灰化しはじめた……` : `${tgt.data.name}は ${status}状態になった！`)
     }
@@ -460,7 +474,7 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
       await sleep(160)
       pushLog(`${attacker.data.name}の ${move.name}！`)
 
-      if (Math.random() > move.acc) {
+      if (!brng.chance(move.acc)) {
         setFx({})
         pushLog('しかし 当たらなかった！')
         await sleep(250)
@@ -497,14 +511,14 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
       }
 
       // ダメージ技(連続対応)
-      const hits = move.multi ? randInt(move.multi[0], move.multi[1]) : 1
+      const hits = move.multi ? brng.int(move.multi[0], move.multi[1]) : 1
       let total = 0
       let anyCrit = false
       let lastEff = 1
       let sturdyHeld = false
       for (let h = 0; h < hits; h++) {
         if (defender.hp <= 0) break
-        const r = calcDamage(attacker, defender, move)
+        const r = calcDamage(attacker, defender, move, 0.85 + brng.next() * 0.15, brng.next())
         lastEff = r.eff
         let dealt = r.damage
         if (defender.ability === 'sturdy' && defender.hp === defender.maxHp && dealt >= defender.hp) { dealt = defender.hp - 1; sturdyHeld = true }
@@ -561,12 +575,12 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
         await sleep(320)
       }
       // 特性:毒手
-      if (defender.hp > 0 && attacker.ability === 'toxictouch' && move.category === 'phys' && !defender.status && Math.random() < 0.3) {
+      if (defender.hp > 0 && attacker.ability === 'toxictouch' && move.category === 'phys' && !defender.status && brng.chance(0.3)) {
         applyInflict(defSide, 'どく')
         await sleep(250)
       }
       // 追加効果(状態異常)
-      if (defender.hp > 0 && move.inflict && Math.random() < move.inflict.chance) {
+      if (defender.hp > 0 && move.inflict && brng.chance(move.inflict.chance)) {
         applyInflict(defSide, move.inflict.status)
         await sleep(250)
       }
@@ -590,7 +604,7 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
       const actor = side === 'p' ? p : e
       if (actor.hp <= 0) continue
       await sleep(420)
-      const pre = preMoveCheck(actor)
+      const pre = preMoveCheck(actor, brng)
       actor.status = pre.status
       actor.statusTurns = pre.statusTurns
       sync(side)
@@ -655,7 +669,7 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
     pushLog('封獣フラスコを なげた！ ……', 'クルクル……')
     await sleep(900)
 
-    if (Math.random() < catchChance(enemy)) {
+    if (brng.chance(catchChance(enemy))) {
       const caught: OwnedMonster = {
         uid: `m${Date.now().toString(36)}_c`,
         speciesId: enemy.data.id,

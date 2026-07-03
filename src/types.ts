@@ -133,6 +133,7 @@ export type BattleConfig =
       biome?: string
       tower?: boolean
       floor?: number
+      seed?: string // シード付きラン(塔)。指定時は敵生成+バトル内乱数が決定論(SPEC_RNG_REPLAY.md)
       // ── ヌシ幻獣(パッケージD): 種/レベル/個体値を固定出現させる ──
       forcedSpeciesId?: string
       forcedLevel?: number

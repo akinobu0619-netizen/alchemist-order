@@ -3,6 +3,7 @@ import type { BattleConfig, GameState } from '../types'
 import { ENCOUNTER_RATE, MAPS, TRAINERS, isWall, isLedgeBlocked } from '../game/maps'
 import type { Ambient, Chest, Npc, NushiSpot, RuneSwitch } from '../game/maps'
 import { hasFlag, species } from '../game/state'
+import { systemRng } from '../engine/rng'
 import { sfx } from '../game/audio'
 import { Building, ChestToken, LeaderToken, NpcToken, PlayerToken, PropToken, Sprite, type Dir } from '../ui'
 import '../field-zones.css'
@@ -56,6 +57,8 @@ const PROP_SCALE: Record<string, number> = {
 }
 
 const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n))
+// フィールド乱数(エンカ発生/レア枠)。v1は非シード。I/Fだけ通し将来の決定論化に備える(SPEC_RNG_REPLAY.md §3)
+const fieldRng = systemRng()
 
 const AMBIENT_EMOJI: Record<string, string> = {
   bird: '🐦',
@@ -291,11 +294,11 @@ export default function Field({ state, setState, onStartBattle, onTrainer, onChe
     setStep((s) => (s ? 0 : 1)) // 一歩ごとに足を入れ替え
     setState((s) => ({ ...s, pos: np }))
 
-    if (ch === 'G' && m.encounter && Math.random() < ENCOUNTER_RATE) {
+    if (ch === 'G' && m.encounter && fieldRng.chance(ENCOUNTER_RATE)) {
       stopHold()
       // 区画別エンカウント(パッケージD): 現在地が zones に該当すればそちらを優先(奥ほど強化+最奥レア枠)
       const zone = m.zones?.find((z) => nx >= z.x0 && nx <= z.x1 && ny >= z.y0 && ny <= z.y1)
-      const useRare = !!zone?.rarePool?.length && Math.random() < (zone.rareChance ?? 0)
+      const useRare = !!zone?.rarePool?.length && fieldRng.chance(zone.rareChance ?? 0)
       const pool = useRare ? zone!.rarePool! : (zone?.pool ?? m.encounter.pool)
       const min = zone?.min ?? m.encounter.min
       const max = zone?.max ?? m.encounter.max

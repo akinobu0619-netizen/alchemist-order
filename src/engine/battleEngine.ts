@@ -1,9 +1,12 @@
 // バトルエンジン — 純粋関数の集合。UI から分離してテスト可能に保つ。
+// 乱数は Rng 経由(SPEC_RNG_REPLAY.md)。引数省略時のみ非シードの sys にフォールバック。
 import type { Combatant, Move, MonsterData, TypeChart } from '../types'
 import typechartJson from '../../data/typechart.json'
 import { abilityIdOf, heldItemOf } from '../game/abilities'
+import { systemRng, type Rng } from './rng'
 
 const TC = typechartJson as unknown as TypeChart
+const sys = systemRng()
 
 /** 種族値とレベルから実ステータスを算出 (ポケモン風の簡易式) */
 export function statAt(base: number, level: number, isHp = false): number {
@@ -71,8 +74,8 @@ export function calcDamage(
   attacker: Combatant,
   defender: Combatant,
   move: Move,
-  rand: number = 0.85 + Math.random() * 0.15,
-  critRand: number = Math.random(),
+  rand: number = 0.85 + sys.next() * 0.15,
+  critRand: number = sys.next(),
 ): DamageResult {
   if (move.category === 'status' || move.power <= 0) return { damage: 0, eff: 1, stab: false, crit: false }
   const stab = move.type === attacker.data.type || move.type === attacker.data.type2
@@ -122,7 +125,7 @@ export function effectiveSpeed(c: Combatant): number {
 }
 
 /** 行動前チェック(ねむり/こおり/まひ)。行動可否と状態変化後の値を返す */
-export function preMoveCheck(c: Combatant): {
+export function preMoveCheck(c: Combatant, rng: Rng = sys): {
   act: boolean
   msg?: string
   status: Combatant['status']
@@ -134,10 +137,10 @@ export function preMoveCheck(c: Combatant): {
     return { act: false, msg: `${c.data.name}は ぐっすり 眠っている。`, status: 'ねむり', statusTurns: t }
   }
   if (c.status === 'こおり') {
-    if (Math.random() < 0.25) return { act: true, msg: `${c.data.name}の こおりが とけた！`, status: null, statusTurns: 0 }
+    if (rng.chance(0.25)) return { act: true, msg: `${c.data.name}の こおりが とけた！`, status: null, statusTurns: 0 }
     return { act: false, msg: `${c.data.name}は こおって 動けない！`, status: 'こおり', statusTurns: c.statusTurns }
   }
-  if (c.status === 'まひ' && Math.random() < 0.25) {
+  if (c.status === 'まひ' && rng.chance(0.25)) {
     return { act: false, msg: `${c.data.name}は からだが しびれて 動けない！`, status: 'まひ', statusTurns: c.statusTurns }
   }
   return { act: true, status: c.status, statusTurns: c.statusTurns }
