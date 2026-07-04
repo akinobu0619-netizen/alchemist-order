@@ -18,6 +18,7 @@ import {
   loadGame,
   makeOwned,
   newGame,
+  playerTitle,
   rarityOf,
   saveGame,
   setLeader,
@@ -34,6 +35,7 @@ import Dex from './screens/Dex'
 import Field from './screens/Field'
 import Opening from './screens/Opening'
 import Dialogue from './screens/Dialogue'
+import ShareCard, { type ShareData } from './screens/ShareCard'
 
 type Phase = 'title' | 'opening' | 'game'
 type Screen = 'field' | 'home' | 'battle' | 'dex'
@@ -85,6 +87,7 @@ export default function App() {
   const [shopOpen, setShopOpen] = useState(false)
   const [worldsOpen, setWorldsOpen] = useState(false)
   const [tower, setTower] = useState<{ floor: number; cleared: number; seed: string } | null>(null)
+  const [shareData, setShareData] = useState<ShareData | null>(null)
   const [homeTab, setHomeTab] = useState<'party' | 'items' | 'note' | 'record'>('party')
   const [getMon, setGetMon] = useState<{ id: string; name: string; type: string; label?: string; talent?: number; after?: () => void } | null>(null)
   const [fusionOpen, setFusionOpen] = useState(false)
@@ -191,6 +194,13 @@ export default function App() {
       setTower(null)
       setScreen('field')
       setGame((s) => ({ ...s, towerBest: Math.max(s.towerBest ?? 0, reached) }))
+      // スコアカード用データ(相棒=挑戦時のアクティブ個体)。reached>0でダイアログ後に共有カードを出す
+      const lead = game.collection.find((o) => o.uid === game.activeUid) ?? game.collection[0]
+      const makeShare = (): ShareData | null => {
+        if (reached <= 0 || !lead) return null
+        const sp = species(lead.speciesId)
+        return { reached, best, speciesId: lead.speciesId, monName: sp.name, type: sp.type, level: lead.level, talent: lead.talent, mutant: lead.mutant, playerName: game.playerName, title: playerTitle(game) }
+      }
       setDialogue({
         speaker: '🗼 試練の塔',
         lines: [
@@ -198,6 +208,7 @@ export default function App() {
           reached > prevBest ? `🏆 自己ベスト更新！(${best}階)` : `自己ベスト: ${best}階`,
           '編成・育成・道具の備えで、記録は伸ばせる。また挑もう。',
         ],
+        after: () => { const sd = makeShare(); if (sd) setShareData(sd) },
       })
       return
     }
@@ -713,6 +724,8 @@ export default function App() {
           }}
         />
       )}
+
+      {shareData && <ShareCard data={shareData} onClose={() => setShareData(null)} />}
 
       {shopOpen && (
         <div className="modal-backdrop" onClick={() => setShopOpen(false)}>
