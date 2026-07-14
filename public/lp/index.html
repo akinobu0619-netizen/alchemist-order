@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>錬金幻獣録 アルケミスト・オーダー｜集めて育てる幻獣錬成ブラウザRPG</title>
+  <meta name="description" content="全100体の幻獣を集めて育てる無料ブラウザRPG。インストール・登録不要、URLを開くだけ。9属性バトル×錬成×1/100の変異種。" />
+  <link rel="icon" href="../icons/icon-192.png" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="錬金幻獣録 アルケミスト・オーダー" />
+  <meta property="og:description" content="全100体の幻獣を集めて育てる無料ブラウザRPG。インストール・登録不要、URLを開くだけ。" />
+  <meta property="og:url" content="https://akinobu0619-netizen.github.io/alchemist-order/lp/" />
+  <meta property="og:image" content="https://akinobu0619-netizen.github.io/alchemist-order/bg/title.jpg" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <style>
+    :root {
+      --gold: #d4af5a;
+      --gold-bright: #f0d99a;
+      --gold-dim: #8a7a55;
+      --ink: #f3e6c4;
+      --ink-sub: #cdbf9c;
+      --bg: #120b08;
+      --bg2: #241a12;
+      --card: rgba(36, 26, 18, 0.85);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", "Noto Sans JP", sans-serif;
+      line-height: 1.7;
+      overflow-x: hidden;
+    }
+    img { max-width: 100%; }
+    a { color: var(--gold-bright); }
+
+    /* ── ヒーロー ── */
+    .hero {
+      position: relative;
+      min-height: 92vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 48px 20px 64px;
+      background:
+        linear-gradient(rgba(18, 11, 8, 0.55), rgba(18, 11, 8, 0.92)),
+        url("../bg/title.jpg") center / cover no-repeat;
+    }
+    .hero-badge {
+      display: inline-block;
+      border: 1px solid var(--gold);
+      color: var(--gold-bright);
+      border-radius: 999px;
+      padding: 4px 18px;
+      font-size: 13px;
+      letter-spacing: 0.2em;
+      margin-bottom: 22px;
+    }
+    .hero h1 {
+      font-size: clamp(30px, 6.5vw, 58px);
+      letter-spacing: 0.08em;
+      color: var(--gold-bright);
+      text-shadow: 0 2px 24px rgba(212, 175, 90, 0.35), 0 1px 2px #000;
+      font-weight: 800;
+    }
+    .hero .sub {
+      margin-top: 6px;
+      font-size: clamp(13px, 2.4vw, 18px);
+      color: var(--ink-sub);
+      letter-spacing: 0.28em;
+    }
+    .hero .catch {
+      margin-top: 26px;
+      font-size: clamp(16px, 3vw, 24px);
+      font-weight: 700;
+    }
+    .cta {
+      display: inline-block;
+      margin-top: 34px;
+      background: linear-gradient(180deg, #f0d99a, #d4af5a);
+      color: #1a120a;
+      font-weight: 800;
+      font-size: clamp(16px, 2.6vw, 20px);
+      padding: 16px 46px;
+      border-radius: 999px;
+      text-decoration: none;
+      box-shadow: 0 6px 28px rgba(212, 175, 90, 0.45);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .cta:hover { transform: translateY(-2px) scale(1.02); box-shadow: 0 10px 36px rgba(212, 175, 90, 0.6); }
+    .cta-note { margin-top: 12px; font-size: 13px; color: var(--ink-sub); }
+    .hero-points {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 30px;
+    }
+    .hero-points span {
+      background: rgba(0, 0, 0, 0.45);
+      border: 1px solid rgba(212, 175, 90, 0.5);
+      border-radius: 8px;
+      padding: 7px 16px;
+      font-size: 14px;
+    }
+    .hero-starters {
+      display: flex;
+      gap: clamp(8px, 3vw, 28px);
+      margin-top: 38px;
+      align-items: flex-end;
+    }
+    .hero-starters img {
+      width: clamp(84px, 16vw, 140px);
+      height: auto;
+      image-rendering: auto;
+      filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.6));
+      animation: bob 3.2s ease-in-out infinite;
+    }
+    .hero-starters img:nth-child(2) { animation-delay: 0.5s; }
+    .hero-starters img:nth-child(3) { animation-delay: 1s; }
+    @keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+
+    /* ── 共通セクション ── */
+    section { padding: 72px 20px; max-width: 1060px; margin: 0 auto; }
+    .sec-label { text-align: center; color: var(--gold); letter-spacing: 0.3em; font-size: 13px; }
+    .sec-title {
+      text-align: center;
+      font-size: clamp(22px, 4.4vw, 34px);
+      font-weight: 800;
+      color: var(--gold-bright);
+      margin: 6px 0 14px;
+    }
+    .sec-lead { text-align: center; color: var(--ink-sub); max-width: 640px; margin: 0 auto 44px; font-size: 15px; }
+    .rule { width: 72px; height: 2px; background: var(--gold); margin: 0 auto 18px; opacity: 0.7; }
+
+    /* ── 特徴カード ── */
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 18px;
+    }
+    .fcard {
+      background: var(--card);
+      border: 1px solid rgba(212, 175, 90, 0.35);
+      border-radius: 14px;
+      padding: 26px 22px;
+      transition: border-color 0.2s ease, transform 0.2s ease;
+    }
+    .fcard:hover { border-color: var(--gold); transform: translateY(-3px); }
+    .fcard .fico { font-size: 30px; }
+    .fcard h3 { color: var(--gold-bright); font-size: 18px; margin: 10px 0 6px; }
+    .fcard p { font-size: 14px; color: var(--ink-sub); }
+    .fcard .num { color: var(--gold-bright); font-weight: 800; }
+
+    /* ── 変異種デモ ── */
+    .mutant-demo {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: clamp(16px, 6vw, 64px);
+      margin-top: 34px;
+      flex-wrap: wrap;
+    }
+    .mutant-demo figure { text-align: center; }
+    .mutant-demo img { width: clamp(100px, 20vw, 150px); filter: drop-shadow(0 6px 14px rgba(0,0,0,0.55)); }
+    .mutant-demo .is-mutant img { filter: hue-rotate(150deg) saturate(1.25) drop-shadow(0 6px 18px rgba(140, 220, 255, 0.35)); }
+    .mutant-demo figcaption { font-size: 13px; color: var(--ink-sub); margin-top: 8px; }
+    .mutant-demo .arrow { font-size: 34px; color: var(--gold); }
+    .is-mutant figcaption { color: var(--gold-bright); }
+
+    /* ── 世界(スクショ帯) ── */
+    .worlds { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; }
+    .world {
+      position: relative;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid rgba(212, 175, 90, 0.3);
+      aspect-ratio: 16 / 10;
+    }
+    .world img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.35s ease; }
+    .world:hover img { transform: scale(1.06); }
+    .world figcaption {
+      position: absolute; left: 0; right: 0; bottom: 0;
+      padding: 26px 14px 10px;
+      background: linear-gradient(transparent, rgba(10, 6, 4, 0.92));
+      font-size: 14px; font-weight: 700; color: var(--gold-bright);
+    }
+
+    /* ── 遊び方 ── */
+    .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; counter-reset: step; }
+    .step {
+      background: var(--card);
+      border: 1px solid rgba(212, 175, 90, 0.35);
+      border-radius: 14px;
+      padding: 26px 22px;
+      position: relative;
+    }
+    .step::before {
+      counter-increment: step;
+      content: counter(step);
+      position: absolute; top: -16px; left: 18px;
+      width: 34px; height: 34px; border-radius: 50%;
+      background: var(--gold); color: #1a120a;
+      font-weight: 800; display: flex; align-items: center; justify-content: center;
+    }
+    .step h3 { color: var(--gold-bright); font-size: 17px; margin: 6px 0 6px; }
+    .step p { font-size: 14px; color: var(--ink-sub); }
+
+    /* ── 伝説シルエット ── */
+    .legends { display: flex; justify-content: center; gap: clamp(12px, 5vw, 48px); margin-top: 30px; flex-wrap: wrap; }
+    .legends figure { text-align: center; }
+    .legends img { width: clamp(96px, 18vw, 150px); filter: brightness(0) drop-shadow(0 0 18px rgba(212,175,90,0.35)); }
+    .legends figcaption { font-size: 13px; color: var(--gold-dim); margin-top: 6px; letter-spacing: 0.2em; }
+
+    /* ── 最終CTA ── */
+    .final {
+      text-align: center;
+      background:
+        linear-gradient(rgba(18, 11, 8, 0.82), rgba(18, 11, 8, 0.94)),
+        url("../bg/battle/volcano.jpg") center / cover no-repeat;
+      padding: 88px 20px;
+      max-width: none;
+    }
+    .final .sec-title { margin-bottom: 4px; }
+
+    footer {
+      text-align: center;
+      padding: 34px 20px 44px;
+      font-size: 13px;
+      color: var(--gold-dim);
+      border-top: 1px solid rgba(212, 175, 90, 0.2);
+    }
+    footer p { margin: 4px 0; }
+  </style>
+</head>
+<body>
+
+  <!-- ヒーロー -->
+  <header class="hero">
+    <span class="hero-badge">無料ブラウザRPG</span>
+    <h1>錬金幻獣録<br />アルケミスト・オーダー</h1>
+    <p class="sub">ALCHEMIST ORDER</p>
+    <p class="catch">全100体の幻獣を、集めて、育てて、錬成する。</p>
+    <a class="cta" href="../">▶ 今すぐ遊ぶ</a>
+    <p class="cta-note">インストール不要・登録不要・完全無料。URLを開けば3秒で冒険が始まる。</p>
+    <div class="hero-points">
+      <span>📱 スマホOK</span>
+      <span>💻 PC OK</span>
+      <span>💾 セーブはブラウザに自動保存</span>
+    </div>
+    <div class="hero-starters">
+      <img src="../sprites/001.png" alt="火のスターター イグニフ" />
+      <img src="../sprites/010.png" alt="水のスターター アクアブ" />
+      <img src="../sprites/022.png" alt="風のスターター コグリフ" />
+    </div>
+  </header>
+
+  <!-- 特徴 -->
+  <section id="features">
+    <p class="sec-label">FEATURES</p>
+    <h2 class="sec-title">このゲームでできること</h2>
+    <div class="rule"></div>
+    <p class="sec-lead">ポケモン・DQM世代に懐かしくも新しい、スキマ時間で遊べる本格育成RPG。</p>
+    <div class="features">
+      <div class="fcard">
+        <div class="fico">🧪</div>
+        <h3>全<span class="num">100体</span>の幻獣を収集</h3>
+        <p>草むらで出会い、弱らせて、フラスコで捕獲。図鑑を埋める懐かしくも熱い収集体験。</p>
+      </div>
+      <div class="fcard">
+        <div class="fico">⚔️</div>
+        <h3><span class="num">9属性</span>の相性バトル</h3>
+        <p>火・水・風・地・雷・毒・聖・冥・錬成。弱点を突けば大ダメージ。読み合いが勝敗を分ける。</p>
+      </div>
+      <div class="fcard">
+        <div class="fico">⚗️</div>
+        <h3>錬成（合成）で強くなる</h3>
+        <p>2体の幻獣を錬成して新たな力を宿す。素材から技を受け継ぐ「遺伝技」で自分だけの1体を。</p>
+      </div>
+      <div class="fcard">
+        <div class="fico">✨</div>
+        <h3><span class="num">1/100</span>の変異種</h3>
+        <p>ごく稀に、色の違う個体が現れる。出会えたら自慢していい。</p>
+      </div>
+      <div class="fcard">
+        <div class="fico">⭐</div>
+        <h3>才能値で厳選</h3>
+        <p>同じ種でも個体ごとに才能が違う。★★★の超レア個体を求めて草むらへ。</p>
+      </div>
+      <div class="fcard">
+        <div class="fico">🗼</div>
+        <h3>試練の塔でスコアアタック</h3>
+        <p>連戦で何階まで登れるか。記録はスコアカードにしてSNSでシェアできる。</p>
+      </div>
+    </div>
+
+    <!-- 変異種デモ -->
+    <div class="mutant-demo">
+      <figure>
+        <img src="../sprites/006.png" alt="イグニス・レオ" />
+        <figcaption>イグニス・レオ</figcaption>
+      </figure>
+      <div class="arrow">→</div>
+      <figure class="is-mutant">
+        <img src="../sprites/006.png" alt="イグニス・レオ 変異種" />
+        <figcaption>✨変異種（1/100）</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- 世界 -->
+  <section id="worlds">
+    <p class="sec-label">WORLDS</p>
+    <h2 class="sec-title">冒険の舞台</h2>
+    <div class="rule"></div>
+    <p class="sec-lead">錬金術の都から、深き森、潮鳴りの港、そして灼熱の火山郷へ。</p>
+    <div class="worlds">
+      <figure class="world"><img src="../bg/battle/town.jpg" alt="錬金術の都" /><figcaption>錬金術の都 ラピス</figcaption></figure>
+      <figure class="world"><img src="../bg/battle/forest.jpg" alt="翠風の森" /><figcaption>翠風の森</figcaption></figure>
+      <figure class="world"><img src="../bg/battle/sea.jpg" alt="潮鳴りの港" /><figcaption>潮鳴りの港</figcaption></figure>
+      <figure class="world"><img src="../bg/battle/volcano.jpg" alt="紅蓮の火山郷" /><figcaption>紅蓮の火山郷</figcaption></figure>
+    </div>
+
+    <!-- 伝説の影 -->
+    <div class="legends">
+      <figure><img src="../sprites/095.png" alt="???" /><figcaption>？？？</figcaption></figure>
+      <figure><img src="../sprites/096.png" alt="???" /><figcaption>？？？</figcaption></figure>
+      <figure><img src="../sprites/097.png" alt="???" /><figcaption>？？？</figcaption></figure>
+    </div>
+    <p style="text-align:center; color: var(--gold-dim); font-size: 13px; margin-top: 10px;">――各属性の頂点に立つ「原初の幻獣」が、どこかで待っている。</p>
+  </section>
+
+  <!-- 遊び方 -->
+  <section id="howto">
+    <p class="sec-label">HOW TO PLAY</p>
+    <h2 class="sec-title">はじめかたは、かんたん</h2>
+    <div class="rule"></div>
+    <div class="steps">
+      <div class="step">
+        <h3>URLを開く</h3>
+        <p>インストールもアカウント登録も不要。スマホでもPCでも、ブラウザで開くだけ。</p>
+      </div>
+      <div class="step">
+        <h3>相棒を選ぶ</h3>
+        <p>火のイグニフ、水のアクアブ、風のコグリフ。最初の1体があなたの物語を決める。</p>
+      </div>
+      <div class="step">
+        <h3>集めて、錬成して、塔へ</h3>
+        <p>図鑑を埋め、守護者に挑み、試練の塔で自己ベストを更新しよう。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 最終CTA -->
+  <section class="final">
+    <p class="sec-label">START YOUR JOURNEY</p>
+    <h2 class="sec-title">さあ、幻獣たちが待っている</h2>
+    <div class="rule"></div>
+    <a class="cta" href="../">▶ 無料でプレイする</a>
+    <p class="cta-note">登録不要。この次の画面がもうゲームです。</p>
+  </section>
+
+  <footer>
+    <p>#アルケミストオーダー を付けてSNSでシェア歓迎</p>
+    <p>実況・配信・収益化OK（報告不要）</p>
+    <p>© 錬金幻獣録 アルケミスト・オーダー — 個人開発</p>
+  </footer>
+
+</body>
+</html>
