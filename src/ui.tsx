@@ -264,6 +264,40 @@ export function ItemIcon({ kind, size = 26 }: { kind: string; size?: number }) {
   )
 }
 
+// 記章エンブレム。public/ui/badge_<slug>.png があれば画像、無ければ🎖。owned=falseはグレー化。
+const badgeImgState: Record<string, boolean> = {}
+export function BadgeIcon({ slug, owned = true, size = 40 }: { slug: string; owned?: boolean; size?: number }) {
+  const [failed, setFailed] = useState(!!badgeImgState[slug])
+  const dim = owned ? {} : { filter: 'grayscale(1) brightness(0.5)', opacity: 0.55 }
+  if (failed) return <span style={{ fontSize: size, lineHeight: 1, ...dim }}>🎖</span>
+  return (
+    <img
+      className="badge-icon-img"
+      src={`${import.meta.env.BASE_URL}ui/badge_${slug}.png`}
+      alt=""
+      style={{ width: size, height: size, objectFit: 'contain', display: 'block', ...dim }}
+      onError={() => { badgeImgState[slug] = true; setFailed(true) }}
+    />
+  )
+}
+
+// 実績メダル。public/ui/medal_<id>.png があれば画像、無ければ絵文字。done=falseはグレー化。
+const medalImgState: Record<string, boolean> = {}
+export function MedalIcon({ id, done = true, size = 40 }: { id: string; done?: boolean; size?: number }) {
+  const [failed, setFailed] = useState(!!medalImgState[id])
+  const dim = done ? {} : { filter: 'grayscale(1) brightness(0.55)', opacity: 0.6 }
+  if (failed) return <span style={{ fontSize: size, lineHeight: 1, ...dim }}>{done ? '🏅' : '🔒'}</span>
+  return (
+    <img
+      className="medal-icon-img"
+      src={`${import.meta.env.BASE_URL}ui/medal_${id}.png`}
+      alt=""
+      style={{ width: size, height: size, objectFit: 'contain', display: 'block', ...dim }}
+      onError={() => { medalImgState[id] = true; setFailed(true) }}
+    />
+  )
+}
+
 // 宝箱。public/ui/chest(_open).png があれば画像、無ければCSSの宝箱。openで開いた見た目。
 const chestImgState = { missing: false }
 export function ChestToken({ open = false, size = 30 }: { open?: boolean; size?: number }) {

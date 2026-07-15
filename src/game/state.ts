@@ -51,6 +51,20 @@ export function playerTitle(s: GameState): string {
   return n >= 8 ? 'オーダー認定マスター' : n >= 5 ? '熟練の錬獣師' : n >= 3 ? '一人前の錬獣師' : n >= 1 ? '駆け出しの錬獣師' : '見習い錬獣師'
 }
 
+// 全8記章の並び順とアイコンslug(獲得記章一覧の8枠グリッド用)。
+// badges は名前文字列で保存されるため name→slug をここで一元管理する。
+// 現在実装は先頭3つ、残り5つは第4世界以降の予約(画像は先行納品済み・未取得はグレー表示)。
+export const ALL_BADGES: { name: string; slug: string }[] = [
+  { name: '新緑の記章', slug: 'verdant' },
+  { name: '蒼潮の記章', slug: 'tide' },
+  { name: '烈火の記章', slug: 'blaze' },
+  { name: '迅雷の記章', slug: 'spark' },
+  { name: '蒼嵐の記章', slug: 'gale' },
+  { name: '聖光の記章', slug: 'astral' },
+  { name: '玄冥の記章', slug: 'umbra' },
+  { name: '錬鉄の記章', slug: 'forge' },
+]
+
 // パーティの uid 列を返す(旧セーブ移行: party未設定なら先頭PARTY_MAX体)。collectionに無いidは除外
 export function getParty(s: GameState): string[] {
   const ids = new Set(s.collection.map((o) => o.uid))

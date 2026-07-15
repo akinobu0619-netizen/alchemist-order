@@ -1,0 +1,40 @@
+/* 記章グリッド＆実績メダル (Home メニュー)。index.css を触らない分離CSS規約に従う。 */
+
+.badge-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px 6px;
+  margin: 4px 0 6px;
+}
+@media (max-width: 360px) {
+  .badge-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+.badge-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 6px 2px;
+  border-radius: 10px;
+  background: rgba(30, 24, 16, 0.4);
+  border: 1px solid rgba(212, 175, 90, 0.18);
+}
+.badge-cell:not(.locked) {
+  border-color: rgba(212, 175, 90, 0.5);
+  background: rgba(60, 48, 24, 0.45);
+}
+.badge-cell .badge-cap {
+  font-size: 11px;
+  line-height: 1.2;
+  text-align: center;
+  color: var(--gold-bright, #f0d99a);
+}
+.badge-cell.locked .badge-cap {
+  color: #8a7a55;
+}
+
+/* 実績メダルは既存 .item-ico の枠にそのまま乗る。中央寄せの微調整のみ */
+.item-ico .medal-icon-img {
+  margin: -2px 0;
+}

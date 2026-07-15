@@ -18,12 +18,14 @@ import {
   sellPrice,
   species,
   withdrawToParty,
+  ALL_BADGES,
 } from '../game/state'
 import typechart from '../../data/typechart.json'
 import { abilityOf, HELD_ITEMS, HELD_ITEM_IDS } from '../game/abilities'
 import { statAt } from '../engine/battleEngine'
 import * as audio from '../game/audio'
-import { ItemIcon, RarityBadge, Sprite, TypeBadge, TYPE_COLORS } from '../ui'
+import { ItemIcon, RarityBadge, Sprite, TypeBadge, TYPE_COLORS, BadgeIcon, MedalIcon } from '../ui'
+import '../medals.css'
 
 interface Props {
   state: GameState
@@ -237,7 +239,7 @@ export default function Home({ state, setState, setActive, onField, onDex, initi
             const met = a.check(state)
             return (
               <div className="item-row" key={a.id}>
-                <span className="item-ico">{done ? '🏅' : met ? '✨' : '🔒'}</span>
+                <span className="item-ico"><MedalIcon id={a.id} done={done} size={38} /></span>
                 <div className="grow">
                   <div className="item-name">{a.name}</div>
                   <div className="item-desc">{a.desc} ・ 報酬 {rewardLabel(a.reward)}</div>
@@ -435,13 +437,18 @@ export default function Home({ state, setState, setActive, onField, onDex, initi
             ))
           })()}
 
-          {/* 記章一覧 */}
+          {/* 記章一覧(8枠グリッド・未取得はグレー) */}
           <h3 className="section-title">獲得記章 {state.badges.length}/8</h3>
-          <div className="badge-list">
-            {state.badges.length === 0 && <span className="ink-dim">まだ記章を持っていない。</span>}
-            {state.badges.map((b) => (
-              <span key={b} className="badge-pill">🎖 {b}</span>
-            ))}
+          <div className="badge-grid">
+            {ALL_BADGES.map((b) => {
+              const owned = state.badges.includes(b.name)
+              return (
+                <div key={b.slug} className={`badge-cell${owned ? '' : ' locked'}`} title={owned ? b.name : '？？？'}>
+                  <BadgeIcon slug={b.slug} owned={owned} size={52} />
+                  <span className="badge-cap">{owned ? b.name.replace('の記章', '') : '？？？'}</span>
+                </div>
+              )
+            })}
           </div>
 
           <div className="money-box" style={{ marginTop: 14 }}>🏆 共通ランキングは準備中。この記録（塔ベスト等）を提出して順位を競う予定。</div>
