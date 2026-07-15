@@ -171,6 +171,15 @@ export default function Home({ state, setState, setActive, onField, onDex, initi
   const moves = ownedMoveset(sel)
   const inheritedIds = new Set((sel.inheritedMoves ?? []).map((m) => m.id))
   const isActive = sel.uid === active.uid
+  const todayWild = Math.min(state.daily?.wild ?? 0, DAILY_GOAL)
+  const nextDexMilestone = DEX_MILESTONES.find((m) => !(state.dexClaimed ?? []).includes(m.n) && state.caught.length < m.n)
+  const nextDexText = nextDexMilestone ? `${state.caught.length}/${nextDexMilestone.n}` : `${state.caught.length}/${DEX_TOTAL}`
+  const achievementReady = ACHIEVEMENTS.filter((a) => a.check(state) && !(state.achievements ?? []).includes(a.id)).length
+  const partnerMood = sel.mutant
+    ? '今日は不思議な光をまとっている。'
+    : (sel.talent ?? 0) >= 6
+      ? '才能のきらめきが強くなっている。'
+      : 'こちらを見て、次の探索を待っている。'
 
   return (
     <div className="screen">
@@ -182,6 +191,67 @@ export default function Home({ state, setState, setActive, onField, onDex, initi
           <span><ItemIcon kind="money" size={22} /> {state.money}</span>
         </div>
       </header>
+
+      <section className="home-hero">
+        <div className="home-hero-main">
+          <button className="home-hero-art" onClick={() => setZoom(true)} title="タップで拡大">
+            <Sprite id={sp.id} type={sp.type} size={156} mutant={sel.mutant} />
+            <span className="home-hero-shadow" />
+          </button>
+          <div className="home-hero-info">
+            <div className="home-hero-kicker">今日の相棒</div>
+            <div className="home-hero-name">
+              <span>{sp.name}</span>
+              <RarityBadge talent={sel.talent} size={13} />
+              {isActive && <span className="lead-tag">先頭</span>}
+            </div>
+            <div className="home-hero-sub">
+              <span>Lv.{sel.level}</span>
+              <TypeBadge t={sp.type} />
+              {sp.type2 && <TypeBadge t={sp.type2} />}
+              {sel.mutant && <span className="rare-tag">変異</span>}
+            </div>
+            <p className="home-hero-flavor">{partnerMood}</p>
+            <div className="home-hero-bars">
+              <div className="home-mini-bar">
+                <span>HP</span>
+                <b>{curHp}/{maxHp}</b>
+                <i><em style={{ width: `${hpRatio * 100}%`, background: hpColor }} /></i>
+              </div>
+              <div className="home-mini-bar">
+                <span>EXP</span>
+                <b>{sel.exp}/{expNeed}</b>
+                <i><em style={{ width: `${expRatio * 100}%` }} /></i>
+              </div>
+            </div>
+            <div className="home-hero-actions">
+              <button className="home-primary-cta" onClick={onField}>
+                探索する
+                <span>戦闘・捕獲・素材集めをまとめて進める</span>
+              </button>
+              <button className="home-secondary-cta" onClick={onDex}>図鑑を見る</button>
+            </div>
+          </div>
+        </div>
+        <div className="home-todo-grid">
+          <button className={`home-todo ${dailyClaimable ? 'hot' : ''}`} onClick={() => setTab('note')}>
+            <span>日課</span>
+            <b>{state.daily?.claimed ? '達成済' : `${todayWild}/${DAILY_GOAL}`}</b>
+          </button>
+          <button className="home-todo" onClick={() => setTab('note')}>
+            <span>図鑑報酬</span>
+            <b>{nextDexText}</b>
+          </button>
+          <button className="home-todo" onClick={() => setTab('record')}>
+            <span>記章</span>
+            <b>{state.badges.length}/8</b>
+          </button>
+          <button className={`home-todo ${achievementReady ? 'hot' : ''}`} onClick={() => setTab('note')}>
+            <span>実績</span>
+            <b>{achievementReady ? `${achievementReady}件受取` : `${state.achievements?.length ?? 0}/${ACHIEVEMENTS.length}`}</b>
+          </button>
+        </div>
+      </section>
 
       <div className="menu-tabs">
         <button className={`menu-tab ${tab === 'party' ? 'on' : ''}`} onClick={() => setTab('party')}>
@@ -491,9 +561,9 @@ export default function Home({ state, setState, setActive, onField, onDex, initi
       )}
 
       <div className="moves" style={{ marginTop: 18 }}>
-        <button className="move-btn" onClick={onField}>
-          <span className="move-name">🗺 ぼうけんに もどる</span>
-          <span className="move-meta">フィールドを探索する</span>
+        <button className="move-btn subtle" onClick={onField}>
+          <span className="move-name">🗺 フィールドを歩く</span>
+          <span className="move-meta">世界を眺めながら探索する</span>
         </button>
         <button className="move-btn" onClick={onDex}>
           <span className="move-name">📖 幻獣図鑑をひらく</span>
