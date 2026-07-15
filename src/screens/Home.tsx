@@ -330,6 +330,7 @@ export default function Home({ state, setState, setActive, onField, onDex, initi
             {/* もちもの(装備) */}
             <h4 className="mini-title">もちもの</h4>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              {sel.heldItem && <ItemIcon kind={sel.heldItem} size={28} />}
               <select
                 value={sel.heldItem ?? ''}
                 onChange={(e) => {
