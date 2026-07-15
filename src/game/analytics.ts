@@ -3,7 +3,9 @@
 // ★X告知の前に GA_MEASUREMENT_ID に GA4測定ID(G-XXXXXXXXXX)を設定すること(初動データの取り逃し防止)。
 // 送信するのは匿名のゲーム内イベントのみ。個人情報・入力テキストは一切送らない。
 
-const GA_MEASUREMENT_ID = '' // ← 告知前にここへ 'G-XXXXXXXXXX' を設定
+const GA_MEASUREMENT_ID = 'G-HQYZY81HBJ' // 設定済(2026-07-15)
+// dev(localhost)からの送信は本番データを汚すため、本番ビルドのみ送信する
+const GA_ENABLED = !!GA_MEASUREMENT_ID && import.meta.env.PROD
 
 type Params = Record<string, string | number | boolean>
 
@@ -20,7 +22,7 @@ let started = false
 export function initAnalytics(): void {
   if (started) return
   started = true
-  if (!GA_MEASUREMENT_ID) return // ID未設定=送信しない(告知前の既定状態)
+  if (!GA_ENABLED) return // ID未設定 or devビルド=送信しない
   const s = document.createElement('script')
   s.async = true
   s.src = `https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`
@@ -35,7 +37,7 @@ export function initAnalytics(): void {
 /** ゲーム内イベントを記録。GA4があれば送信、無くても直近ログをlocalStorageに残す(自己確認用)。 */
 export function track(event: string, params: Params = {}): void {
   try {
-    if (GA_MEASUREMENT_ID && window.gtag) window.gtag('event', event, params)
+    if (GA_ENABLED && window.gtag) window.gtag('event', event, params)
     // 自己確認用: 直近50件をlocalStorageへ(送信の有無に関わらず)
     const key = 'ao-analytics-log'
     const log = JSON.parse(localStorage.getItem(key) || '[]') as unknown[]
