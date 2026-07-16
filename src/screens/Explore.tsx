@@ -97,10 +97,10 @@ export default function Explore({ state, onHome, onVisitMap, onStartBattle, onTr
   return (
     <div className="screen explore-screen">
       <header className="home-header">
-        <h1>Explore</h1>
+        <h1>??</h1>
         <div className="home-stats">
-          <span>Dex {state.caught.length}</span>
-          <span>Badges {state.badges.length}</span>
+          <span>?? {state.caught.length}</span>
+          <span>?? {state.badges.length}</span>
           <span><ItemIcon kind="money" size={22} /> {state.money}</span>
         </div>
       </header>
@@ -122,10 +122,10 @@ export default function Explore({ state, onHome, onVisitMap, onStartBattle, onTr
               disabled={!unlocked}
               onClick={() => setWorldId(w.id)}
             >
-              <span className="explore-world-icon">{unlocked ? w.icon : 'LOCK'}</span>
+              <span className="explore-world-icon">{unlocked ? w.icon : '??'}</span>
               <span>
                 <b>{w.name}</b>
-                <small>{cleared ? 'Cleared' : unlocked ? w.desc : `${w.unlock} unlocks`}</small>
+                <small>{cleared ? '????' : unlocked ? w.desc : `${w.unlock}???`}</small>
               </span>
             </button>
           )
@@ -135,11 +135,11 @@ export default function Explore({ state, onHome, onVisitMap, onStartBattle, onTr
       <section className="explore-node" style={{ backgroundImage: `linear-gradient(rgba(18,15,10,0.26), rgba(18,15,10,0.82)), url(${bgUrl})` }}>
         <div className="explore-node-head">
           <div>
-            <div className="home-hero-kicker">Depth {node.depth}</div>
+            <div className="home-hero-kicker">?? {node.depth}</div>
             <h2>{node.name}</h2>
             <p>{node.subtitle}</p>
           </div>
-          <div className="explore-depth-dots" aria-label="explore depth">
+          <div className="explore-depth-dots" aria-label="????">
             {world.nodes.map((n, i) => <span key={n.id} className={i <= nodeIndex ? 'on' : ''} />)}
           </div>
         </div>
@@ -155,34 +155,34 @@ export default function Explore({ state, onHome, onVisitMap, onStartBattle, onTr
               <div className="explore-event-actions">
                 {pending.kind === 'battle' && (
                   <button className="home-primary-cta" onClick={() => { const ev = pending; setPending(null); setEventsDone((n) => n + 1); onStartBattle(ev.config, true) }}>
-                    Auto Battle
-                    <span>watch the battle, skip commands</span>
+                    ??????
+                    <span>???????????</span>
                   </button>
                 )}
                 <button className="home-secondary-cta" onClick={consume}>
-                  {pending.kind === 'battle' ? 'Manual Battle' : pending.kind === 'trainer' || pending.kind === 'nushi' ? 'Challenge' : 'OK'}
+                  {pending.kind === 'battle' ? '?????' : pending.kind === 'trainer' || pending.kind === 'nushi' ? '??' : '????'}
                 </button>
               </div>
             </div>
           ) : mustChoose ? (
             <div className="explore-choice">
-              <h3>Keep exploring?</h3>
-              <p>You cleared 3 events. Going deeper brings richer encounters.</p>
+              <h3>?????????</h3>
+              <p>3??????????????????????????????</p>
               <div className="home-hero-actions">
                 <button className="home-primary-cta" onClick={goNext} disabled={nodeIndex >= world.nodes.length - 1}>
-                  Go Deeper
-                  <span>{nodeIndex >= world.nodes.length - 1 ? 'Deepest point' : 'Depth +1'}</span>
+                  ?????
+                  <span>{nodeIndex >= world.nodes.length - 1 ? '?????????' : '???1????'}</span>
                 </button>
-                <button className="home-secondary-cta" onClick={returnHome}>Return</button>
+                <button className="home-secondary-cta" onClick={returnHome}>????</button>
               </div>
             </div>
           ) : (
             <div className="explore-choice">
               <h3>{world.icon} {world.name}</h3>
-              <p>Move straight to the next event. Normal battles can run on auto; important battles stay manual.</p>
+              <p>???????????????????????????????????</p>
               <button className="home-primary-cta" onClick={drawEvent}>
-                Advance
-                <span>{3 - (eventsDone % 3)} events until choice</span>
+                ??????
+                <span>{3 - (eventsDone % 3)} ????????/?????</span>
               </button>
             </div>
           )}
@@ -191,12 +191,12 @@ export default function Explore({ state, onHome, onVisitMap, onStartBattle, onTr
 
       <div className="moves" style={{ marginTop: 14 }}>
         <button className="move-btn subtle" onClick={returnHome}>
-          <span className="move-name">Return to Base</span>
-          <span className="move-meta">Check party, items, and records</span>
+          <span className="move-name">?????</span>
+          <span className="move-meta">??????????????</span>
         </button>
         <button className="move-btn" onClick={() => { setNodeIndex(0); setEventsDone(0); setPending(null) }}>
-          <span className="move-name">Reset Area</span>
-          <span className="move-meta">Reset this exploration route</span>
+          <span className="move-name">???????</span>
+          <span className="move-meta">??????????</span>
         </button>
       </div>
     </div>
