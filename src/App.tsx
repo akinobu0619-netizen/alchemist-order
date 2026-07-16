@@ -580,6 +580,7 @@ export default function App() {
     content = (
       <Explore
         state={game}
+        setState={setGame}
         onHome={() => { setHomeTab('party'); setScreen('home') }}
         onVisitMap={(mapId) => setGame((s) => (s.pos.mapId === mapId ? s : { ...s, pos: { ...s.pos, mapId } }))}
         onStartBattle={startBattle}

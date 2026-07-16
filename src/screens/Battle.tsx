@@ -138,7 +138,7 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
   const ownedRef = useRef<OwnedMonster>({ ...active })
 
   const [player, setPlayer] = useState<Combatant>(() => {
-    const c = makeCombatant(species(active.speciesId), active.level, active.talent ?? 0, active.heldItem)
+    const c = makeCombatant(species(active.speciesId), active.level, active.talent ?? 0, active.heldItem, active.traitBoost ?? 0)
     if (typeof active.hp === 'number' && active.hp > 0) c.hp = Math.min(c.maxHp, active.hp)
     return c
   })
@@ -159,7 +159,7 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
 
   // 手持ちの生存メンバー(現在出ている個体を除く)
   const mk = (o: OwnedMonster): Combatant => {
-    const c = makeCombatant(species(o.speciesId), o.level, o.talent ?? 0, o.heldItem)
+    const c = makeCombatant(species(o.speciesId), o.level, o.talent ?? 0, o.heldItem, o.traitBoost ?? 0)
     if (typeof o.hp === 'number' && o.hp > 0) c.hp = Math.min(c.maxHp, o.hp)
     return c
   }

@@ -2,12 +2,14 @@ import { useEffect, useMemo, useState } from 'react'
 import type { BattleConfig, GameState, TrainerData } from '../types'
 import type { Chest, Npc, NushiSpot, RuneSwitch } from '../game/maps'
 import { hasFlag } from '../game/state'
+import { resolveQuickBattle, type QuickBattleResult } from '../game/quickResolve'
 import { systemRng } from '../engine/rng'
 import { EXPLORE_WORLDS, MAP_BACKGROUNDS, type ExploreEvent, type ExploreNode } from '../game/nodes'
 import { ItemIcon } from '../ui'
 
 interface Props {
   state: GameState
+  setState: (updater: (s: GameState) => GameState) => void
   onHome: () => void
   onVisitMap: (mapId: string) => void
   onStartBattle: (config: BattleConfig) => void
@@ -39,7 +41,7 @@ function fallbackEvent(node: ExploreNode): ExploreEvent | null {
   return node.events.find((event) => event.kind === 'battle') ?? node.events[0] ?? null
 }
 
-export default function Explore({ state, onHome, onVisitMap, onStartBattle, onTrainer, onChest, onNushi, onSwitch, onTalk }: Props) {
+export default function Explore({ state, setState, onHome, onVisitMap, onStartBattle, onTrainer, onChest, onNushi, onSwitch, onTalk }: Props) {
   const unlockedWorlds = EXPLORE_WORLDS.filter((world) => !world.unlock || state.badges.includes(world.unlock))
   const [worldId, setWorldId] = useState(unlockedWorlds[0]?.id ?? EXPLORE_WORLDS[0].id)
   const world = EXPLORE_WORLDS.find((w) => w.id === worldId) ?? unlockedWorlds[0] ?? EXPLORE_WORLDS[0]
@@ -47,6 +49,7 @@ export default function Explore({ state, onHome, onVisitMap, onStartBattle, onTr
   const node = world.nodes[Math.min(nodeIndex, world.nodes.length - 1)]
   const [eventsDone, setEventsDone] = useState(0)
   const [pending, setPending] = useState<ExploreEvent | null>(null)
+  const [quickResult, setQuickResult] = useState<QuickBattleResult | null>(null)
   const rng = useMemo(() => systemRng(), [worldId, nodeIndex])
   const mustChoose = eventsDone > 0 && eventsDone % 3 === 0 && !pending
   const bgUrl = `${import.meta.env.BASE_URL}${node.background}`
@@ -80,6 +83,22 @@ export default function Explore({ state, onHome, onVisitMap, onStartBattle, onTr
     else onTalk(event.npc)
   }
 
+
+  const quickResolve = () => {
+    if (!pending) return
+    const event = pending
+    if (event.kind !== 'battle' && event.kind !== 'trainer' && event.kind !== 'nushi') return consume()
+    setPending(null)
+    setEventsDone((n) => n + 1)
+    const config = event.kind === 'trainer'
+      ? { kind: 'trainer' as const, trainer: event.trainer, biome: event.biome }
+      : event.kind === 'nushi'
+        ? { kind: 'wild' as const, biome: event.biome, forcedSpeciesId: event.nushi.speciesId, forcedLevel: event.nushi.level, forcedTalent: event.nushi.talent, forcedStatus: event.nushi.status, nushiId: event.nushi.id }
+        : event.config
+    const { state: next, result } = resolveQuickBattle(state, config)
+    setState(() => next)
+    setQuickResult(result)
+  }
   const goNext = () => {
     setPending(null)
     setEventsDone(0)
@@ -150,7 +169,17 @@ export default function Explore({ state, onHome, onVisitMap, onStartBattle, onTr
                 <h3>{pending.title}</h3>
                 <p>{pending.desc}</p>
               </div>
-              <button className="home-primary-cta" onClick={consume}>対応する</button>
+              <div className="explore-event-actions">
+                {(pending.kind === 'battle' || pending.kind === 'trainer' || pending.kind === 'nushi') && (
+                  <button className="home-primary-cta" onClick={quickResolve}>
+                    クイック決着
+                    <span>勝敗をすぐ判定</span>
+                  </button>
+                )}
+                <button className="home-secondary-cta" onClick={consume}>
+                  {pending.kind === 'battle' || pending.kind === 'trainer' || pending.kind === 'nushi' ? '手動で戦う' : '対応する'}
+                </button>
+              </div>
             </div>
           ) : mustChoose ? (
             <div className="explore-choice">
@@ -176,6 +205,21 @@ export default function Explore({ state, onHome, onVisitMap, onStartBattle, onTr
           )}
         </div>
       </section>
+
+      {quickResult && (
+        <div className="modal-backdrop" onClick={() => setQuickResult(null)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="card-head">
+              <span className="mon-name">{quickResult.won ? '✨ ' : '💨 '}{quickResult.title}</span>
+              <button className="modal-close" onClick={() => setQuickResult(null)}>×</button>
+            </div>
+            <div className="quick-result-lines">
+              {quickResult.lines.map((line, i) => <p key={i}>{line}</p>)}
+            </div>
+            <button className="title-btn primary" style={{ width: '100%', marginTop: 10 }} onClick={() => setQuickResult(null)}>探索に戻る</button>
+          </div>
+        </div>
+      )}
 
       <div className="moves" style={{ marginTop: 14 }}>
         <button className="move-btn subtle" onClick={returnHome}>

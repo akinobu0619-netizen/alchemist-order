@@ -351,7 +351,7 @@ export function makeOwned(speciesId: string, level: number): OwnedMonster {
 
 /** active個体をバトル用Combatantに変換(現在HPを反映) */
 export function ownedToCombatant(o: OwnedMonster): Combatant {
-  const c = makeCombatant(species(o.speciesId), o.level, o.talent ?? 0)
+  const c = makeCombatant(species(o.speciesId), o.level, o.talent ?? 0, o.heldItem, o.traitBoost ?? 0)
   if (typeof o.hp === 'number') c.hp = Math.max(0, Math.min(c.maxHp, o.hp))
   return c
 }
@@ -398,7 +398,7 @@ export function healOwned(s: GameState, uid: string, amount: number): GameState 
     ...s,
     collection: s.collection.map((o) => {
       if (o.uid !== uid) return o
-      const max = makeCombatant(species(o.speciesId), o.level).maxHp
+      const max = makeCombatant(species(o.speciesId), o.level, o.talent ?? 0, o.heldItem, o.traitBoost ?? 0).maxHp
       const cur = typeof o.hp === 'number' ? o.hp : max
       return { ...o, hp: Math.min(max, cur + amount) }
     }),

@@ -185,6 +185,11 @@ export default function Home({ state, setState, setActive, onField, onDex, onSho
     : (sel.talent ?? 0) >= 6
       ? '才能のきらめきが強くなっている。'
       : 'こちらを見て、次の探索を待っている。'
+  const talentStoneCount = state.mats?.talentStone ?? 0
+  const slotCharmCount = state.mats?.slotCharm ?? 0
+  const traitLevel = sel.traitBoost ?? 0
+  const canUseTalentStone = talentStoneCount > 0 && (sel.talent ?? 0) < 10
+  const canUseTraitCharm = slotCharmCount > 0 && traitLevel < 5
 
   return (
     <div className="screen">
@@ -424,6 +429,44 @@ export default function Home({ state, setState, setActive, onField, onDex, onSho
             </div>
 
             {/* もちもの(装備) */}
+            <h4 className="mini-title">育成強化</h4>
+            <div className="training-grid">
+              <button
+                className="training-btn"
+                disabled={!canUseTalentStone}
+                onClick={() => {
+                  if (!canUseTalentStone) return
+                  audio.sfx('coin')
+                  setState((s) => ({
+                    ...s,
+                    mats: { talentStone: Math.max(0, (s.mats?.talentStone ?? 0) - 1), slotCharm: s.mats?.slotCharm ?? 0 },
+                    collection: s.collection.map((o) => (o.uid === sel.uid ? { ...o, talent: Math.min(10, (o.talent ?? 0) + 1) } : o)),
+                  }))
+                }}
+              >
+                <span>才能石を使う</span>
+                <b>才能 {sel.talent ?? 0} → {Math.min(10, (sel.talent ?? 0) + 1)}</b>
+                <small>所持 {talentStoneCount}</small>
+              </button>
+              <button
+                className="training-btn"
+                disabled={!canUseTraitCharm}
+                onClick={() => {
+                  if (!canUseTraitCharm) return
+                  audio.sfx('coin')
+                  setState((s) => ({
+                    ...s,
+                    mats: { talentStone: s.mats?.talentStone ?? 0, slotCharm: Math.max(0, (s.mats?.slotCharm ?? 0) - 1) },
+                    collection: s.collection.map((o) => (o.uid === sel.uid ? { ...o, traitBoost: Math.min(5, (o.traitBoost ?? 0) + 1) } : o)),
+                  }))
+                }}
+              >
+                <span>特性鍛錬</span>
+                <b>Lv.{traitLevel} → {Math.min(5, traitLevel + 1)}</b>
+                <small>所持 {slotCharmCount}</small>
+              </button>
+            </div>
+            <p className="dex-text" style={{ marginTop: 4 }}>特性鍛錬は基礎能力を少し底上げします。クイック決着の勝率にも反映されます。</p>
             <h4 className="mini-title">もちもの</h4>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               {sel.heldItem && <ItemIcon kind={sel.heldItem} size={28} />}

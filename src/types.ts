@@ -33,6 +33,7 @@ export interface Combatant {
   talent?: number // 個体の質(0-10)。レア度＆全能力+4%/段の倍率。野生でロール、配合で上昇
   mutant?: boolean // 変異種(色違い・見た目のみ)
   ability?: string // 特性id(バトル中の判定に使用)
+  traitBoost?: number // 特性鍛錬Lv。クイック/通常戦闘の基礎能力に少し上乗せする
   heldItem?: string // もちものid
   berryUsed?: boolean // 回復系もちものを使ったか(1戦1回)
   maxHp: number
@@ -85,6 +86,7 @@ export interface OwnedMonster {
   talent?: number // 才能(錬成で上昇)。0〜10。全能力に+4%/段
   mutant?: boolean // 変異種(1/100の色違い。強さとは無関係の見た目レア)
   inheritedMoves?: Move[] // 遺伝技(錬成で素材から受け継いだ技)
+  traitBoost?: number // 特性鍛錬Lv。クイック/通常戦闘の基礎能力に少し上乗せする
   heldItem?: string // もちものid(heldItems参照)。1体1つ
 }
 

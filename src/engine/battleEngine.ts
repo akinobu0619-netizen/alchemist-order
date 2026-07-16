@@ -22,9 +22,9 @@ export function stageMult(stage: number): number {
 export const CRIT_BASE = 0.06 // 基礎会心率
 
 /** MonsterData から指定レベルのバトル個体を生成。talentで全能力に+4%/段＋もちもの能力倍率＋特性(俊足) */
-export function makeCombatant(data: MonsterData, level: number, talent = 0, heldItem?: string): Combatant {
+export function makeCombatant(data: MonsterData, level: number, talent = 0, heldItem?: string, traitBoost = 0): Combatant {
   const [hp, atk, def, spd, mag] = data.stats
-  const m = 1 + Math.max(0, talent) * 0.04
+  const m = 1 + Math.max(0, talent) * 0.04 + Math.max(0, traitBoost) * 0.025
   const ability = abilityIdOf(data)
   const sm = heldItemOf(heldItem)?.statMult ?? {}
   const atkM = m * (sm.atk ?? 1)
