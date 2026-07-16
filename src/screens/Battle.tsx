@@ -29,6 +29,7 @@ import { getMoveset, moveById } from '../game/moves'
 import '../battle-fx.css'
 import { ABILITIES, heldItemOf } from '../game/abilities'
 import * as audio from '../game/audio'
+import { track } from '../game/analytics'
 import { BattlePortrait, GetMonsterOverlay, HpBar, Sprite, StatusBadge, TypeBadge } from '../ui'
 
 // 倍速トグル(第2次品質スプリント): 全演出sleepにこの係数を掛ける。localStorageで永続。
@@ -101,10 +102,11 @@ interface Props {
   config: BattleConfig
   state: GameState
   setState: (updater: (s: GameState) => GameState) => void
+  auto?: boolean
   onExit: (won?: boolean) => void // won=この戦闘に勝利したか(塔の階層進行に使用)
 }
 
-export default function Battle({ active, config, state, setState, onExit }: Props) {
+export default function Battle({ active, config, state, setState, onExit, auto = false }: Props) {
   const isTrainer = config.kind === 'trainer'
   const isTower = config.kind === 'wild' && !!config.tower
   // 乱数ストリーム(SPEC_RNG_REPLAY.md §3): 塔=シード付き(敵生成=floor/バトル内=battle)、他=非シード。
@@ -154,6 +156,9 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
   const [acting, setActing] = useState(false)
   const [caught, setCaught] = useState<{ id: string; name: string; type: string; talent?: number; mutant?: boolean } | null>(null)
   const [speed, setSpeed] = useState(getBattleSpeed())
+  const [autoMode, setAutoMode] = useState(!!auto)
+  const [capturePrompt, setCapturePrompt] = useState(false)
+  const [retreatPrompt, setRetreatPrompt] = useState(false)
   // 捕獲演出(第2次品質スプリント): 敵が吸い込まれ→フラスコが揺れ→確定 or 脱出
   const [capture, setCapture] = useState<null | 'suck' | 'shake' | 'caught' | 'break'>(null)
 
@@ -170,6 +175,8 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
   const [popup, setPopup] = useState<Popup | null>(null)
   const [burst, setBurst] = useState<{ type: string; side: Side; strong: boolean; key: number } | null>(null)
   const busy = useRef(false)
+  const capturePrompted = useRef(false)
+  const retreatPrompted = useRef(false)
   const burstKey = useRef(0)
   const popupKey = useRef(0)
   const logEndRef = useRef<HTMLDivElement>(null)
@@ -319,6 +326,33 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
   }
 
   // プレイヤーの個体が倒れた時: 生存仲間がいれば交代を促し、いなければ敗北
+
+  function choosePlayerMove(p: Combatant, e: Combatant): Move {
+    if (p.charging) {
+      const charged = playerMoves.find((m) => m.id === p.charging)
+      if (charged) return charged
+    }
+    const usable = playerMoves.filter((mv) => ppOf(mv) > 0 && !(mv.guard && p.lastMoveId === mv.id))
+    if (!usable.length) return struggle
+    const enemyTypes = [e.data.type, e.data.type2].filter(Boolean) as string[]
+    const hpRate = p.hp / p.maxHp
+    const healing = usable.find((mv) => mv.category === 'status' && mv.heal && hpRate <= 0.35)
+    if (healing) return healing
+    const damageMoves = usable.filter((mv) => mv.category !== 'status' && mv.power > 0)
+    if (!damageMoves.length) return usable[0]
+    let best = damageMoves[0]
+    let bestScore = -1
+    for (const mv of damageMoves) {
+      const stab = mv.type === p.data.type || mv.type === p.data.type2 ? 1.2 : 1
+      const score = mv.power * mv.acc * effectiveness(mv.type, enemyTypes) * stab
+      if (score > bestScore) {
+        bestScore = score
+        best = mv
+      }
+    }
+    return best
+  }
+
   function handlePlayerDown(msg: string) {
     audio.sfx('faint')
     pushLog(msg)
@@ -675,6 +709,9 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
   }
 
   async function throwFlask() {
+    setCapturePrompt(false)
+    capturePrompted.current = true
+    track('capture_panel', { action: 'throw', rate: Math.round(catchChance(enemy) * 100) })
     if (busy.current || phase !== 'fighting' || config.kind !== 'wild') return
     if (state.flasks <= 0) {
       pushLog('封獣フラスコを 持っていない！')
@@ -697,6 +734,7 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
     }
 
     if (success) {
+      track('capture_result', { success: true, talent: enemy.talent ?? 0, mutant: !!enemy.mutant })
       setCapture('caught')
       audio.sfx('catch')
       await sleep(600)
@@ -719,6 +757,7 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
       setCaught({ id: enemy.data.id, name: enemy.data.name, type: enemy.data.type, talent: enemy.talent ?? 0, mutant: enemy.mutant })
       setPhase('caught')
     } else {
+      track('capture_result', { success: false, talent: enemy.talent ?? 0, mutant: !!enemy.mutant })
       setCapture('break')
       audio.sfx('cancel')
       pushLog('ああっ！ 幻獣が フラスコから 出てしまった！')
@@ -731,6 +770,9 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
   }
 
   function flee() {
+    setRetreatPrompt(false)
+    retreatPrompted.current = true
+    track('capture_panel', { action: 'retreat' })
     if (busy.current || phase !== 'fighting' || config.kind !== 'wild') return
     pushLog('うまく にげきった！')
     setPhase('fled')
@@ -783,6 +825,33 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
     })
     onExit(phase === 'won' || phase === 'caught') // 捕獲もヌシ解放等の「勝利扱い」に含める(パッケージD)
   }
+
+  const canAutoPrompt = autoMode && config.kind === 'wild' && !config.tower && phase === 'fighting' && !acting && !busy.current && !mustSwitch
+  useEffect(() => {
+    if (!canAutoPrompt || capturePrompt || retreatPrompt) return
+    const rareTarget = !!enemy.mutant || (enemy.talent ?? 0) >= 6 || !state.caught.includes(enemy.data.id)
+    const threshold = rareTarget ? 0.5 : 0.35
+    if (!capturePrompted.current && enemy.hp > 0 && enemy.hp / enemy.maxHp <= threshold) {
+      capturePrompted.current = true
+      setCapturePrompt(true)
+      track('capture_panel', { action: 'show', rate: Math.round(catchChance(enemy) * 100), talent: enemy.talent ?? 0, mutant: !!enemy.mutant })
+      return
+    }
+    if (!retreatPrompted.current && player.hp > 0 && player.hp / player.maxHp <= 0.3) {
+      retreatPrompted.current = true
+      setRetreatPrompt(true)
+      track('capture_panel', { action: 'low_hp' })
+    }
+  }, [canAutoPrompt, capturePrompt, retreatPrompt, enemy, player, state.caught])
+
+  useEffect(() => {
+    if (!autoMode || phase !== 'fighting' || busy.current || acting || mustSwitch || capturePrompt || retreatPrompt || player.charging) return
+    const t = setTimeout(() => {
+      void takeTurn(choosePlayerMove(player, enemy))
+    }, Math.max(80, 420 / battleSpeed))
+    return () => clearTimeout(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoMode, phase, acting, mustSwitch, capturePrompt, retreatPrompt, player, enemy, pp])
 
   const remaining = isTrainer ? teamRef.current.length - enemyIndex : 0
   const biome = config.biome
@@ -854,7 +923,7 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
       <div className={spriteCapCls}>
         <Sprite id={c.data.id} type={c.data.type} size={who === 'e' ? 146 : 166} bare flip={who === 'e'} mutant={c.mutant} />
       </div>
-      {cap && <span className={`capture-flask cap-${cap}`} aria-hidden>🔮</span>}
+      {cap && <span className={`capture-flask cap-${cap}`} data-rarity={enemy.mutant ? 'rainbow' : (enemy.talent ?? 0) >= 6 ? 'gold' : undefined} aria-hidden>🔮</span>}
       {cap === 'caught' && <span className="capture-stars" aria-hidden>✦✦✦</span>}
       <div className="ground-shadow" />
     </div>
@@ -868,11 +937,22 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
         <button
           className={`speed-toggle ${speed > 1 ? 'on' : ''}`}
           style={{ position: 'absolute', top: 8, right: 8, zIndex: 20 }}
-          onClick={() => { const n = speed > 1 ? 1 : 2; setBattleSpeed(n); setSpeed(n) }}
+          onClick={() => { const n = speed === 1 ? 2 : speed === 2 ? 4 : 1; setBattleSpeed(n); setSpeed(n) }}
           title="戦闘演出の速さを切り替え"
         >
           {speed > 1 ? '⏩ 2倍速' : '▶ 等速'}
         </button>
+        <button
+          className={`speed-toggle ${autoMode ? 'on' : ''}`}
+          style={{ position: 'absolute', top: 8, right: 86, zIndex: 20 }}
+          onClick={() => setAutoMode((v) => !v)}
+          title="Toggle auto battle"
+        >
+          {autoMode ? 'Auto ON' : 'Manual'}
+        </button>
+        {config.kind === 'wild' && !state.caught.includes(enemy.data.id) && (
+          <span className="new-badge">NEW!</span>
+        )}
         {isTrainer && config.kind === 'trainer' && (
           <>
             <div className="trainer-tag">⚔ {config.trainer.name}・残り{remaining}体</div>
@@ -1006,6 +1086,45 @@ export default function Battle({ active, config, state, setState, onExit }: Prop
           )}
         </div>
       </div>
+
+      {capturePrompt && (
+        <div className="modal-backdrop" onClick={() => { setCapturePrompt(false); setAutoMode(false); track('capture_panel', { action: 'dismiss' }) }}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="card-head">
+              <span className="mon-name">Capture Chance</span>
+              <button className="modal-close" onClick={() => { setCapturePrompt(false); setAutoMode(false) }}>x</button>
+            </div>
+            <p className="ink-dim">{enemy.data.name} is weakened. Chance {Math.round(catchChance(enemy) * 100)}%</p>
+            <div className="cmd-grid" style={{ marginTop: 10 }}>
+              <button className="cmd-btn" disabled={state.flasks <= 0} onClick={() => { void throwFlask() }}>
+                Throw Flask<span className="cmd-sub">Stock {state.flasks}</span>
+              </button>
+              <button className="cmd-btn" onClick={() => { setCapturePrompt(false); track('capture_panel', { action: 'weaken' }) }}>
+                Weaken More<span className="cmd-sub">Auto continues</span>
+              </button>
+              <button className="cmd-btn" onClick={() => { setCapturePrompt(false); setAutoMode(false); track('capture_panel', { action: 'stop' }) }}>
+                Manual Finish<span className="cmd-sub">Auto stops</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {retreatPrompt && (
+        <div className="modal-backdrop" onClick={() => { setRetreatPrompt(false); setAutoMode(false) }}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="card-head">
+              <span className="mon-name">Retreat?</span>
+              <button className="modal-close" onClick={() => { setRetreatPrompt(false); setAutoMode(false) }}>?</button>
+            </div>
+            <p className="ink-dim">{player.data.name} is low on HP. Choose whether to retreat.</p>
+            <div className="cmd-grid" style={{ marginTop: 10 }}>
+              <button className="cmd-btn" onClick={flee}>Retreat</button>
+              <button className="cmd-btn" onClick={() => { setRetreatPrompt(false); track('capture_panel', { action: 'continue_low_hp' }) }}>Keep Fighting</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {caught && (
         <GetMonsterOverlay id={caught.id} name={caught.name} type={caught.type} talent={caught.talent} mutant={caught.mutant} onClose={() => setCaught(null)} />

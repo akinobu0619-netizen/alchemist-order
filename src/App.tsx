@@ -87,6 +87,7 @@ export default function App() {
   const [phase, setPhase] = useState<Phase>('title')
   const [screen, setScreen] = useState<Screen>('home')
   const [battleConfig, setBattleConfig] = useState<BattleConfig | null>(null)
+  const [battleAuto, setBattleAuto] = useState(false)
   const [battleReturnScreen, setBattleReturnScreen] = useState<Screen>('explore')
   const [muted, setMuted] = useState(audio.isMuted())
   const [dialogue, setDialogue] = useState<DialogueData | null>(null)
@@ -164,8 +165,9 @@ export default function App() {
 
   const hasSave = game.collection.length > 0
   const active = game.collection.find((o) => o.uid === game.activeUid) ?? game.collection[0]
-  const startBattle = (config: BattleConfig) => {
+  const startBattle = (config: BattleConfig, auto = false) => {
     setBattleReturnScreen(screen === 'battle' ? 'explore' : screen)
+    setBattleAuto(auto)
     audio.sfx('encounter')
     setBattleConfig(config)
     setScreen('battle')
@@ -193,6 +195,7 @@ export default function App() {
       if (won) {
         const next = { floor: tower.floor + 1, cleared: tower.cleared + 1, seed: tower.seed }
         setTower(next)
+        setBattleAuto(false)
         setBattleConfig(towerConfig(next.floor, next.seed)) // screenはbattleのまま、keyで再マウント
         return
       }
@@ -364,6 +367,7 @@ export default function App() {
     const seed = `AO1|tower|${Date.now().toString(36)}${Math.floor(Math.random() * 36 ** 4).toString(36)}`
     setTower({ floor: 1, cleared: 0, seed })
     audio.sfx('encounter')
+    setBattleAuto(false)
     setBattleConfig(towerConfig(1, seed))
     setScreen('battle')
   }
@@ -576,6 +580,7 @@ export default function App() {
         config={battleConfig}
         state={game}
         setState={setGame}
+        auto={battleAuto}
         onExit={handleBattleExit}
       />
     )
