@@ -975,12 +975,12 @@ export default function Battle({ active, config, state, setState, onExit, auto =
           className={`speed-toggle ${autoMode ? 'on' : ''}`}
           style={{ position: 'absolute', top: 8, right: 86, zIndex: 20 }}
           onClick={() => setAutoMode((v) => !v)}
-          title="Toggle auto battle"
+          title="自動戦闘の切り替え"
         >
-          {autoMode ? 'Auto' : 'Manual'}
+          {autoMode ? 'オート' : '手動'}
         </button>
         {config.kind === 'wild' && !state.caught.includes(enemy.data.id) && (
-          <span className="new-badge">NEW!</span>
+          <span className="new-badge">初発見</span>
         )}
         {isTodayTarget && <span className="new-badge" style={{ top: 82 }}>今日の幻獣</span>}
         {isTrainer && config.kind === 'trainer' && (
@@ -1121,19 +1121,19 @@ export default function Battle({ active, config, state, setState, onExit, auto =
         <div className="modal-backdrop" onClick={() => { setCapturePrompt(false); setAutoMode(false); track('capture_panel', { action: 'dismiss' }) }}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <div className="card-head">
-              <span className="mon-name">Capture Chance</span>
-              <button className="modal-close" onClick={() => { setCapturePrompt(false); setAutoMode(false) }}>?</button>
+              <span className="mon-name">捕獲チャンス</span>
+              <button className="modal-close" onClick={() => { setCapturePrompt(false); setAutoMode(false) }}>×</button>
             </div>
-            <p className="ink-dim">{enemy.data.name} is weakened. Chance {Math.round(Math.min(0.95, catchChance(enemy) + researchCatchBonus(state, enemy.data.id) + todayCaptureBonus) * 100)}%</p>
+            <p className="ink-dim">{enemy.data.name}は弱っている。成功率 {Math.round(Math.min(0.95, catchChance(enemy) + researchCatchBonus(state, enemy.data.id) + todayCaptureBonus) * 100)}%</p>
             <div className="cmd-grid" style={{ marginTop: 10 }}>
               <button className="cmd-btn" disabled={state.flasks <= 0} onClick={() => { void throwFlask() }}>
-                Throw Flask<span className="cmd-sub">Stock {state.flasks}</span>
+                フラスコを投げる<span className="cmd-sub">所持 {state.flasks}</span>
               </button>
               <button className="cmd-btn" onClick={() => { setCapturePrompt(false); track('capture_panel', { action: 'weaken' }) }}>
-                Weaken More<span className="cmd-sub">Higher chance, KO risk</span>
+                もう少し弱める<span className="cmd-sub">成功率上昇・倒しきる危険あり</span>
               </button>
               <button className="cmd-btn" onClick={() => { setCapturePrompt(false); setAutoMode(false); track('capture_panel', { action: 'stop' }) }}>
-                Finish Manually<span className="cmd-sub">Stop auto</span>
+                手動で決着する<span className="cmd-sub">オートを止める</span>
               </button>
             </div>
           </div>
@@ -1144,13 +1144,13 @@ export default function Battle({ active, config, state, setState, onExit, auto =
         <div className="modal-backdrop" onClick={() => { setRetreatPrompt(false); setAutoMode(false) }}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <div className="card-head">
-              <span className="mon-name">Danger</span>
-              <button className="modal-close" onClick={() => { setRetreatPrompt(false); setAutoMode(false) }}>?</button>
+              <span className="mon-name">危険</span>
+              <button className="modal-close" onClick={() => { setRetreatPrompt(false); setAutoMode(false) }}>×</button>
             </div>
-            <p className="ink-dim">{player.data.name} is low on HP. Retreat or keep fighting?</p>
+            <p className="ink-dim">{player.data.name}のHPが少ない。撤退する？ それとも続ける？</p>
             <div className="cmd-grid" style={{ marginTop: 10 }}>
-              <button className="cmd-btn" onClick={flee}>Retreat</button>
-              <button className="cmd-btn" onClick={() => { setRetreatPrompt(false); track('capture_panel', { action: 'continue_low_hp' }) }}>Keep Fighting</button>
+              <button className="cmd-btn" onClick={flee}>撤退する</button>
+              <button className="cmd-btn" onClick={() => { setRetreatPrompt(false); track('capture_panel', { action: 'continue_low_hp' }) }}>戦いを続ける</button>
             </div>
           </div>
         </div>

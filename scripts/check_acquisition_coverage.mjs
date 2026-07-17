@@ -5,6 +5,7 @@ const monsters = JSON.parse(fs.readFileSync('data/monsters.json', 'utf8')).dex
 const stages = JSON.parse(fs.readFileSync('data/stages.json', 'utf8')).stages
 const catchable = monsters.filter((m) => m.role !== 'legendary')
 const byId = new Map(monsters.map((m) => [m.id, m]))
+const starters = new Set(JSON.parse(fs.readFileSync('data/monsters.json', 'utf8')).meta.starters)
 
 function stableHash(input) {
   let h = 2166136261
@@ -18,6 +19,7 @@ function routeOf(id) {
   const data = byId.get(id)
   if (!data) return 'wild'
   if (data.role === 'legendary') return 'legendary'
+  if (starters.has(data.id)) return 'starter'
   if (data.stage === 1) return 'wild'
   if (data.stage === 2) return 'levelup'
   if (!data.id.startsWith('g')) return 'levelup'
@@ -68,4 +70,4 @@ if (missingWild.length || illegalWild.length || brokenEvolution.length) {
   if (brokenEvolution.length) console.error(`locked route has unreachable previous stage: ${brokenEvolution.map((m) => m.id).join(', ')}`)
   process.exit(1)
 }
-console.log(`? check_acquisition_coverage: wild ${routeCounts.wild ?? 0}, levelup ${routeCounts.levelup ?? 0}, fusion ${routeCounts.fusion ?? 0}, item ${routeCounts.item ?? 0}`)
+console.log(`? check_acquisition_coverage: starter ${routeCounts.starter ?? 0}, wild ${routeCounts.wild ?? 0}, levelup ${routeCounts.levelup ?? 0}, fusion ${routeCounts.fusion ?? 0}, item ${routeCounts.item ?? 0}`)

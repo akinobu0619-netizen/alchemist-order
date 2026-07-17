@@ -110,7 +110,7 @@ export default function Dex({ state, setState, onBack }: Props) {
                   <span className="dex-cell-name">{m.name}</span>
                   {m.id === todayTarget.id && <span className="dex-evo-hint">今日の幻獣 ??+15%</span>}
                   <span className="dex-evo-hint">{evolutionHint(m, bestLv)}</span>
-                  {isCaught && <span className="dex-research-mini">Research Lv.{researchSummary(state, m.id).level} / {researchSummary(state, m.id).progressText}</span>}
+                  {isCaught && <span className="dex-research-mini">研究Lv.{researchSummary(state, m.id).level} / {researchSummary(state, m.id).progressText}</span>}
                 </>
               ) : (
                 <>
