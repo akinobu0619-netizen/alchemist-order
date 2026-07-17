@@ -196,6 +196,7 @@ export function loadGame(): GameState | null {
     merged.achievements = p.achievements ?? []
     merged.dexClaimed = p.dexClaimed ?? []
     merged.mats = { talentStone: p.mats?.talentStone ?? 0, slotCharm: p.mats?.slotCharm ?? 0 }
+    merged.loginTotal = p.loginTotal ?? 0
     // パーティ移行(旧セーブはparty無し→先頭PARTY_MAX体)。collectionに無いidは除外
     merged.party = getParty(merged)
     // リーダー(activeUid)は必ずパーティ内に
@@ -207,7 +208,7 @@ export function loadGame(): GameState | null {
 }
 
 // ── やりこみ(日課/実績/図鑑報酬) ──
-export type Reward = { money?: number; flask?: number; heal?: number; heal2?: number; heal3?: number; exp_tome?: number; evo_dust?: number; trait_elixir?: number; catch_charm?: number; revive?: number }
+export type Reward = { money?: number; flask?: number; heal?: number; heal2?: number; heal3?: number; exp_tome?: number; evo_dust?: number; trait_elixir?: number; catch_charm?: number; revive?: number; talentStone?: number; slotCharm?: number }
 export const DAILY_GOAL = 3 // デイリー: 野生討伐数
 export const DAILY_REWARD: { money: number; flask: number } = { money: 150, flask: 2 }
 
@@ -243,26 +244,30 @@ export function grantReward(s: GameState, r: Reward): GameState {
     money: s.money + (r.money ?? 0),
     flasks: s.flasks + (r.flask ?? 0),
     items: { ...s.items, heal: s.items.heal + (r.heal ?? 0), heal2: s.items.heal2 + (r.heal2 ?? 0), heal3: s.items.heal3 + (r.heal3 ?? 0), exp_tome: s.items.exp_tome + (r.exp_tome ?? 0), evo_dust: s.items.evo_dust + (r.evo_dust ?? 0), trait_elixir: s.items.trait_elixir + (r.trait_elixir ?? 0), catch_charm: s.items.catch_charm + (r.catch_charm ?? 0), revive: s.items.revive + (r.revive ?? 0) },
+    mats: { talentStone: (s.mats?.talentStone ?? 0) + (r.talentStone ?? 0), slotCharm: (s.mats?.slotCharm ?? 0) + (r.slotCharm ?? 0) },
   }
 }
 
 /** ログイン処理。日付が変わっていればボーナス付与＋デイリーをリセット。reward!=nullなら新規ログイン */
-export function applyDailyLogin(s: GameState): { state: GameState; reward: { money: number; flask: number; streak: number } | null } {
+export function applyDailyLogin(s: GameState): { state: GameState; reward: { money: number; flask: number; streak: number; day: number; text: string } | null } {
   const t = today()
   if (s.lastLogin === t) {
-    const daily = s.daily && s.daily.date === t ? s.daily : { date: t, wild: 0, claimed: false }
+    const daily = s.daily && s.daily.date === t ? s.daily : { date: t, wild: 0, claimed: false, todayCatch: false }
     return { state: { ...s, daily }, reward: null }
   }
   const streak = s.lastLogin === yesterdayStr() ? (s.loginStreak ?? 0) + 1 : 1
-  const money = 100 + Math.min(streak, 7) * 20
-  const flask = 1
+  const loginTotal = (s.loginTotal ?? 0) + 1
+  const day = ((loginTotal - 1) % 7) + 1
+  const parcel: Reward = day === 1 ? { heal: 2 } : day === 2 ? { flask: 3 } : day === 3 ? { money: 300 } : day === 4 ? { heal2: 2 } : day === 5 ? { flask: 5 } : day === 6 ? { revive: 1 } : { talentStone: 1 }
+  const text = day === 1 ? '傷薬×2' : day === 2 ? '封獣フラスコ×3' : day === 3 ? '300ゲル' : day === 4 ? '上傷薬×2' : day === 5 ? '封獣フラスコ×5' : day === 6 ? '全癒の秘薬×1' : '才能の結晶×1'
   const ns: GameState = {
-    ...grantReward(s, { money, flask }),
+    ...grantReward(s, parcel),
     lastLogin: t,
     loginStreak: streak,
-    daily: { date: t, wild: 0, claimed: false },
+    loginTotal,
+    daily: { date: t, wild: 0, claimed: false, todayCatch: false },
   }
-  return { state: ns, reward: { money, flask, streak } }
+  return { state: ns, reward: { money: parcel.money ?? 0, flask: parcel.flask ?? 0, streak, day, text } }
 }
 
 export interface Achievement {

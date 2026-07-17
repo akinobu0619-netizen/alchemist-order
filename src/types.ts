@@ -117,7 +117,8 @@ export interface GameState {
   flags: string[] // 一度きりイベントの完了フラグ
   // やりこみ(日課・実績・図鑑報酬)
   lastLogin?: string // 最終ログイン日 YYYY-MM-DD
-  loginStreak?: number // 連続ログイン日数
+  loginStreak?: number
+  loginTotal?: number // cumulative login days for 7-day parcel rewards // 連続ログイン日数
   daily?: { date: string; wild: number; claimed: boolean; todayCatch?: boolean } // 当日のデイリー進捗
   achievements?: string[] // 解除済み実績id
   dexClaimed?: number[] // 受取済みの図鑑マイルストーン

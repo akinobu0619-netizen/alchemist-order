@@ -145,8 +145,8 @@ export default function App() {
     if (reward) {
       audio.sfx('coin')
       setDialogue({
-        speaker: 'ログインボーナス',
-        lines: [`${reward.streak}日 連続ログイン！`, `💰 ${reward.money}ゲル と 🔮 封獣フラスコ×${reward.flask} を 受け取った！`],
+        speaker: '小包ログボ',
+        lines: [`${reward.streak}日目のログイン。師匠から ${reward.day}/7 日目の小包が届いた。`, `${reward.text} を受け取った！`],
       })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
