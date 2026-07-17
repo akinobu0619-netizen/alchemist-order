@@ -13,8 +13,11 @@ import { makeRng, systemRng, type Rng } from '../engine/rng'
 import {
   DEX,
   PARTY_MAX,
+  applyCaptureChain,
   catchChance,
   captureResearchHighlights,
+  chainMutantRate,
+  chainTalentFloor,
   recordCapture,
   researchCatchBonus,
   researchLevel,
@@ -23,7 +26,6 @@ import {
   grantExp,
   rarityOf,
   rollTalent,
-  rollMutant,
   species,
   today,
   withCaught,
@@ -91,8 +93,9 @@ function makeWild(playerLevel: number, config: Extract<BattleConfig, { kind: 'wi
     config.min != null && config.max != null
       ? rng.int(config.min, config.max)
       : clamp(playerLevel + rng.int(-2, 1), 2, 100)
-  const c = makeCombatant(species(id), level, rollTalent(rng)) // 個体差をロール(良個体は約5%)
-  c.mutant = rollMutant(rng) // 変異種(1/100の色違い)
+  const talent = Math.max(chainTalentFloor(config.chain, id), rollTalent(rng))
+  const c = makeCombatant(species(id), level, talent)
+  c.mutant = rng.chance(chainMutantRate(config.chain, id))
   return c
 }
 
@@ -158,7 +161,7 @@ export default function Battle({ active, config, state, setState, onExit, auto =
   const [curUid, setCurUid] = useState(active.uid)
   const [mustSwitch, setMustSwitch] = useState(false)
   const [acting, setActing] = useState(false)
-  const [caught, setCaught] = useState<{ id: string; name: string; type: string; talent?: number; mutant?: boolean; researchLevel?: number; researchNote?: string; researchHighlights?: string[] } | null>(null)
+  const [caught, setCaught] = useState<{ id: string; name: string; type: string; talent?: number; mutant?: boolean; researchLevel?: number; researchNote?: string; researchHighlights?: string[]; chainCount?: number } | null>(null)
   const [speed, setSpeed] = useState(getBattleSpeed())
   const [autoMode, setAutoMode] = useState(!!auto)
   const [capturePrompt, setCapturePrompt] = useState(false)
@@ -180,6 +183,7 @@ export default function Battle({ active, config, state, setState, onExit, auto =
   const [burst, setBurst] = useState<{ type: string; side: Side; strong: boolean; key: number } | null>(null)
   const busy = useRef(false)
   const capturePrompted = useRef(false)
+  const enemyChainCount = config.kind === 'wild' && config.chain?.speciesId === enemy.data.id ? config.chain.count : 0
   const retreatPrompted = useRef(false)
   const burstKey = useRef(0)
   const popupKey = useRef(0)
@@ -759,14 +763,16 @@ export default function Battle({ active, config, state, setState, onExit, auto =
         mutant: !!prevResearch?.mutant || !!enemy.mutant,
       }
       const researchHighlights = captureResearchHighlights(prevResearch, nextResearch, caught)
+      const nextChainCount = state.chain?.speciesId === caught.speciesId ? state.chain.count + 1 : 1
+      track('chain_update', { species: caught.speciesId, count: nextChainCount })
       setState((s) => {
         const pty = getParty(s)
         const np = pty.length < PARTY_MAX ? [...pty, caught.uid] : pty // add to party if there is room; otherwise storage
-        return recordCapture({ ...s, collection: [...s.collection, caught], party: np }, caught)
+        return applyCaptureChain(recordCapture({ ...s, collection: [...s.collection, caught], party: np }, caught), caught.speciesId)
       })
       const toParty = getParty(state).length < PARTY_MAX
       pushLog(`やった！ 野生の ${enemy.mutant ? '変異種の ' : ''}${enemy.data.name}を 捕まえた！`, toParty ? '図鑑に 登録された。' : '図鑑に 登録された。（パーティが満員のため 預かり所へ）', ...researchHighlights.map((h) => `研究: ${h}`))
-      setCaught({ id: enemy.data.id, name: enemy.data.name, type: enemy.data.type, talent: enemy.talent ?? 0, mutant: enemy.mutant, researchLevel: researchLevel(nextResearch), researchNote: `捕獲#${nextResearch.caught}`, researchHighlights })
+      setCaught({ id: enemy.data.id, name: enemy.data.name, type: enemy.data.type, talent: enemy.talent ?? 0, mutant: enemy.mutant, researchLevel: researchLevel(nextResearch), researchNote: `捕獲#${nextResearch.caught}`, researchHighlights, chainCount: nextChainCount })
       setPhase('caught')
     } else {
       track('capture_result', { success: false, talent: enemy.talent ?? 0, mutant: !!enemy.mutant })
@@ -882,6 +888,7 @@ export default function Battle({ active, config, state, setState, onExit, auto =
       <div className="ip-head">
         <span className="ip-name">{c.data.name}</span>
         {c.mutant && <span style={{ fontSize: 12 }} title="変異種">✨</span>}
+        {who === 'e' && enemyChainCount > 0 && <span className="research-chip">チェーン{enemyChainCount}</span>}
         {(() => {
           const rar = rarityOf(c.talent)
           return rar ? <span style={{ color: rar.color, fontSize: 12, fontWeight: 700, letterSpacing: -1 }} title={rar.name}>{rar.stars}</span> : null
@@ -1139,7 +1146,7 @@ export default function Battle({ active, config, state, setState, onExit, auto =
       )}
 
       {caught && (
-        <GetMonsterOverlay id={caught.id} name={caught.name} type={caught.type} talent={caught.talent} mutant={caught.mutant} researchLevel={caught.researchLevel} researchNote={caught.researchNote} researchHighlights={caught.researchHighlights} onClose={() => setCaught(null)} />
+        <GetMonsterOverlay id={caught.id} name={caught.name} type={caught.type} talent={caught.talent} mutant={caught.mutant} researchLevel={caught.researchLevel} researchNote={caught.researchNote} researchHighlights={caught.researchHighlights} chainCount={caught.chainCount} onClose={() => setCaught(null)} />
       )}
     </div>
   )

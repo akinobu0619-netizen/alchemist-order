@@ -88,6 +88,23 @@ export const MUTANT_RATE = 0.01
 export function rollMutant(rng: Rng = sys): boolean {
   return rng.chance(MUTANT_RATE)
 }
+
+export function applyCaptureChain(s: GameState, speciesId: string): GameState {
+  const nextCount = s.chain?.speciesId === speciesId ? s.chain.count + 1 : 1
+  return { ...s, chain: { speciesId, count: nextCount } }
+}
+
+export function chainTalentFloor(chain: GameState['chain'] | undefined, speciesId: string): number {
+  if (!chain || chain.speciesId !== speciesId) return 0
+  if (chain.count >= 5) return 4
+  if (chain.count >= 3) return 2
+  return 0
+}
+
+export function chainMutantRate(chain: GameState['chain'] | undefined, speciesId: string): number {
+  return chain?.speciesId === speciesId && chain.count >= 7 ? 0.02 : MUTANT_RATE
+}
+
 /** talent からレア度表示(なし=ノーマル)。 */
 export function rarityOf(talent = 0): { stars: string; name: string; color: string } | null {
   if (talent >= 8) return { stars: '★★★', name: '超レア', color: '#e2c23b' }
@@ -150,6 +167,7 @@ export function newGame(): GameState {
     seen: [],
     caught: [],
     research: {},
+    chain: undefined,
     activeUid: null,
     flasks: 0,
     wins: 0,
@@ -174,6 +192,7 @@ export function loadGame(): GameState | null {
     merged.items = { heal: p.items?.heal ?? 0, heal2: p.items?.heal2 ?? 0, heal3: p.items?.heal3 ?? 0, exp_tome: p.items?.exp_tome ?? 0, evo_dust: p.items?.evo_dust ?? 0, trait_elixir: p.items?.trait_elixir ?? 0, catch_charm: p.items?.catch_charm ?? 0, revive: p.items?.revive ?? 0 }
     merged.money = p.money ?? 0
     merged.research = buildResearchFromCollection(merged.collection, p.research)
+    merged.chain = p.chain && typeof p.chain.speciesId === 'string' && typeof p.chain.count === 'number' ? p.chain : undefined
     merged.achievements = p.achievements ?? []
     merged.dexClaimed = p.dexClaimed ?? []
     merged.mats = { talentStone: p.mats?.talentStone ?? 0, slotCharm: p.mats?.slotCharm ?? 0 }

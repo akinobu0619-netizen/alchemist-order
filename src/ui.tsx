@@ -444,6 +444,7 @@ export function GetMonsterOverlay({
   researchLevel,
   researchNote,
   researchHighlights = [],
+  chainCount,
   onClose,
 }: {
   id: string
@@ -455,6 +456,7 @@ export function GetMonsterOverlay({
   researchLevel?: number
   researchNote?: string
   researchHighlights?: string[]
+  chainCount?: number
   onClose: () => void
 }) {
   return (
@@ -475,6 +477,9 @@ export function GetMonsterOverlay({
           <div className="research-chip">
             研究Lv.{researchLevel ?? 1}{researchNote ? ` / ${researchNote}` : ''}
           </div>
+        )}
+        {chainCount != null && chainCount >= 2 && (
+          <div className="research-chip">チェーン {chainCount}連鎖！</div>
         )}
         {researchHighlights.length > 0 && (
           <div className="research-highlights">

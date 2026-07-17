@@ -69,7 +69,7 @@ export default function Explore({ state, setState, onHome, onVisitMap, onStartBa
     const event = pending
     setPending(null)
     setEventsDone((n) => n + 1)
-    if (event.kind === 'battle') onStartBattle(event.config, false)
+    if (event.kind === 'battle') onStartBattle({ ...event.config, chain: state.chain }, false)
     else if (event.kind === 'trainer') onTrainer(event.trainer, event.biome)
     else if (event.kind === 'chest') onChest(event.chest)
     else if (event.kind === 'nushi') onNushi(event.nushi, event.biome)
@@ -99,7 +99,7 @@ export default function Explore({ state, setState, onHome, onVisitMap, onStartBa
       }
       for (const event of picks) {
         if (event.kind === 'battle') {
-          const resolved = resolveQuickBattle(next, event.config)
+          const resolved = resolveQuickBattle(next, { ...event.config, chain: next.chain })
           next = resolved.state
           lines.push(`[${resolved.result.title}] ${event.title}`)
           lines.push(...resolved.result.lines.slice(0, 5))
@@ -207,7 +207,7 @@ export default function Explore({ state, setState, onHome, onVisitMap, onStartBa
               </div>
               <div className="explore-event-actions">
                 {pending.kind === 'battle' && (
-                  <button className="home-primary-cta" onClick={() => { const ev = pending; setPending(null); setEventsDone((n) => n + 1); onStartBattle(ev.config, true) }}>
+                  <button className="home-primary-cta" onClick={() => { const ev = pending; setPending(null); setEventsDone((n) => n + 1); onStartBattle({ ...ev.config, chain: state.chain }, true) }}>
                     オートで戦う
                     <span>観るだけで決着・捕獲チャンスあり</span>
                   </button>

@@ -2,7 +2,10 @@ import type { BattleConfig, GameState, OwnedMonster } from '../types'
 import { makeCombatant } from '../engine/battleEngine'
 import { systemRng } from '../engine/rng'
 import {
+  applyCaptureChain,
   captureResearchHighlights,
+  chainTalentFloor,
+  chainMutantRate,
   expReward,
   getParty,
   grantExp,
@@ -31,9 +34,11 @@ function activeOf(s: GameState): OwnedMonster | null {
 function pickWild(config: Extract<BattleConfig, { kind: 'wild' }>, level: number) {
   const rng = systemRng()
   const forced = config.forcedSpeciesId
-  if (forced) return { id: forced, level: config.forcedLevel ?? level, talent: config.forcedTalent ?? 0 }
+  if (forced) return { id: forced, level: config.forcedLevel ?? level, talent: config.forcedTalent ?? 0, mutant: false }
   const pool = config.pool?.length ? config.pool : ['ignif', 'aquab', 'cogrif']
-  return { id: rng.pick(pool), level: rng.int(config.min ?? Math.max(2, level - 2), config.max ?? level + 1), talent: rng.int(0, 4) }
+  const id = rng.pick(pool)
+  const talent = Math.max(chainTalentFloor(config.chain, id), rng.int(0, 4))
+  return { id, level: rng.int(config.min ?? Math.max(2, level - 2), config.max ?? level + 1), talent, mutant: rng.chance(chainMutantRate(config.chain, id)) }
 }
 
 function score(o: OwnedMonster, enemyLevel: number): number {
@@ -112,7 +117,7 @@ export function resolveQuickBattle(state: GameState, config: BattleConfig): { st
     // 成功時のみ消費だとクイック決着の失敗が無料になり、手動戦闘より一方的に有利になってしまう。
     next = { ...next, flasks: next.flasks - 1 }
     if (rng.chance(0.34 + catchBonus)) {
-      const owned = { ...makeOwned(wild.id, wild.level), talent: wild.talent }
+      const owned = { ...makeOwned(wild.id, wild.level), talent: wild.talent, mutant: wild.mutant }
       const prevResearch = next.research?.[wild.id]
       const nextResearch = {
         caught: (prevResearch?.caught ?? 0) + 1,
@@ -120,7 +125,7 @@ export function resolveQuickBattle(state: GameState, config: BattleConfig): { st
         mutant: !!prevResearch?.mutant || !!owned.mutant,
       }
       const highlights = captureResearchHighlights(prevResearch, nextResearch, owned)
-      next = recordCapture({ ...next, items: { ...next.items, catch_charm: Math.max(0, (next.items.catch_charm ?? 0) - 1) }, collection: [...next.collection, owned] }, owned)
+      next = applyCaptureChain(recordCapture({ ...next, items: { ...next.items, catch_charm: Math.max(0, (next.items.catch_charm ?? 0) - 1) }, collection: [...next.collection, owned] }, owned), owned.speciesId)
       lines.push(`${species(wild.id).name}を捕獲した。`, ...highlights.map((h) => `研究: ${h}`))
     } else {
       lines.push(`${species(wild.id).name}は フラスコから 逃げてしまった。`)

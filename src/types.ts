@@ -97,12 +97,15 @@ export interface ResearchEntry {
   mutant: boolean
 }
 
+export interface CaptureChain { speciesId: string; count: number }
+
 export interface GameState {
   collection: OwnedMonster[] // 所持する全個体(パーティ＋預かりボックス)
   party: string[] // 戦うパーティの uid 列(先頭=リーダー、最大 PARTY_MAX)。残りは預かりボックス
   seen: string[] // 出会った種のid
   caught: string[] // 捕獲した種のid
   research?: Record<string, ResearchEntry> // species research record: catches / best talent / mutant found
+  chain?: CaptureChain // consecutive captures of the same species
   activeUid: string | null // 手持ちの先頭(バトルに出す個体)
   flasks: number // 封獣フラスコ所持数
   wins: number
@@ -150,6 +153,7 @@ export type BattleConfig =
       forcedLevel?: number
       forcedTalent?: number
       forcedStatus?: StatusKind // 開始時の状態異常(灰化ヘルフレア等のストーリー演出)
+      chain?: CaptureChain // active capture chain passed into generated wild encounters
       nushiId?: string // 勝利/捕獲で解放するヌシのid(flag=`nushi_<id>`)
     }
   | { kind: 'trainer'; trainer: TrainerData; biome?: string }

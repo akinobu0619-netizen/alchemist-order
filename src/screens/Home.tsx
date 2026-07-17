@@ -184,6 +184,7 @@ export default function Home({ state, setState, setActive, onField, onDex, onSho
   const nextDexMilestone = DEX_MILESTONES.find((m) => !(state.dexClaimed ?? []).includes(m.n) && state.caught.length < m.n)
   const nextDexText = nextDexMilestone ? `${state.caught.length}/${nextDexMilestone.n}` : `${state.caught.length}/${DEX_TOTAL}`
   const achievementReady = ACHIEVEMENTS.filter((a) => a.check(state) && !(state.achievements ?? []).includes(a.id)).length
+  const chainSpecies = state.chain ? species(state.chain.speciesId) : null
   const partnerMood = sel.mutant
     ? '今日は不思議な光をまとっている。'
     : (sel.talent ?? 0) >= 6
@@ -305,6 +306,12 @@ export default function Home({ state, setState, setActive, onField, onDex, onSho
             <span>実績</span>
             <b>{achievementReady ? `${achievementReady}件受取` : `${state.achievements?.length ?? 0}/${ACHIEVEMENTS.length}`}</b>
           </button>
+          {chainSpecies && state.chain && (
+            <button className="home-todo hot" onClick={onField}>
+              <span>捕獲チェーン</span>
+              <b>{chainSpecies.name} ×{state.chain.count}</b>
+            </button>
+          )}
         </div>
         {/* 拠点アクション(旧フィールドの施設。歩行廃止に伴いここが正式導線) */}
         <div className="home-todo-grid home-base-grid">
