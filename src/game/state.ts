@@ -217,6 +217,20 @@ function dateStr(d: Date): string {
 export function today(): string {
   return dateStr(new Date())
 }
+
+function stableHash(input: string): number {
+  let h = 2166136261
+  for (let i = 0; i < input.length; i++) {
+    h ^= input.charCodeAt(i)
+    h = Math.imul(h, 16777619)
+  }
+  return h >>> 0
+}
+
+export function speciesOfTheDay(dateStrValue: string = today()): MonsterData {
+  const pool = DEX.filter((m) => m.role !== 'legendary' && m.stage <= 2)
+  return pool[stableHash(`sotd:${dateStrValue}`) % pool.length]
+}
 function yesterdayStr(): string {
   const d = new Date()
   d.setDate(d.getDate() - 1)

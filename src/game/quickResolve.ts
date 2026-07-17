@@ -9,11 +9,13 @@ import {
   expReward,
   getParty,
   grantExp,
+  grantReward,
   hasFlag,
   makeOwned,
   recordCapture,
   researchCatchBonus,
   species,
+  speciesOfTheDay,
   today,
   withCaught,
   withFlag,
@@ -111,7 +113,8 @@ export function resolveQuickBattle(state: GameState, config: BattleConfig): { st
   if (config.nushiId) next = hasFlag(next, `nushi_${config.nushiId}`) ? next : withFlag(next, `nushi_${config.nushiId}`)
 
   const canCatch = next.flasks > 0 && !next.caught.includes(wild.id) && species(wild.id).role !== 'legendary'
-  const catchBonus = Math.min(0.3, (next.items.catch_charm ?? 0) * 0.08) + researchCatchBonus(next, wild.id)
+  const isTodayTarget = wild.id === speciesOfTheDay(today()).id
+  const catchBonus = Math.min(0.3, (next.items.catch_charm ?? 0) * 0.08) + researchCatchBonus(next, wild.id) + (isTodayTarget ? 0.15 : 0)
   if (canCatch) {
     // フラスコは投げた(試みた)時点で消費する。手動戦闘(throwFlask)と経済を揃える —
     // 成功時のみ消費だとクイック決着の失敗が無料になり、手動戦闘より一方的に有利になってしまう。
@@ -126,6 +129,10 @@ export function resolveQuickBattle(state: GameState, config: BattleConfig): { st
       }
       const highlights = captureResearchHighlights(prevResearch, nextResearch, owned)
       next = applyCaptureChain(recordCapture({ ...next, items: { ...next.items, catch_charm: Math.max(0, (next.items.catch_charm ?? 0) - 1) }, collection: [...next.collection, owned] }, owned), owned.speciesId)
+      if (isTodayTarget && !(next.daily?.date === today() && next.daily.todayCatch)) {
+        next = grantReward({ ...next, daily: { ...(next.daily ?? { date: today(), wild: 0, claimed: false }), date: today(), todayCatch: true } }, { money: 300, heal2: 1 })
+        lines.push('今日の幻獣ボーナス: 300ゲルと上傷薬1個。')
+      }
       lines.push(`${species(wild.id).name}を捕獲した。`, ...highlights.map((h) => `研究: ${h}`))
     } else {
       lines.push(`${species(wild.id).name}は フラスコから 逃げてしまった。`)

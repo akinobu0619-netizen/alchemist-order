@@ -24,9 +24,11 @@ import {
   expReward,
   getParty,
   grantExp,
+  grantReward,
   rarityOf,
   rollTalent,
   species,
+  speciesOfTheDay,
   today,
   withCaught,
   withSeen,
@@ -184,6 +186,9 @@ export default function Battle({ active, config, state, setState, onExit, auto =
   const busy = useRef(false)
   const capturePrompted = useRef(false)
   const enemyChainCount = config.kind === 'wild' && config.chain?.speciesId === enemy.data.id ? config.chain.count : 0
+  const todaySpecies = speciesOfTheDay(today())
+  const isTodayTarget = config.kind === 'wild' && enemy.data.id === todaySpecies.id
+  const todayCaptureBonus = isTodayTarget ? 0.15 : 0
   const retreatPrompted = useRef(false)
   const burstKey = useRef(0)
   const popupKey = useRef(0)
@@ -719,7 +724,7 @@ export default function Battle({ active, config, state, setState, onExit, auto =
   async function throwFlask() {
     setCapturePrompt(false)
     capturePrompted.current = true
-    track('capture_panel', { action: 'throw', rate: Math.round(Math.min(0.95, catchChance(enemy) + researchCatchBonus(state, enemy.data.id)) * 100) })
+    track('capture_panel', { action: 'throw', rate: Math.round(Math.min(0.95, catchChance(enemy) + researchCatchBonus(state, enemy.data.id) + todayCaptureBonus) * 100) })
     if (busy.current || phase !== 'fighting' || config.kind !== 'wild') return
     if (state.flasks <= 0) {
       pushLog('封獣フラスコを 持っていない！')
@@ -730,7 +735,7 @@ export default function Battle({ active, config, state, setState, onExit, auto =
     setState((s) => ({ ...s, flasks: s.flasks - 1 }))
     pushLog('封獣フラスコを なげた！')
     // 演出: 敵が吸い込まれる→フラスコが揺れる(揺れごとにポン、と音)
-    const catchRate = Math.min(0.95, catchChance(enemy) + researchCatchBonus(state, enemy.data.id))
+    const catchRate = Math.min(0.95, catchChance(enemy) + researchCatchBonus(state, enemy.data.id) + todayCaptureBonus)
     const success = brng.chance(catchRate)
     setCapture('suck')
     await sleep(520)
@@ -768,7 +773,12 @@ export default function Battle({ active, config, state, setState, onExit, auto =
       setState((s) => {
         const pty = getParty(s)
         const np = pty.length < PARTY_MAX ? [...pty, caught.uid] : pty // add to party if there is room; otherwise storage
-        return applyCaptureChain(recordCapture({ ...s, collection: [...s.collection, caught], party: np }, caught), caught.speciesId)
+        let next = applyCaptureChain(recordCapture({ ...s, collection: [...s.collection, caught], party: np }, caught), caught.speciesId)
+        if (isTodayTarget && !(s.daily?.date === today() && s.daily.todayCatch)) {
+          next = grantReward({ ...next, daily: { ...(next.daily ?? { date: today(), wild: 0, claimed: false }), date: today(), todayCatch: true } }, { money: 300, heal2: 1 })
+          track('sotd_catch', { species: caught.speciesId })
+        }
+        return next
       })
       const toParty = getParty(state).length < PARTY_MAX
       pushLog(`やった！ 野生の ${enemy.mutant ? '変異種の ' : ''}${enemy.data.name}を 捕まえた！`, toParty ? '図鑑に 登録された。' : '図鑑に 登録された。（パーティが満員のため 預かり所へ）', ...researchHighlights.map((h) => `研究: ${h}`))
@@ -852,7 +862,7 @@ export default function Battle({ active, config, state, setState, onExit, auto =
     if (!capturePrompted.current && enemy.hp > 0 && enemy.hp / enemy.maxHp <= threshold) {
       capturePrompted.current = true
       setCapturePrompt(true)
-      track('capture_panel', { action: 'show', rate: Math.round(Math.min(0.95, catchChance(enemy) + researchCatchBonus(state, enemy.data.id)) * 100), talent: enemy.talent ?? 0, mutant: !!enemy.mutant })
+      track('capture_panel', { action: 'show', rate: Math.round(Math.min(0.95, catchChance(enemy) + researchCatchBonus(state, enemy.data.id) + todayCaptureBonus) * 100), talent: enemy.talent ?? 0, mutant: !!enemy.mutant })
       return
     }
     if (!retreatPrompted.current && player.hp > 0 && player.hp / player.maxHp <= 0.3) {
@@ -972,6 +982,7 @@ export default function Battle({ active, config, state, setState, onExit, auto =
         {config.kind === 'wild' && !state.caught.includes(enemy.data.id) && (
           <span className="new-badge">NEW!</span>
         )}
+        {isTodayTarget && <span className="new-badge" style={{ top: 82 }}>今日の幻獣</span>}
         {isTrainer && config.kind === 'trainer' && (
           <>
             <div className="trainer-tag">⚔ {config.trainer.name}・残り{remaining}体</div>
@@ -1113,7 +1124,7 @@ export default function Battle({ active, config, state, setState, onExit, auto =
               <span className="mon-name">Capture Chance</span>
               <button className="modal-close" onClick={() => { setCapturePrompt(false); setAutoMode(false) }}>?</button>
             </div>
-            <p className="ink-dim">{enemy.data.name} is weakened. Chance {Math.round(Math.min(0.95, catchChance(enemy) + researchCatchBonus(state, enemy.data.id)) * 100)}%</p>
+            <p className="ink-dim">{enemy.data.name} is weakened. Chance {Math.round(Math.min(0.95, catchChance(enemy) + researchCatchBonus(state, enemy.data.id) + todayCaptureBonus) * 100)}%</p>
             <div className="cmd-grid" style={{ marginTop: 10 }}>
               <button className="cmd-btn" disabled={state.flasks <= 0} onClick={() => { void throwFlask() }}>
                 Throw Flask<span className="cmd-sub">Stock {state.flasks}</span>

@@ -19,6 +19,8 @@ import {
   sellMon,
   sellPrice,
   species,
+  speciesOfTheDay,
+  today,
   withdrawToParty,
   withCaught,
   withSeen,
@@ -185,6 +187,7 @@ export default function Home({ state, setState, setActive, onField, onDex, onSho
   const nextDexText = nextDexMilestone ? `${state.caught.length}/${nextDexMilestone.n}` : `${state.caught.length}/${DEX_TOTAL}`
   const achievementReady = ACHIEVEMENTS.filter((a) => a.check(state) && !(state.achievements ?? []).includes(a.id)).length
   const chainSpecies = state.chain ? species(state.chain.speciesId) : null
+  const todayTarget = speciesOfTheDay(today())
   const partnerMood = sel.mutant
     ? '今日は不思議な光をまとっている。'
     : (sel.talent ?? 0) >= 6
@@ -306,10 +309,14 @@ export default function Home({ state, setState, setActive, onField, onDex, onSho
             <span>実績</span>
             <b>{achievementReady ? `${achievementReady}件受取` : `${state.achievements?.length ?? 0}/${ACHIEVEMENTS.length}`}</b>
           </button>
+          <button className="home-todo hot" onClick={onField}>
+            <span>今日の幻獣</span>
+            <b>{todayTarget.name} 捕獲+15%</b>
+          </button>
           {chainSpecies && state.chain && (
             <button className="home-todo hot" onClick={onField}>
               <span>捕獲チェーン</span>
-              <b>{chainSpecies.name} ×{state.chain.count}</b>
+              <b>{chainSpecies.name} ?{state.chain.count}</b>
             </button>
           )}
         </div>
