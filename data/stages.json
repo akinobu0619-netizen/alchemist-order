@@ -968,6 +968,10 @@
         {
           "key": "slotCharm",
           "rate": 0.02
+        },
+        {
+          "key": "evo_incense",
+          "rate": 0.03
         }
       ],
       "bg": "bg/battle/town.jpg",
@@ -1011,6 +1015,10 @@
         {
           "key": "slotCharm",
           "rate": 0.02
+        },
+        {
+          "key": "evo_incense",
+          "rate": 0.03
         }
       ],
       "bg": "bg/battle/sea.jpg",
@@ -1068,6 +1076,10 @@
         {
           "key": "slotCharm",
           "rate": 0.02
+        },
+        {
+          "key": "evo_incense",
+          "rate": 0.03
         }
       ],
       "bg": "bg/battle/forest.jpg",

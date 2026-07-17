@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { BattleConfig, GameState, TrainerData } from '../types'
 import type { Chest, Npc, NushiSpot, RuneSwitch } from '../game/maps'
-import { hasFlag, species, withFlag } from '../game/state'
+import { grantReward, hasFlag, species, withFlag } from '../game/state'
 import { systemRng } from '../engine/rng'
 import { EXPLORE_WORLDS, MAP_BACKGROUNDS, type ExploreEvent, type ExploreNode } from '../game/nodes'
 import { resolveQuickBattle } from '../game/quickResolve'
@@ -28,6 +28,24 @@ function dropRateLabel(rate: number): string {
   if (rate >= 0.06) return 'ときどき'
   if (rate >= 0.06) return 'ときどき'
   return 'まれに'
+}
+
+
+function grantStageDrop(state: GameState, key: string): GameState {
+  if (key === 'money') return grantReward(state, { money: 100 })
+  if (key === 'flask') return grantReward(state, { flask: 1 })
+  if (key === 'heal') return grantReward(state, { heal: 1 })
+  if (key === 'heal2') return grantReward(state, { heal2: 1 })
+  if (key === 'heal3') return grantReward(state, { heal3: 1 })
+  if (key === 'exp_tome') return grantReward(state, { exp_tome: 1 })
+  if (key === 'evo_dust') return grantReward(state, { evo_dust: 1 })
+  if (key === 'trait_elixir') return grantReward(state, { trait_elixir: 1 })
+  if (key === 'catch_charm') return grantReward(state, { catch_charm: 1 })
+  if (key === 'revive') return grantReward(state, { revive: 1 })
+  if (key === 'evo_incense') return grantReward(state, { evo_incense: 1 })
+  if (key === 'talentStone') return grantReward(state, { talentStone: 1 })
+  if (key === 'slotCharm') return grantReward(state, { slotCharm: 1 })
+  return state
 }
 
 function stageUnlocked(stage: ExploreNode['stage'], state: GameState): boolean {
@@ -141,6 +159,14 @@ export default function Explore({ state, setState, onHome, onVisitMap, onStartBa
           next = resolved.state
           lines.push(`[${resolved.result.title}] ${event.title}`)
           lines.push(...resolved.result.lines.slice(0, 5))
+          if (resolved.result.won) {
+            for (const drop of node.stage.dropTable) {
+              if (rng.chance(drop.rate)) {
+                next = grantStageDrop(next, drop.key)
+                lines.push(`stageDrop:${drop.key}`)
+              }
+            }
+          }
         } else if (event.kind === 'chest') {
           const flag = `chest_${event.chest.id}`
           if (hasFlag(next, flag)) {
@@ -262,9 +288,9 @@ export default function Explore({ state, setState, onHome, onVisitMap, onStartBa
                   const sp = species(id)
                   const known = state.seen.includes(id) || state.caught.includes(id)
                   return (
-                    <span key={id} className="move-chip" style={{ minWidth: 74, textAlign: 'center', filter: known ? undefined : 'brightness(0)' }} title={known ? sp.name : '???'}>
+                    <span key={id} className="move-chip" style={{ minWidth: 74, textAlign: 'center', filter: known ? undefined : 'brightness(0)' }} title={known ? sp.name : '？？？'}>
                       <Sprite id={id} type={sp.type} size={32} />
-                      <span className="dex-text" style={{ display: 'block', fontSize: 10 }}>{known ? sp.name : '???'}</span>
+                      <span className="dex-text" style={{ display: 'block', fontSize: 10 }}>{known ? sp.name : '？？？'}</span>
                     </span>
                   )
                 })}
