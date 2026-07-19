@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import type { GameState, MonsterData } from '../types'
-import { DEX, DEX_TOTAL, grantReward, researchSummary, species, speciesOfTheDay, today } from '../game/state'
+import { DEX, DEX_MILESTONES, DEX_TOTAL, grantReward, researchSummary, species, speciesOfTheDay, today } from '../game/state'
 import { Sprite, TypeBadge } from '../ui'
 
 const STAT_LABELS = ['HP', '攻', '防', '速', '魔']
@@ -44,6 +44,10 @@ export default function Dex({ state, setState, onBack }: Props) {
   const seenRate = Math.round((seen.size / DEX_TOTAL) * 100)
   const rank = caughtRate >= 80 ? '大錬獣師' : caughtRate >= 50 ? '幻獣蒐集家' : caughtRate >= 20 ? '見習い調査員' : '旅立ちの記録者'
   const nextGoal = caught.size >= DEX_TOTAL ? '図鑑完成！' : `あと${Math.max(1, Math.ceil((caught.size + 1) / 10) * 10 - caught.size)}体集めよう`
+  const seenOnly = Math.max(0, seen.size - caught.size)
+  const unseenCount = Math.max(0, DEX_TOTAL - seen.size)
+  const nextMilestone = DEX_MILESTONES.find((m) => caught.size < m.n)
+  const dexRewardText = nextMilestone ? `${caught.size}/${nextMilestone.n}` : '達成済'
   const claimTypeReward = (key: string, reward: 500 | "stone") => {
     setState((cur) => {
       if ((cur.dexTypeClaimed ?? []).includes(key)) return cur
@@ -74,6 +78,13 @@ export default function Dex({ state, setState, onBack }: Props) {
         <div><b>次の目標</b><span>{nextGoal}</span></div>
       </section>
 
+
+      <section className="dex-hunt-board" aria-label="図鑑チャレンジ">
+        <div><b>未発見</b><span>{unseenCount}体</span><small>影だけ見える枠を埋めよう</small></div>
+        <div><b>発見済み</b><span>{seenOnly}体</span><small>出会ったら次は捕獲</small></div>
+        <div><b>今日の幻獣</b><span>{todayTarget.name}</span><small>捕獲率 +15%</small></div>
+        <div><b>次の報酬</b><span>{dexRewardText}</span><small>10体ごとに拠点で受取</small></div>
+      </section>
 
       <section className="dex-collector" style={{ marginTop: 10 }}>
         <div><b>タイプ別達成</b><span>中間目標で集める</span></div>
@@ -108,13 +119,13 @@ export default function Dex({ state, setState, onBack }: Props) {
                 <>
                   <Sprite id={m.id} type={m.type} size={36} />
                   <span className="dex-cell-name">{m.name}</span>
-                  {m.id === todayTarget.id && <span className="dex-evo-hint">今日の幻獣 ??+15%</span>}
+                  {m.id === todayTarget.id && <span className="dex-evo-hint">今日の幻獣 捕獲+15%</span>}
                   <span className="dex-evo-hint">{evolutionHint(m, bestLv)}</span>
                   {isCaught && <span className="dex-research-mini">研究Lv.{researchSummary(state, m.id).level} / {researchSummary(state, m.id).progressText}</span>}
                 </>
               ) : (
                 <>
-                  <div className="sprite locked-sprite">?</div>
+                  <div className="sprite locked-sprite">影</div>
                   <span className="dex-cell-name">？？？</span>
                   <span className="dex-evo-hint">未発見</span>
                 </>

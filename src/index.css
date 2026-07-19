@@ -636,6 +636,51 @@ button:disabled {
 }
 
 /* ── 図鑑 ── */
+
+.dex-hunt-board {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0 0 12px;
+}
+.dex-hunt-board > div {
+  padding: 10px 11px;
+  border: 1px solid rgba(215, 181, 106, 0.28);
+  border-radius: 13px;
+  background:
+    radial-gradient(circle at 30% 0%, rgba(240, 217, 154, 0.11), transparent 42%),
+    rgba(42, 36, 25, 0.62);
+}
+.dex-hunt-board b,
+.dex-hunt-board span,
+.dex-hunt-board small { display: block; }
+.dex-hunt-board b {
+  color: var(--gold);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+}
+.dex-hunt-board span {
+  margin-top: 3px;
+  color: var(--gold-bright);
+  font-size: 16px;
+  font-weight: 900;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dex-hunt-board small {
+  margin-top: 4px;
+  color: var(--ink-dim);
+  font-size: 10px;
+  line-height: 1.35;
+}
+@media (max-width: 720px) {
+  .dex-hunt-board { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 420px) {
+  .dex-hunt-board { grid-template-columns: 1fr; }
+}
+
 .dex-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
