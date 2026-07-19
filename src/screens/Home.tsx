@@ -52,9 +52,9 @@ interface Props {
 function rewardLabel(r: { money?: number; flask?: number; heal?: number; heal2?: number }): string {
   const parts: string[] = []
   if (r.money) parts.push(`${r.money}ゲル`)
-  if (r.flask) parts.push(`フラスコ?${r.flask}`)
-  if (r.heal) parts.push(`傷薬?${r.heal}`)
-  if (r.heal2) parts.push(`上傷薬?${r.heal2}`)
+  if (r.flask) parts.push(`フラスコ×${r.flask}`)
+  if (r.heal) parts.push(`傷薬×${r.heal}`)
+  if (r.heal2) parts.push(`上傷薬×${r.heal2}`)
   return parts.join(' / ')
 }
 
@@ -159,7 +159,7 @@ export default function Home({ state, setState, setActive, onField, onDex, onSho
             </>
           ) : confirm?.uid === o.uid ? (
             <>
-              <span className="cmd-sub" style={{ whiteSpace: 'nowrap' }}>{confirm.sell ? `売値${sellPrice(o)}?` : '逃がす?'}</span>
+              <span className="cmd-sub" style={{ whiteSpace: 'nowrap' }}>{confirm.sell ? `売値${sellPrice(o)}ゲル` : '逃がす？'}</span>
               <button className="title-btn" style={btnS} onClick={() => doRelease(o.uid, confirm.sell)}>はい</button>
               <button className="title-btn" style={btnS} onClick={() => setConfirm(null)}>やめる</button>
             </>
@@ -328,7 +328,7 @@ export default function Home({ state, setState, setActive, onField, onDex, onSho
           {chainSpecies && state.chain && (
             <button className="home-todo hot" onClick={onField}>
               <span>捕獲チェーン</span>
-              <b>{chainSpecies.name} ?{state.chain.count}</b>
+              <b>{chainSpecies.name} ×{state.chain.count}</b>
             </button>
           )}
         </div>
@@ -627,14 +627,14 @@ export default function Home({ state, setState, setActive, onField, onDex, onSho
           {(() => {
             const pct = Math.round((state.caught.length / DEX_TOTAL) * 100)
             const rows: { icon: string; fallback: string; name: string; val: string }[] = [
-              { icon: 'dex', fallback: '?', name: '図鑑コンプリート', val: `${state.caught.length} / ${DEX_TOTAL} 体 (${pct}%)` },
-              { icon: 'badge', fallback: '?', name: '記章', val: `${state.badges.length} / 8` },
-              { icon: 'tower', fallback: '?', name: '試練の塔 自己ベスト', val: `${state.towerBest ?? 0} 階` },
-              { icon: 'wins', fallback: '?', name: '通算勝利数', val: `${state.wins} 勝` },
-              { icon: 'guardian', fallback: '?', name: '撃破した守護者', val: `${state.defeatedTrainers.length} 人` },
-              { icon: 'money', fallback: '?', name: '所持金', val: `${state.money} ゲル` },
-              { icon: 'login', fallback: '?', name: '連続ログイン', val: `${state.loginStreak ?? 1} 日` },
-              { icon: 'monsters', fallback: '?', name: '所持幻獣', val: `${state.collection.length} 体 (パーティ ${partyMons.length})` },
+              { icon: 'dex', fallback: '本', name: '図鑑コンプリート', val: `${state.caught.length} / ${DEX_TOTAL} 体 (${pct}%)` },
+              { icon: 'badge', fallback: '章', name: '記章', val: `${state.badges.length} / 8` },
+              { icon: 'tower', fallback: '塔', name: '試練の塔 自己ベスト', val: `${state.towerBest ?? 0} 階` },
+              { icon: 'wins', fallback: '剣', name: '通算勝利数', val: `${state.wins} 勝` },
+              { icon: 'guardian', fallback: '守', name: '撃破した守護者', val: `${state.defeatedTrainers.length} 人` },
+              { icon: 'money', fallback: '金', name: '所持金', val: `${state.money} ゲル` },
+              { icon: 'login', fallback: '火', name: '連続ログイン', val: `${state.loginStreak ?? 1} 日` },
+              { icon: 'monsters', fallback: '獣', name: '所持幻獣', val: `${state.collection.length} 体 (パーティ ${partyMons.length})` },
             ]
             return rows.map((r) => (
               <div className="item-row" key={r.name}>
@@ -708,9 +708,9 @@ export default function Home({ state, setState, setActive, onField, onDex, onSho
           </div>
           <div className="item-row">
             <span className="item-ico"><ItemIcon kind="evo_incense" size={32} /></span>
-            <div className="grow"><div className="item-name">進化の秘香</div><div className="item-desc">進化の秘香進化の秘香進化の秘香</div></div>
-            <span className="item-count">?{state.items.evo_incense}</span>
-            <button className="title-btn" style={{ padding: '5px 10px', fontSize: 12 }} disabled={state.items.evo_incense <= 0 || !sp.to || routeOf(sp.to) !== 'item'} onClick={useEvoIncense}>??</button>
+            <div className="grow"><div className="item-name">進化の秘香</div><div className="item-desc">特別な進化に必要な香。進化先が秘香を求める時だけ使える</div></div>
+            <span className="item-count">×{state.items.evo_incense}</span>
+            <button className="title-btn" style={{ padding: '5px 10px', fontSize: 12 }} disabled={state.items.evo_incense <= 0 || !sp.to || routeOf(sp.to) !== 'item'} onClick={useEvoIncense}>使う</button>
           </div>
           <div className="item-row">
             <span className="item-ico"><ItemIcon kind="trait_elixir" size={32} /></span>

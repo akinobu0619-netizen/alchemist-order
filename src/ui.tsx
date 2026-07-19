@@ -258,7 +258,7 @@ export function PropToken({ kind, emoji, size = 30 }: { kind: string; emoji?: st
 }
 
 // アイテムのアイコン。public/ui/item_<kind>.png があれば画像、無ければ絵文字。
-const ITEM_EMOJI: Record<string, string> = { heal: '?', heal2: '?', heal3: '*', flask: 'o', money: '$', exp_tome: 'B', evo_dust: '*', evo_incense: '~', trait_elixir: 'A', catch_charm: '@', revive: '^' }
+const ITEM_EMOJI: Record<string, string> = { heal: '🧪', heal2: '🧪', heal3: '🧪', flask: '🔮', money: '💰', exp_tome: '📘', evo_dust: '✨', evo_incense: '🕯️', trait_elixir: '⚗️', catch_charm: '🧿', revive: '🌿' }
 const itemImgState: Record<string, boolean> = {}
 export function ItemIcon({ kind, size = 26 }: { kind: string; size?: number }) {
   const [failed, setFailed] = useState(!!itemImgState[kind])
@@ -322,7 +322,7 @@ export function MedalIcon({ id, done = true, size = 40 }: { id: string; done?: b
 
 // Stat icons for the record panel. Uses public/ui/stat_<kind>.png, then falls back to emoji.
 const statImgState: Record<string, boolean> = {}
-export function StatIcon({ kind, fallback = '?', size = 34 }: { kind: string; fallback?: string; size?: number }) {
+export function StatIcon({ kind, fallback = '◆', size = 34 }: { kind: string; fallback?: string; size?: number }) {
   const [failed, setFailed] = useState(!!statImgState[kind])
   if (failed) return <span style={{ fontSize: size, lineHeight: 1 }}>{fallback}</span>
   return (
@@ -343,7 +343,7 @@ export function StatIcon({ kind, fallback = '?', size = 34 }: { kind: string; fa
 const menuImgState: Record<string, boolean> = {}
 export function MenuIcon({ kind, size = 28 }: { kind: string; size?: number }) {
   const [failed, setFailed] = useState(!!menuImgState[kind])
-  if (failed) return <span className="menu-icon-fallback" aria-hidden="true">?</span>
+  if (failed) return <span className="menu-icon-fallback" aria-hidden="true">◆</span>
   return (
     <img
       className="menu-icon-img"
@@ -360,7 +360,7 @@ export function MenuIcon({ kind, size = 28 }: { kind: string; size?: number }) {
 const eventImgState: Record<string, boolean> = {}
 export function EventIcon({ kind, size = 36 }: { kind: string; size?: number }) {
   const [failed, setFailed] = useState(!!eventImgState[kind])
-  if (failed) return <span className="menu-icon-fallback" aria-hidden="true">?</span>
+  if (failed) return <span className="menu-icon-fallback" aria-hidden="true">◆</span>
   return (
     <img
       className="event-icon-img"

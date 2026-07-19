@@ -25,11 +25,27 @@ interface ExploreSummary { battles: number; catches: number; newDex: number; gol
 const worldBadgeSlug: Record<string, string> = { forest: 'verdant', sea: 'tide', volcano: 'blaze', deep: 'alchemy' }
 
 function dropRateLabel(rate: number): string {
-  if (rate >= 0.06) return 'ときどき'
+  if (rate >= 0.12) return 'よく出る'
   if (rate >= 0.06) return 'ときどき'
   return 'まれに'
 }
 
+const DROP_LABELS: Record<string, string> = {
+  money: 'ゲル',
+  flask: '封獣フラスコ',
+  heal: '傷薬',
+  heal2: '上傷薬',
+  heal3: '特上傷薬',
+  exp_tome: '経験の書',
+  evo_dust: '進化の香粉',
+  trait_elixir: '特性霊薬',
+  catch_charm: '捕獲の護符',
+  revive: '蘇生薬',
+  evo_incense: '進化の秘香',
+  talentStone: '才能石',
+  slotCharm: 'スロット護符',
+}
+function dropLabel(key: string): string { return DROP_LABELS[key] ?? key }
 
 function grantStageDrop(state: GameState, key: string): GameState {
   if (key === 'money') return grantReward(state, { money: 100 })
@@ -102,15 +118,12 @@ export default function Explore({ state, setState, onHome, onVisitMap, onStartBa
       catches: Math.max(0, to.collection.length - from.collection),
       newDex: Math.max(0, to.caught.length - from.caught),
       gold: Math.max(0, to.money - from.money),
-      chain: to.chain ? `${speciesName(to.chain.speciesId)} ?${to.chain.count}` : undefined,
+      chain: to.chain ? `${speciesName(to.chain.speciesId)} ×${to.chain.count}` : undefined,
     }
     return next.battles || next.catches || next.newDex || next.gold ? next : null
   }
 
-  const speciesName = (id: string): string => {
-    const found = state.collection.find((m) => m.speciesId === id)
-    return found ? found.speciesId : id
-  }
+  const speciesName = (id: string): string => species(id).name
 
   const drawEvent = () => {
     if (mustChoose) return
@@ -162,7 +175,7 @@ export default function Explore({ state, setState, onHome, onVisitMap, onStartBa
             for (const drop of node.stage.dropTable) {
               if (rng.chance(drop.rate)) {
                 next = grantStageDrop(next, drop.key)
-                lines.push(`stageDrop:${drop.key}`)
+                lines.push(`${dropLabel(drop.key)}を拾った。`)
               }
             }
           }
@@ -175,7 +188,7 @@ export default function Explore({ state, setState, onHome, onVisitMap, onStartBa
             if (event.chest.item === 'money') next = { ...next, money: next.money + event.chest.amount }
             else if (event.chest.item === 'flask') next = { ...next, flasks: next.flasks + event.chest.amount }
             else next = { ...next, items: { ...next.items, [event.chest.item]: next.items[event.chest.item] + event.chest.amount } }
-            const label = event.chest.item === 'money' ? `${event.chest.amount}ゲル` : event.chest.item === 'flask' ? `フラスコx${event.chest.amount}` : `${event.chest.item}x${event.chest.amount}`
+            const label = event.chest.item === 'money' ? `${event.chest.amount}ゲル` : event.chest.item === 'flask' ? `封獣フラスコ×${event.chest.amount}` : `${dropLabel(event.chest.item)}×${event.chest.amount}`
             lines.push(`宝箱から ${label} を入手。`)
           }
         } else if (event.kind === 'switch') {
@@ -371,10 +384,10 @@ export default function Explore({ state, setState, onHome, onVisitMap, onStartBa
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <div className="card-head">
               <span className="mon-name">探索の成果</span>
-              <button className="modal-close" onClick={() => setSummary(null)}>?</button>
+              <button className="modal-close" onClick={() => setSummary(null)}>×</button>
             </div>
             <div className="item-row"><span className="item-ico"><EventIcon kind="battle" size={32} /></span><div className="grow"><div className="item-name">戦闘 {summary.battles}勝</div></div></div>
-            <div className="item-row"><span className="item-ico"><StatIcon kind="dex" size={32} /></span><div className="grow"><div className="item-name">捕獲 {summary.catches}体 / NEW {summary.newDex}</div></div></div>
+            <div className="item-row"><span className="item-ico"><StatIcon kind="dex" size={32} /></span><div className="grow"><div className="item-name">捕獲 {summary.catches}体 / 初登録 {summary.newDex}</div></div></div>
             <div className="item-row"><span className="item-ico"><ItemIcon kind="money" size={32} /></span><div className="grow"><div className="item-name">+{summary.gold}ゲル</div></div></div>
             {summary.chain && <div className="research-chip">チェーン継続中: {summary.chain}</div>}
             <div className="home-hero-actions" style={{ marginTop: 12 }}>
